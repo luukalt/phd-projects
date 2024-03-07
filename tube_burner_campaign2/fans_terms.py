@@ -111,8 +111,10 @@ def plot_streamlines_reacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_unifor
         line = np.array([segment[0] for segment in segments[:-1]] + [segments[-1][1]])
         
         line_r, line_x = line[:,0], line[:,1]
-        distance = np.cumsum(np.sqrt( np.ediff1d(line_r, to_begin=0)**2 + np.ediff1d(line_x, to_begin=0)**2 ))
+        distance = np.cumsum(np.sqrt(np.ediff1d(line_r, to_begin=0)**2 + np.ediff1d(line_x, to_begin=0)**2))
+        
         distance = distance/distance[-1]
+        
         
         fr, fx = interp1d(distance, line_r), interp1d(distance, line_x)
         
@@ -658,10 +660,10 @@ if __name__ == '__main__':
     #%%% Define cases
     react_names_ls =    [
                         # ('react_h0_c3000_ls_record1', 57),
-                        # ('react_h0_s4000_ls_record1', 58),
+                        ('react_h0_s4000_ls_record1', 58),
                         # ('react_h100_c12000_ls_record1', 61),
                         # ('react_h100_c12500_ls_record1', 61),
-                        ('react_h100_s16000_ls_record1', 62)
+                        # ('react_h100_s16000_ls_record1', 62)
                         ]
     
     react_names_hs =    [
@@ -935,37 +937,37 @@ if __name__ == '__main__':
     
     #%% Save images
     # Get a list of all currently opened figures
-    figure_ids = plt.get_fignums()
-    figure_ids = [14]
+    # figure_ids = plt.get_fignums()
+    # figure_ids = [14]
     
-    if react_names_ls:
-        folder = 'ls'
-    else:
-        folder = 'hs'
+    # if react_names_ls:
+    #     folder = 'ls'
+    # else:
+    #     folder = 'hs'
 
-    # Apply tight_layout to each figure
-    for fid in figure_ids:
-        fig = plt.figure(fid)
-        fig.tight_layout()
-        # filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
-        filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
+    # # Apply tight_layout to each figure
+    # for fid in figure_ids:
+    #     fig = plt.figure(fid)
+    #     fig.tight_layout()
+    #     # filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
+    #     filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
         
-        # Constructing the paths
-        if fid == 1:
+    #     # Constructing the paths
+    #     if fid == 1:
             
-            png_path = os.path.join('figures', f'{folder}', f"{filename}.png")
-            pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
+    #         png_path = os.path.join('figures', f'{folder}', f"{filename}.png")
+    #         pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
             
-            # Saving the figure in EPS format
-            fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
+    #         # Saving the figure in EPS format
+    #         fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
             
-        else:
+    #     else:
             
-            eps_path = os.path.join('figures', f'{folder}', f"{filename}.eps")
-            pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
+    #         eps_path = os.path.join('figures', f'{folder}', f"{filename}.eps")
+    #         pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
             
-            # Saving the figure in EPS format
-            fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+    #         # Saving the figure in EPS format
+    #         fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
         
         
         # # Pickling the figure

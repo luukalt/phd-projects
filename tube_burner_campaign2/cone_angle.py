@@ -77,13 +77,13 @@ variables_dict = {
 #%% IMPORTANT: SET FLAME INFO
 pc_name = socket.gethostname()
 
-if pc_name == 'DESKTOP-B05JCBI':
+if pc_name == 'A7':
     
-    main_dir = 'W:\\staff-umbrella\\High hydrogen\\laaltenburg\\data\\tube_burner_campaign2\\selected_runs\\'
+    data_dir = 'U:\\staff-umbrella\\High hydrogen\\laaltenburg\\data\\tube_burner_campaign2\\selected_runs\\'
 
 else:
 
-    main_dir = 'U:\\High hydrogen\\laaltenburg\\data\\tube_burner_campaign2\\selected_runs\\'
+    data_dir = 'U:\\High hydrogen\\laaltenburg\\data\\tube_burner_campaign2\\selected_runs\\'
 
 
 def find_intersection_and_angle_from_arrays(x1, y1, x2, y2):
@@ -146,7 +146,7 @@ def cone_angle(spydata_dir, name, distances_above_tube=[.75, 1., 1.25]):
     #%% READ FLAME INFO [DO NOT TOUCH]
     
     # spydata_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'spydata')
-    # spydata_dir = os.path.join(main_dir, 'spydata')
+    # spydata_dir = os.path.join(data_dir, 'spydata')
     
     fname = f'{name}_segment_length_{segment_length_mm}mm_wsize_{window_size}pixels'
     
@@ -168,7 +168,7 @@ def cone_angle(spydata_dir, name, distances_above_tube=[.75, 1., 1.25]):
     #%% READ RAW IMAGE DATA [DO NOT TOUCH]
     
     # Construct file path
-    raw_dir = os.path.join(main_dir,  f'session_{flame.session_nr:03d}', flame.record_name, 'Correction', 'Resize', 'Frame0', 'Export')
+    raw_dir = os.path.join(data_dir,  f'session_{flame.session_nr:03d}', flame.record_name, 'Correction', 'Resize', 'Frame0', 'Export')
     raw_file = os.path.join(raw_dir, 'B0001.csv')
     
     df_raw = pd.read_csv(raw_file)
