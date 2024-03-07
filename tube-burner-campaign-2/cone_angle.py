@@ -14,7 +14,7 @@ import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 from scipy.interpolate import griddata
-from custom_colormaps import parula
+from plot_parameters.custom_colormaps import parula
 
 #%% FIGURE SETTINGS
 

@@ -28,24 +28,35 @@ C5: Reynolds normal stress term
 
 #%% IMPORT PACKAGES
 import os
+import sys
+
+# Add the 'main' folder to sys.path
+parent_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_folder)
+
 import pickle
-import numpy as np
+
 import pandas as pd
+
+import numpy as np
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from scipy.interpolate import griddata
-from custom_colormaps import parula
-from premixed_flame_properties import PremixedFlame
+from scipy.interpolate import interp1d
+
+from plot_parameters.custom_colormaps import parula
+from flame_simulations.premixed_flame_properties import PremixedFlame
 from cone_angle import cone_angle
 from intersect import intersection
-from scipy.interpolate import interp1d
 
 from nonreact_flow_fields import non_react_dict
 from favre_averaging import process_df
 
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+import flame-front-detection.flame_object 
+
 
 # # from parameters import set_mpl_params
 # from parameters_ls import r_range_left, r_range_right, poly_left_fit, poly_right_fit
@@ -651,9 +662,9 @@ if __name__ == '__main__':
                         ]
     
     if react_names_ls:
-        spydata_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'spydata\\udf')
+        spydata_dir = os.path.join(parent_folder, 'spydata\\udf')
     elif react_names_hs:
-        spydata_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'spydata')
+        spydata_dir = os.path.join(parent_folder, 'spydata')
         
     react_names = react_names_ls + react_names_hs
     

@@ -13,7 +13,7 @@ import pandas as pd
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 import scipy.io
-from custom_colormaps import parula
+from plot_parameters.custom_colormaps import parula
 # from parameters import set_mpl_params
 
 #%% CLOSE ALL FIGURES

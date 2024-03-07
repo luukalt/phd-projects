@@ -14,7 +14,7 @@ from matplotlib.path import Path
 from tqdm import tqdm
 from multiprocessing import Pool, cpu_count
 import numpy as np
-from premixed_flame_properties import PremixedFlame
+from flame_simulations.premixed_flame_properties import PremixedFlame
 
 #%% CLOSE ALL FIGURES
 plt.close('all')
