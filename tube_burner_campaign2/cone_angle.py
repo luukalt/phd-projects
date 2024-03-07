@@ -77,7 +77,7 @@ variables_dict = {
 #%% IMPORTANT: SET FLAME INFO
 pc_name = socket.gethostname()
 
-if pc_name == 'A7':
+if pc_name == 'A7' or 'DESKTOP-KA87T30':
     
     data_dir = 'U:\\staff-umbrella\\High hydrogen\\laaltenburg\\data\\tube_burner_campaign2\\selected_runs\\'
 
@@ -365,7 +365,7 @@ def cone_angle(spydata_dir, name, distances_above_tube=[.75, 1., 1.25]):
     alpha_right = np.degrees(np.arctan(abs(1/coefs_right[0])))
     
     intersection, angle = find_intersection_and_angle_from_arrays(peaks_left_r, peaks_left_x, peaks_right_r, peaks_right_x)
-    print(f"Intersection: {intersection}")
+    # print(f"Intersection: {intersection}")
     
     # Average flame angle
     alpha = alpha_left + alpha_right
