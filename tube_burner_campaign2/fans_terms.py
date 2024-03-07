@@ -43,9 +43,7 @@ sys.path.append(flame_simulations_directory)
 sys.path.append(plot_parameters_directory)
 
 import pickle
-
 import pandas as pd
-
 import numpy as np
 import matplotlib as mpl
 from matplotlib import pyplot as plt
@@ -65,7 +63,7 @@ from favre_averaging import process_df
 
 import flame_object
 import premixed_flame_properties
-
+import rc_params_settings
 
 # # from parameters import set_mpl_params
 # from parameters_ls import r_range_left, r_range_right, poly_left_fit, poly_right_fit
