@@ -647,8 +647,10 @@ def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lin
 #%% MAIN
 if __name__ == '__main__':
     
-    main_dir = 'U:\\High hydrogen\\laaltenburg\\data\\tube_burner_campaign2\\selected_runs\\'
-
+    # data_dir = 'U:\\High hydrogen\\laaltenburg\\data\\tube_burner_campaign2\\selected_runs\\'
+    
+    data_dir = 'U:\\staff-umbrella\\High hydrogen\\laaltenburg\\data\\tube_burner_campaign2\\selected_runs\\'
+    
     frame_nr = 0
     segment_length_mm = 1 # units: mm
     window_size = 31 # units: pixels
@@ -674,7 +676,7 @@ if __name__ == '__main__':
         spydata_dir = os.path.join(parent_folder, 'spydata\\udf')
     elif react_names_hs:
         spydata_dir = os.path.join(parent_folder, 'spydata')
-        
+    
     react_names = react_names_ls + react_names_hs
     
     # piv_method = 'PIV_MP(3x16x16_75%ov_ImgCorr)'
@@ -702,7 +704,7 @@ if __name__ == '__main__':
         flame.properties.rho_b = mixture.rho_b
 
     # Save the mean DataFrame to a CSV file
-    input_file_path = os.path.join('spydata', flame.name, 'AvgFavreFinal.csv')
+    input_file_path = os.path.join(os.path.join(parent_folder, 'spydata'), flame.name, 'AvgFavreFinal.csv')
     
     df_favre_avg = pd.read_csv(input_file_path, index_col='index')
     headers = df_favre_avg.columns
@@ -910,7 +912,7 @@ if __name__ == '__main__':
     u_bulk_set = non_react_flow[5]
     u_bulk_measured = non_react_flow[6]
     
-    Avg_Stdev_file = os.path.join(main_dir, f'session_{session_nr:03d}', recording, piv_method, 'Avg_Stdev', 'Export', 'B0001.csv')
+    Avg_Stdev_file = os.path.join(data_dir, f'session_{session_nr:03d}', recording, piv_method, 'Avg_Stdev', 'Export', 'B0001.csv')
     
     df_piv = pd.read_csv(Avg_Stdev_file)
     
