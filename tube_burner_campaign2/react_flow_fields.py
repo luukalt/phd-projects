@@ -6,29 +6,6 @@ Created on Tue Jul  4 10:25:15 2023
 
 """
 
-
-#%% IMPORT PACKAGES
-# import os
-# import pickle
-# import numpy as np
-# import pandas as pd
-# import matplotlib as mpl
-# from matplotlib import pyplot as plt
-# from scipy.interpolate import griddata, interp1d
-# from custom_colormaps import parula
-# # from parameters import set_mpl_params
-# from cone_angle import cone_angle
-# from nonreact_flow_fields import non_react_dict
-# from ns_terms import ns_incomp_terms, ns_comp_terms
-# from intersect import intersection
-
-# import matplotlib.collections as mcol
-# from matplotlib.legend_handler import HandlerLineCollection, HandlerTuple
-# from matplotlib.lines import Line2D
-# from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-
-# from tqdm import tqdm
-
 #%% IMPORT PACKAGES
 import os
 import sys
@@ -1444,7 +1421,7 @@ if __name__ == '__main__':
                 
                 normalize_value = u_bulk_measured_list[0]**2
             
-            fig9.tight_layout()
+            # fig9.tight_layout()
             
             # Mean absolute velocity
             flow_field = ax.pcolor(r_norm_list[0], x_norm_list[0], pivot_var_list[0].values/normalize_value, cmap=colormap)
@@ -1616,7 +1593,7 @@ if __name__ == '__main__':
                 ax.set_zticks([])
                 fig1.tight_layout()
 
-    print(f'The cone angle: {alpha}')
+    # print(f'The cone angle: {alpha}')
 
 # ax1.legend()
 # ax2.legend()
