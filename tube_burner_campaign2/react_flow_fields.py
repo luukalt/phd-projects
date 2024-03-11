@@ -8,27 +8,68 @@ Created on Tue Jul  4 10:25:15 2023
 
 
 #%% IMPORT PACKAGES
+# import os
+# import pickle
+# import numpy as np
+# import pandas as pd
+# import matplotlib as mpl
+# from matplotlib import pyplot as plt
+# from scipy.interpolate import griddata, interp1d
+# from custom_colormaps import parula
+# # from parameters import set_mpl_params
+# from cone_angle import cone_angle
+# from nonreact_flow_fields import non_react_dict
+# from ns_terms import ns_incomp_terms, ns_comp_terms
+# from intersect import intersection
+
+# import matplotlib.collections as mcol
+# from matplotlib.legend_handler import HandlerLineCollection, HandlerTuple
+# from matplotlib.lines import Line2D
+# from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
+# from tqdm import tqdm
+
+#%% IMPORT PACKAGES
 import os
+import sys
+
+# Add the 'main' folder to sys.path
+parent_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+flame_front_detection_directory = os.path.abspath(os.path.join(parent_folder, 'flame_front_detection'))
+flame_simulations_directory = os.path.abspath(os.path.join(parent_folder, 'flame_simulations'))
+plot_parameters_directory = os.path.abspath(os.path.join(parent_folder, 'plot_parameters'))
+
+# Add the flame_object_directory to sys.path
+sys.path.append(parent_folder)
+sys.path.append(flame_front_detection_directory)
+sys.path.append(flame_simulations_directory)
+sys.path.append(plot_parameters_directory)
+
 import pickle
-import numpy as np
 import pandas as pd
+import numpy as np
 import matplotlib as mpl
 from matplotlib import pyplot as plt
-from scipy.interpolate import griddata, interp1d
-from custom_colormaps import parula
-# from parameters import set_mpl_params
-from cone_angle import cone_angle
-from nonreact_flow_fields import non_react_dict
-from ns_terms import ns_incomp_terms, ns_comp_terms
-from intersect import intersection
-
-import matplotlib.collections as mcol
-from matplotlib.legend_handler import HandlerLineCollection, HandlerTuple
 from matplotlib.lines import Line2D
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+import matplotlib.collections as mcol
+from matplotlib.legend_handler import HandlerLineCollection, HandlerTuple
 
-from tqdm import tqdm
-# from numba import njit
+from scipy.interpolate import griddata
+from scipy.interpolate import interp1d
+
+from custom_colormaps import parula
+from premixed_flame_properties import PremixedFlame
+from cone_angle import cone_angle
+from intersect import intersection
+
+from ns_terms import ns_incomp_terms, ns_comp_terms
+from nonreact_flow_fields import non_react_dict
+from favre_averaging import process_df
+
+import flame_object
+import premixed_flame_properties
+import rc_params_settings
 
 #%% CLOSE ALL FIGURES
 plt.close('all')
@@ -688,10 +729,10 @@ def plot_streamlines_nonreacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_uni
 def plot_cartoons(flame, ax, image_nr, recording, piv_method):
     
     
-    piv_dir = os.path.join(main_dir,  f'session_{flame.session_nr:03d}', recording, piv_method, 'Export')
+    piv_dir = os.path.join(data_dir,  f'session_{flame.session_nr:03d}', recording, piv_method, 'Export')
     piv_file = os.path.join(piv_dir, f'B{image_nr:04d}.csv')
     
-    # Avg_Stdev_file = os.path.join(main_dir, f'session_{session_nr:03d}', recording, piv_method, 'Avg_Stdev', 'Export', 'B0001.csv')
+    # Avg_Stdev_file = os.path.join(data_dir, f'session_{session_nr:03d}', recording, piv_method, 'Avg_Stdev', 'Export', 'B0001.csv')
 
     df_piv = pd.read_csv(piv_file)
     
@@ -727,7 +768,7 @@ def plot_cartoons(flame, ax, image_nr, recording, piv_method):
     # x_norm_values = x_norm.flatten()
     
     # Construct file path
-    raw_dir = os.path.join(main_dir,  f'session_{flame.session_nr:03d}', flame.record_name, 'Correction', 'Frame0', 'Export')
+    raw_dir = os.path.join(data_dir,  f'session_{flame.session_nr:03d}', flame.record_name, 'Correction', 'Frame0', 'Export')
     raw_file = os.path.join(raw_dir, f'B{image_nr:04d}.csv')
 
     df_raw = pd.read_csv(raw_file)
@@ -778,6 +819,12 @@ def plot_cartoons(flame, ax, image_nr, recording, piv_method):
         brighten_factor = 4
         custom_x_ticks = [-.4, -.2, .0, .2]# Replace with your desired tick positions
         
+        # x_left_zoom = -.5
+        # y_bottom_zoom = .25
+        # clims = (0.9, 1.3)
+        # brighten_factor = 4
+        # custom_x_ticks = [-.4, -.2, .0, .2]# Replace with your desired tick positions
+        
     elif flame.Re_D == 12500:
     
         # Re_D = 12500
@@ -789,7 +836,6 @@ def plot_cartoons(flame, ax, image_nr, recording, piv_method):
     
     x_right_zoom = x_left_zoom + box_size
     y_top_zoom = y_bottom_zoom + box_size
-    
     
     fig1, ax1 = plt.subplots()
     fontsize = 20
@@ -867,11 +913,11 @@ def plot_cartoons(flame, ax, image_nr, recording, piv_method):
     ax2.set_yticks(custom_y_ticks)
     ax2.set_yticklabels(custom_y_tick_labels)  # Use this line to set custom tick labels
     
-    fig1.tight_layout()
-    fig1.savefig(f"figures/H{flame.H2_percentage}_Re{flame.Re_D}_B{image_nr}_V.eps", format="eps", dpi=300, bbox_inches="tight")
+    # fig1.tight_layout()
+    # fig1.savefig(f"figures/H{flame.H2_percentage}_Re{flame.Re_D}_B{image_nr}_V.eps", format="eps", dpi=300, bbox_inches="tight")
     
-    fig2.tight_layout()
-    fig2.savefig(f"figures/H{flame.H2_percentage}_Re{flame.Re_D}_B{image_nr}_Ip.png", format="png", dpi=300, bbox_inches="tight")
+    # fig2.tight_layout()
+    # fig2.savefig(f"figures/H{flame.H2_percentage}_Re{flame.Re_D}_B{image_nr}_Ip.png", format="png", dpi=300, bbox_inches="tight")
     
     # # Add textbox with timestamp
     # left, width = .25, .7
@@ -942,8 +988,8 @@ def process_df(df, D_in, offset_to_wall_center, offset):
 # If the python interpreter is running that module (the source file) as the main program, it sets the special __name__ variable to have a value “__main__”. If this file is being imported from another module, __name__ will be set to the module’s name. Module’s name is available as value to __name__ global variable. 
 if __name__ == '__main__':
     
-    main_dir = 'U:\\High hydrogen\\laaltenburg\\data\\tube_burner_campaign2\\selected_runs\\'
-
+    data_dir = 'U:\\staff-umbrella\\High hydrogen\\laaltenburg\\data\\tube_burner_campaign2\\selected_runs\\'
+    
     frame_nr = 0
     segment_length_mm = 1 # units: mm
     window_size = 31 # units: pixels
@@ -959,7 +1005,7 @@ if __name__ == '__main__':
     #%% Define cases
     react_names_ls =    [
                         # ('react_h0_c3000_ls_record1', 57),
-                        ('react_h0_s4000_ls_record1', 58),
+                        # ('react_h0_s4000_ls_record1', 58),
                         # ('react_h100_c12000_ls_record1', 61),
                         # ('react_h100_c12500_ls_record1', 61),
                         # ('react_h100_s16000_ls_record1', 62)
@@ -967,7 +1013,7 @@ if __name__ == '__main__':
     
     react_names_hs =    [
                         # ('react_h0_f2700_hs_record1', 57),
-                        # ('react_h0_c3000_hs_record1', 57),
+                        ('react_h0_c3000_hs_record1', 57),
                         # ('react_h0_s4000_hs_record1', 58),
                         # ('react_h100_c12500_hs_record1', 61),
                         # ('react_h100_s16000_hs_record1', 62)
@@ -975,9 +1021,9 @@ if __name__ == '__main__':
     
     
     if react_names_ls:
-        spydata_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'spydata\\udf')
+        spydata_dir = os.path.join(parent_folder, 'spydata\\udf')
     elif react_names_hs:
-        spydata_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'spydata')
+        spydata_dir = os.path.join(parent_folder, 'spydata')
         
     react_names = react_names_ls + react_names_hs
     
@@ -1128,24 +1174,26 @@ if __name__ == '__main__':
             
             print(name)
             
-            Avg_Stdev_file = os.path.join(main_dir, f'session_{session_nr:03d}', recording, piv_method, 'Avg_Stdev', 'Export', 'B0001.csv')
+            Avg_Stdev_file = os.path.join(data_dir, f'session_{session_nr:03d}', recording, piv_method, 'Avg_Stdev', 'Export', 'B0001.csv')
             
-            # if ii == 0:
+            if ii == 0:
                 
-            #     # image_nrs = [3167, 3169, 3171, 3173, 3175,  3177]
-            #     # image_nrs = [2312] #[4624] #2314 #[4496]
-            #     image_nrs = [4469] #[4624] #2314 #[4496]
+                # image_nrs = [3167, 3169, 3171, 3173, 3175,  3177]
+                # image_nrs = [2306, 2308, 2310, 2312, 2314, 2316] #[4624] #2314 #[4496]
+                # image_nrs = [1737, 1738] #[4624] #2314 #[4496]
+                image_nrs = [2297, 2298, 2299] #[4624] #2314 #[4496]
                 
                 
-            #     fig_i, ax_i = plt.subplots()
-            #     plot_cartoons(ax_i, image_nrs[0], recording, piv_method)
+                fig_i, ax_i = plt.subplots()
+                for image_nr in image_nrs:
+                    plot_cartoons(flame, ax_i, image_nr, recording, piv_method)
                 
                 # fig, axs = plt.subplots(3, 2, figsize=(10, 15))
                 
                 # for image_i, ax_i in enumerate(axs.ravel()):
                     
                 #     image_nr = image_nrs[image_i]
-                #     plot_cartoons(ax_i, image_nr, recording, piv_method)
+                #     plot_cartoons(flame, ax_i, image_nr, recording, piv_method)
                     
                 #     if image_i in [1, 3, 5]:
                 #         ax_i.set_ylabel('')
@@ -1424,7 +1472,7 @@ if __name__ == '__main__':
             if i == 5:
                 
                 image_nr = 1
-                raw_dir = os.path.join(main_dir,  f'session_{flame.session_nr:03d}', flame.record_name, 'Correction', 'Resize', 'Frame0', 'Export')
+                raw_dir = os.path.join(data_dir,  f'session_{flame.session_nr:03d}', flame.record_name, 'Correction', 'Resize', 'Frame0', 'Export')
                 raw_file = os.path.join(raw_dir, f'B{image_nr:04d}.csv')
 
                 df_raw = pd.read_csv(raw_file)
@@ -1577,36 +1625,36 @@ if __name__ == '__main__':
 
 #%% Save images
 # Get a list of all currently opened figures
-figure_ids = plt.get_fignums()
-figure_ids = [1, 2, 12, 13, 21]
+# figure_ids = plt.get_fignums()
+# figure_ids = [1, 2, 12, 13, 21]
 
-if react_names_ls:
-    folder = 'ls'
-else:
-    folder = 'hs'
+# if react_names_ls:
+#     folder = 'ls'
+# else:
+#     folder = 'hs'
     
-# Apply tight_layout to each figure
-for fid in figure_ids:
-    fig = plt.figure(fid)
-    fig.tight_layout()
-    filename = f'H{flame.H2_percentage}_Re{Re_D_list[0]}_fig{fid}'
+# # Apply tight_layout to each figure
+# for fid in figure_ids:
+#     fig = plt.figure(fid)
+#     fig.tight_layout()
+#     filename = f'H{flame.H2_percentage}_Re{Re_D_list[0]}_fig{fid}'
     
-    # Constructing the paths
-    if fid == 1:
+#     # Constructing the paths
+#     if fid == 1:
         
-        png_path = os.path.join('figures', f'{folder}', f'{filename}.png')
-        # pkl_path = os.path.join('pickles', f'{folder}', f'{filename}.pkl')
+#         png_path = os.path.join('figures', f'{folder}', f'{filename}.png')
+#         # pkl_path = os.path.join('pickles', f'{folder}', f'{filename}.pkl')
         
-        # Saving the figure in EPS format
-        fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
+#         # Saving the figure in EPS format
+#         fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
         
-    else:
+#     else:
         
-        eps_path = os.path.join('figures', f'{folder}', f'{filename}.eps')
-        # pkl_path = os.path.join('pickles', f'{folder}', f'{filename}.pkl')
+#         eps_path = os.path.join('figures', f'{folder}', f'{filename}.eps')
+#         # pkl_path = os.path.join('pickles', f'{folder}', f'{filename}.pkl')
         
-        # Saving the figure in EPS format
-        fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+#         # Saving the figure in EPS format
+#         fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
     
     
     # Pickling the figure
