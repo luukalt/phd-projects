@@ -703,8 +703,7 @@ def plot_streamlines_nonreacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_uni
     return streamlines, paths, dummy_indices, colors
     
 
-def plot_cartoons(flame, ax, image_nr, recording, piv_method):
-    
+def plot_cartoons(flame, fig, ax, image_nr, recording, piv_method):
     
     piv_dir = os.path.join(data_dir,  f'session_{flame.session_nr:03d}', recording, piv_method, 'Export')
     piv_file = os.path.join(piv_dir, f'B{image_nr:04d}.csv')
@@ -713,14 +712,16 @@ def plot_cartoons(flame, ax, image_nr, recording, piv_method):
 
     df_piv = pd.read_csv(piv_file)
     
-    df_piv['x_shift [mm]'] = df_piv['x [mm]'] - (D_in/2 - offset_to_wall_center)
-    df_piv['y_shift [mm]'] = df_piv['y [mm]'] + offset
+    df_piv = process_df(df_piv, D_in, offset_to_wall_center, offset)
     
-    df_piv['x_shift_norm'] = df_piv['x_shift [mm]']/D_in
-    df_piv['y_shift_norm'] = df_piv['y_shift [mm]']/D_in
+    # df_piv['x_shift [mm]'] = df_piv['x [mm]'] - (D_in/2 - offset_to_wall_center)
+    # df_piv['y_shift [mm]'] = df_piv['y [mm]'] + offset
     
-    df_piv['x_shift [m]'] = df_piv['x_shift [mm]']*1e-3
-    df_piv['y_shift [m]'] = df_piv['y_shift [mm]']*1e-3
+    # df_piv['x_shift_norm'] = df_piv['x_shift [mm]']/D_in
+    # df_piv['y_shift_norm'] = df_piv['y_shift [mm]']/D_in
+    
+    # df_piv['x_shift [m]'] = df_piv['x_shift [mm]']*1e-3
+    # df_piv['y_shift [m]'] = df_piv['y_shift [mm]']*1e-3
     
     # Get the column headers
     headers = df_piv.columns
@@ -749,14 +750,17 @@ def plot_cartoons(flame, ax, image_nr, recording, piv_method):
     raw_file = os.path.join(raw_dir, f'B{image_nr:04d}.csv')
 
     df_raw = pd.read_csv(raw_file)
-    df_raw['x_shift [mm]'] = df_raw['x [mm]'] - (D_in/2 - offset_to_wall_center)
-    df_raw['y_shift [mm]'] = df_raw['y [mm]'] + offset
     
-    df_raw['x_shift_norm'] = df_raw['x_shift [mm]']/D_in
-    df_raw['y_shift_norm'] = df_raw['y_shift [mm]']/D_in
+    df_raw = process_df(df_raw, D_in, offset_to_wall_center, offset)
     
-    df_raw['x_shift [m]'] = df_raw['x_shift [mm]']*1e-3
-    df_raw['y_shift [m]'] = df_raw['y_shift [mm]']*1e-3
+    # df_raw['x_shift [mm]'] = df_raw['x [mm]'] - (D_in/2 - offset_to_wall_center)
+    # df_raw['y_shift [mm]'] = df_raw['y [mm]'] + offset
+    
+    # df_raw['x_shift_norm'] = df_raw['x_shift [mm]']/D_in
+    # df_raw['y_shift_norm'] = df_raw['y_shift [mm]']/D_in
+    
+    # df_raw['x_shift [m]'] = df_raw['x_shift [mm]']*1e-3
+    # df_raw['y_shift [m]'] = df_raw['y_shift [mm]']*1e-3
 
     headers_raw = df_raw.columns
     
@@ -790,17 +794,17 @@ def plot_cartoons(flame, ax, image_nr, recording, piv_method):
     if flame.Re_D == 3000:
         
         # Re_D = 3000
-        x_left_zoom = -.475
-        y_bottom_zoom = .35
-        clims = (0.9, 1.3)
-        brighten_factor = 4
-        custom_x_ticks = [-.4, -.2, .0, .2]# Replace with your desired tick positions
-        
-        # x_left_zoom = -.5
-        # y_bottom_zoom = .25
+        # x_left_zoom = -.475
+        # y_bottom_zoom = .35
         # clims = (0.9, 1.3)
         # brighten_factor = 4
         # custom_x_ticks = [-.4, -.2, .0, .2]# Replace with your desired tick positions
+        
+        x_left_zoom = -.55
+        y_bottom_zoom = .25
+        clims = (0.9, 1.3)
+        brighten_factor = 4
+        custom_x_ticks = [-.4, -.2, .0, .2]# Replace with your desired tick positions
         
     elif flame.Re_D == 12500:
     
@@ -814,34 +818,36 @@ def plot_cartoons(flame, ax, image_nr, recording, piv_method):
     x_right_zoom = x_left_zoom + box_size
     y_top_zoom = y_bottom_zoom + box_size
     
-    fig1, ax1 = plt.subplots()
+    # fig1, ax1 = plt.subplots()
+    
+    # ax = ax1
     fontsize = 20
     
-    flow_field = ax1.pcolor(r_norm, x_norm, pivot_V_abs.values/u_bulk_measured, cmap=colormap)
+    flow_field = ax.pcolor(r_norm, x_norm, pivot_V_abs.values/u_bulk_measured, cmap=colormap)
     
     flow_field.set_clim(clims[0], clims[1])
-    cbar = ax1.figure.colorbar(flow_field)
+    cbar = ax.figure.colorbar(flow_field)
     cbar.set_label(cbar_titles[1], rotation=0, labelpad=25, fontsize=28) 
     cbar.ax.tick_params(labelsize=fontsize)
     
     skip = vector_skip
-    ax1.quiver(r_norm[::skip], x_norm[::skip], pivot_u_r[::skip]/u_bulk_measured, pivot_u_x[::skip]/u_bulk_measured, angles='xy', scale_units='xy', scale=vector_scale, width=vector_width, color='k')
+    ax.quiver(r_norm[::skip], x_norm[::skip], pivot_u_r[::skip]/u_bulk_measured, pivot_u_x[::skip]/u_bulk_measured, angles='xy', scale_units='xy', scale=vector_scale, width=vector_width, color='k')
     
-    ax1.set_xlabel(r'$r/D$', fontsize=fontsize)
-    ax1.set_ylabel(r'$x/D$', fontsize=fontsize)
+    ax.set_xlabel(r'$r/D$', fontsize=fontsize)
+    ax.set_ylabel(r'$x/D$', fontsize=fontsize)
     
-    ax1.tick_params(axis='both', labelsize=fontsize)
-    ax1.set_aspect('equal')
+    ax.tick_params(axis='both', labelsize=fontsize)
+    ax.set_aspect('equal')
     
     custom_x_tick_labels =  [f'{tick:.1f}' for tick in custom_x_ticks] # Replace with your desired tick labels
-    ax1.set_xticks(custom_x_ticks)
-    ax1.set_xticklabels(custom_x_tick_labels)  # Use this line to set custom tick labels
+    ax.set_xticks(custom_x_ticks)
+    ax.set_xticklabels(custom_x_tick_labels)  # Use this line to set custom tick labels
     
     y_tick_step = .2
     custom_y_ticks = np.linspace(y_bottom_zoom, y_top_zoom, 1 + int((y_top_zoom - y_bottom_zoom)/y_tick_step)) # Replace with your desired tick positions
     custom_y_tick_labels =  [f'{tick:.1f}' for tick in custom_y_ticks] # Replace with your desired tick labels
-    ax1.set_yticks(custom_y_ticks)
-    ax1.set_yticklabels(custom_y_tick_labels)  # Use this line to set custom tick labels
+    ax.set_yticks(custom_y_ticks)
+    ax.set_yticklabels(custom_y_tick_labels)  # Use this line to set custom tick labels
     
     # Define your custom colorbar tick locations and labels
     num_ticks = 5
@@ -851,11 +857,10 @@ def plot_cartoons(flame, ax, image_nr, recording, piv_method):
     cbar.set_ticklabels(custom_cbar_tick_labels)
     
     # plot flame front contour
-    ax1.plot(contour_x, contour_y, color='r', ls='solid')
-    ax1.set_aspect('equal')
+    ax.plot(contour_x, contour_y, color='r', ls='solid')
+    ax.set_aspect('equal')
     
     fig2, ax2 = plt.subplots()
-    # ax2 = ax
     
     # brighten_factor = 16
     z = pivot_intensity.values
@@ -878,8 +883,8 @@ def plot_cartoons(flame, ax, image_nr, recording, piv_method):
     
     if toggle_zoom:
         
-        ax1.set_xlim(x_left_zoom, x_right_zoom)
-        ax1.set_ylim(y_bottom_zoom, y_top_zoom)
+        ax.set_xlim(x_left_zoom, x_right_zoom)
+        ax.set_ylim(y_bottom_zoom, y_top_zoom)
         ax2.set_xlim(x_left_zoom, x_right_zoom)
         ax2.set_ylim(y_bottom_zoom, y_top_zoom)
         
@@ -1158,12 +1163,11 @@ if __name__ == '__main__':
                 # image_nrs = [3167, 3169, 3171, 3173, 3175,  3177]
                 # image_nrs = [2306, 2308, 2310, 2312, 2314, 2316] #[4624] #2314 #[4496]
                 # image_nrs = [1737, 1738] #[4624] #2314 #[4496]
-                image_nrs = [2297, 2298, 2299] #[4624] #2314 #[4496]
-                
+                image_nrs = [2297, 2299] #[4624] #2314 #[4496]
                 
                 fig_i, ax_i = plt.subplots()
                 for image_nr in image_nrs:
-                    plot_cartoons(flame, ax_i, image_nr, recording, piv_method)
+                    plot_cartoons(flame, fig_i, ax_i, image_nr, recording, piv_method)
                 
                 # fig, axs = plt.subplots(3, 2, figsize=(10, 15))
                 
