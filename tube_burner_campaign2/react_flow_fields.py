@@ -51,15 +51,7 @@ import rc_params_settings
 #%% CLOSE ALL FIGURES
 plt.close('all')
 
-# plt.rcParams.update({
-#     "text.usetex": True,
-#     "font.family": "serif",
-#     "font.serif": ["Computer Modern Roman"],
-#     "font.size": 14.0}
-#     )
-
-#%% SET MATPLOTLIB PARAMETERS
-# set_mpl_params()
+#%% SET PLOT SETTINGS
 
 # Set color map
 # colormap = 'jet' 
