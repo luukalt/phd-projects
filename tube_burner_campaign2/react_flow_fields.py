@@ -695,94 +695,22 @@ def plot_streamlines_nonreacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_uni
     return streamlines, paths, dummy_indices, colors
     
 
-def plot_cartoons(flame, fig, ax, image_nr, recording, piv_method):
+def plot_cartoons(flame, image_nrs, recording, piv_method):
     
-    piv_dir = os.path.join(data_dir,  f'session_{flame.session_nr:03d}', recording, piv_method, 'Export')
-    piv_file = os.path.join(piv_dir, f'B{image_nr:04d}.csv')
+    # Font size for x,y labels
+    fontsize = 20
     
-    # Avg_Stdev_file = os.path.join(data_dir, f'session_{session_nr:03d}', recording, piv_method, 'Avg_Stdev', 'Export', 'B0001.csv')
-
-    df_piv = pd.read_csv(piv_file)
-    
-    df_piv = process_df(df_piv, D_in, offset_to_wall_center, offset)
-    
-    # df_piv['x_shift [mm]'] = df_piv['x [mm]'] - (D_in/2 - offset_to_wall_center)
-    # df_piv['y_shift [mm]'] = df_piv['y [mm]'] + offset
-    
-    # df_piv['x_shift_norm'] = df_piv['x_shift [mm]']/D_in
-    # df_piv['y_shift_norm'] = df_piv['y_shift [mm]']/D_in
-    
-    # df_piv['x_shift [m]'] = df_piv['x_shift [mm]']*1e-3
-    # df_piv['y_shift [m]'] = df_piv['y_shift [mm]']*1e-3
-    
-    # Get the column headers
-    headers = df_piv.columns
-    
-    bottom_limit = -100
-    top_limit = 100
-    left_limit = -100
-    right_limit = 100
-    index_name = 'y_shift_norm'
-    column_name = 'x_shift_norm'
-    df_piv_cropped = df_piv[(df_piv[index_name] > bottom_limit) & (df_piv[index_name] < top_limit) & (df_piv[column_name] > left_limit) & (df_piv[column_name] < right_limit)]
-    
-    pivot_u_r = pd.pivot_table(df_piv_cropped, values=headers[u_r_col_index], index=index_name, columns=column_name)
-    pivot_u_x = pd.pivot_table(df_piv_cropped, values=headers[u_x_col_index], index=index_name, columns=column_name)
-    pivot_V_abs = pd.pivot_table(df_piv_cropped, values=headers[V_abs_col_index], index=index_name, columns=column_name)
-    
-    # Create x-y meshgrid
-    r_norm_array = pivot_u_r.columns
-    x_norm_array = pivot_u_r.index
-    r_norm, x_norm = np.meshgrid(r_norm_array, x_norm_array)
-    # r_norm_values = r_norm.flatten()
-    # x_norm_values = x_norm.flatten()
-    
-    # Construct file path
-    raw_dir = os.path.join(data_dir,  f'session_{flame.session_nr:03d}', flame.record_name, 'Correction', 'Frame0', 'Export')
-    raw_file = os.path.join(raw_dir, f'B{image_nr:04d}.csv')
-
-    df_raw = pd.read_csv(raw_file)
-    
-    df_raw = process_df(df_raw, D_in, offset_to_wall_center, offset)
-    
-    # df_raw['x_shift [mm]'] = df_raw['x [mm]'] - (D_in/2 - offset_to_wall_center)
-    # df_raw['y_shift [mm]'] = df_raw['y [mm]'] + offset
-    
-    # df_raw['x_shift_norm'] = df_raw['x_shift [mm]']/D_in
-    # df_raw['y_shift_norm'] = df_raw['y_shift [mm]']/D_in
-    
-    # df_raw['x_shift [m]'] = df_raw['x_shift [mm]']*1e-3
-    # df_raw['y_shift [m]'] = df_raw['y_shift [mm]']*1e-3
-
-    headers_raw = df_raw.columns
-    
-    df_raw_filtered = df_raw[(df_raw[index_name] > bottom_limit) & (df_raw[index_name] < top_limit) & (df_raw[column_name] > left_limit) & (df_raw[column_name] < right_limit)]
-    
-    # Read intensity
-    pivot_intensity = pd.pivot_table(df_raw_filtered, values=headers_raw[2], index=index_name, columns=column_name)
-    r_raw_array = pivot_intensity.columns
-    x_raw_array = pivot_intensity.index
-    r_raw, x_raw = np.meshgrid(r_raw_array, x_raw_array)
-    n_windows_r_raw, n_windows_x_raw = len(r_raw_array), len(x_raw_array)
-    window_size_r_raw, window_size_x_raw = np.mean(np.diff(r_raw_array)), -np.mean(np.diff(x_raw_array))
-    
-    r_left_raw = r_raw_array[0]
-    r_right_raw = r_raw_array[-1]
-    x_bottom_raw = x_raw_array[0]
-    x_top_raw = x_raw_array[-1]
-    
-    contour_nr = image_nr - 1
-    contour_corrected = contour_correction(flame, contour_nr, r_left_raw, r_right_raw, x_bottom_raw, x_top_raw, window_size_r_raw, window_size_x_raw, frame_nr=0)
-    
-    contour_x, contour_y =  contour_corrected[:,0,0], contour_corrected[:,0,1]
-    
+    # Vector settings for quiver plot
     vector_scale = 20
     vector_width = 0.005
     vector_skip = 2
     box_size = .7
     
+    # Zoom settings
+    # Toggle zoom
     toggle_zoom = True
     
+    # Set zoom settings
     if flame.Re_D == 3000:
         
         # Re_D = 3000
@@ -810,36 +738,137 @@ def plot_cartoons(flame, fig, ax, image_nr, recording, piv_method):
     x_right_zoom = x_left_zoom + box_size
     y_top_zoom = y_bottom_zoom + box_size
     
-    # fig1, ax1 = plt.subplots()
+    fig1, ax1 = plt.subplots()
     
-    # ax = ax1
-    fontsize = 20
+    fig2, ax2 = plt.subplots()
     
-    flow_field = ax.pcolor(r_norm, x_norm, pivot_V_abs.values/u_bulk_measured, cmap=colormap)
+    colors = ['r', 'c']
     
-    flow_field.set_clim(clims[0], clims[1])
-    cbar = ax.figure.colorbar(flow_field)
-    cbar.set_label(cbar_titles[1], rotation=0, labelpad=25, fontsize=28) 
-    cbar.ax.tick_params(labelsize=fontsize)
+    for color, image_nr in zip(colors, image_nrs):
+        
+        # PIV directory
+        piv_dir = os.path.join(data_dir,  f'session_{flame.session_nr:03d}', recording, piv_method, 'Export')
+        piv_file = os.path.join(piv_dir, f'B{image_nr:04d}.csv')
+        
+        # Read the PIV file and add coordinate system translation
+        df_piv = pd.read_csv(piv_file)
+        df_piv = process_df(df_piv, D_in, offset_to_wall_center, offset)
+        
+        # Get the column headers of the PIV file
+        headers = df_piv.columns
+        
+        # Non-dimensional limits in r- (left, right) and x-direction (bottom, top)
+        bottom_limit = -100
+        top_limit = 100
+        left_limit = -100
+        right_limit = 100
+        index_name = 'y_shift_norm'
+        column_name = 'x_shift_norm'
+        
+        # Cropped PIV dataframe based on Non-dimensional limits in r- (left, right) and x-direction (bottom, top)
+        df_piv_cropped = df_piv[(df_piv[index_name] > bottom_limit) & (df_piv[index_name] < top_limit) & (df_piv[column_name] > left_limit) & (df_piv[column_name] < right_limit)]
+        
+        # Obtain velocity fields
+        pivot_u_r = pd.pivot_table(df_piv_cropped, values=headers[u_r_col_index], index=index_name, columns=column_name)
+        pivot_u_x = pd.pivot_table(df_piv_cropped, values=headers[u_x_col_index], index=index_name, columns=column_name)
+        pivot_V_abs = pd.pivot_table(df_piv_cropped, values=headers[V_abs_col_index], index=index_name, columns=column_name)
+        
+        # Create r,x PIV grid
+        r_norm_array = pivot_u_r.columns
+        x_norm_array = pivot_u_r.index
+        r_norm, x_norm = np.meshgrid(r_norm_array, x_norm_array)
     
-    skip = vector_skip
-    ax.quiver(r_norm[::skip], x_norm[::skip], pivot_u_r[::skip]/u_bulk_measured, pivot_u_x[::skip]/u_bulk_measured, angles='xy', scale_units='xy', scale=vector_scale, width=vector_width, color='k')
+        # Raw Mie-scattering directory
+        raw_dir = os.path.join(data_dir,  f'session_{flame.session_nr:03d}', flame.record_name, 'Correction', 'Frame0', 'Export')
+        raw_file = os.path.join(raw_dir, f'B{image_nr:04d}.csv')
+        
+        # Read the raw Mie-scattering image and add coordinate system translation
+        df_raw = pd.read_csv(raw_file)
+        df_raw = process_df(df_raw, D_in, offset_to_wall_center, offset)
+        
+        # Get the column headers of the raw Mie-scattering image file
+        headers_raw = df_raw.columns
+        
+        # Cropped raw Mie-scattering image based on Non-dimensional limits in r- (left, right) and x-direction (bottom, top)
+        df_raw_filtered = df_raw[(df_raw[index_name] > bottom_limit) & (df_raw[index_name] < top_limit) & (df_raw[column_name] > left_limit) & (df_raw[column_name] < right_limit)]
+        
+        # Obtain intensity field
+        pivot_intensity = pd.pivot_table(df_raw_filtered, values=headers_raw[2], index=index_name, columns=column_name)
+        
+        # Create r,x raw Mie scattering grid
+        r_raw_array = pivot_intensity.columns
+        x_raw_array = pivot_intensity.index
+        r_raw, x_raw = np.meshgrid(r_raw_array, x_raw_array)
+        n_windows_r_raw, n_windows_x_raw = len(r_raw_array), len(x_raw_array)
+        window_size_r_raw, window_size_x_raw = np.mean(np.diff(r_raw_array)), -np.mean(np.diff(x_raw_array))
+        
+        # Parameters for correcting contours from pixel coordinates to physical coordinates
+        r_left_raw = r_raw_array[0]
+        r_right_raw = r_raw_array[-1]
+        x_bottom_raw = x_raw_array[0]
+        x_top_raw = x_raw_array[-1]
+        
+        # Contour correction (raw -> world)
+        contour_nr = image_nr - 1
+        contour_corrected = contour_correction(flame, contour_nr, r_left_raw, r_right_raw, x_bottom_raw, x_top_raw, window_size_r_raw, window_size_x_raw, frame_nr=0)
+        contour_x, contour_y =  contour_corrected[:,0,0], contour_corrected[:,0,1]
+        
+        if image_nr == image_nrs[0]:
+            
+            # Figure 1: Plot velocity contour
+            flow_field = ax1.pcolor(r_norm, x_norm, pivot_V_abs.values/u_bulk_measured, cmap=colormap)
+            
+            flow_field.set_clim(clims[0], clims[1])
+            cbar = ax1.figure.colorbar(flow_field)
+            cbar.set_label(cbar_titles[1], rotation=0, labelpad=25, fontsize=28) 
+            cbar.ax.tick_params(labelsize=fontsize)
+            
+            # Figure 1: Plot velocity vectors
+            skip = vector_skip
+            ax1.quiver(r_norm[::skip], x_norm[::skip], pivot_u_r[::skip]/u_bulk_measured, pivot_u_x[::skip]/u_bulk_measured, angles='xy', scale_units='xy', scale=vector_scale, width=vector_width, color='k')
     
-    ax.set_xlabel(r'$r/D$', fontsize=fontsize)
-    ax.set_ylabel(r'$x/D$', fontsize=fontsize)
+            
+            # Figure 2: Plot raw Mie-scattering image
+            pivot_intensity_values = pivot_intensity.values
+            raw_field = ax2.pcolor(r_raw, x_raw, pivot_intensity_values, cmap='gray', 
+                                   vmin=np.min(pivot_intensity_values.flatten())/brighten_factor, 
+                                   vmax=np.max(pivot_intensity_values.flatten())/brighten_factor
+                                   )
+            
+            # raw_field.set_clim(1.25, 3)
+            
+            # cbar = ax2.figure.colorbar(raw_field)
+            # cbar.set_label(r'$I_p$', rotation=0, labelpad=15, fontsize=20)
+            
+        # Figure 1: Plot flame front contour
+        ax1.plot(contour_x, contour_y, color=color, ls='solid', lw=2)
+        
+        # Figure 2: Plot flame front contour
+        ax2.plot(contour_x, contour_y, color=color, ls='solid', lw=2)
+        
+    # Set labels for both figures
+    ax1.set_xlabel(r'$r/D$', fontsize=fontsize)
+    ax1.set_ylabel(r'$x/D$', fontsize=fontsize)
+    ax1.tick_params(axis='both', labelsize=fontsize)
+    ax1.set_aspect('equal')
     
-    ax.tick_params(axis='both', labelsize=fontsize)
-    ax.set_aspect('equal')
+    ax2.set_xlabel(r'$r/D$', fontsize=fontsize)
+    ax2.set_ylabel(r'$x/D$', fontsize=fontsize)
+    ax2.tick_params(axis='both', labelsize=fontsize)
+    ax2.set_aspect('equal')
+        
+    if toggle_zoom:
+        
+        ax1.set_xlim(x_left_zoom, x_right_zoom)
+        ax1.set_ylim(y_bottom_zoom, y_top_zoom)
+        ax2.set_xlim(x_left_zoom, x_right_zoom)
+        ax2.set_ylim(y_bottom_zoom, y_top_zoom)
     
     custom_x_tick_labels =  [f'{tick:.1f}' for tick in custom_x_ticks] # Replace with your desired tick labels
-    ax.set_xticks(custom_x_ticks)
-    ax.set_xticklabels(custom_x_tick_labels)  # Use this line to set custom tick labels
     
     y_tick_step = .2
     custom_y_ticks = np.linspace(y_bottom_zoom, y_top_zoom, 1 + int((y_top_zoom - y_bottom_zoom)/y_tick_step)) # Replace with your desired tick positions
     custom_y_tick_labels =  [f'{tick:.1f}' for tick in custom_y_ticks] # Replace with your desired tick labels
-    ax.set_yticks(custom_y_ticks)
-    ax.set_yticklabels(custom_y_tick_labels)  # Use this line to set custom tick labels
     
     # Define your custom colorbar tick locations and labels
     num_ticks = 5
@@ -848,45 +877,16 @@ def plot_cartoons(flame, fig, ax, image_nr, recording, piv_method):
     cbar.set_ticks(custom_cbar_ticks)
     cbar.set_ticklabels(custom_cbar_tick_labels)
     
-    # plot flame front contour
-    ax.plot(contour_x, contour_y, color='r', ls='solid')
-    ax.set_aspect('equal')
-    
-    fig2, ax2 = plt.subplots()
-    
-    # brighten_factor = 16
-    z = pivot_intensity.values
-    raw_field = ax2.pcolor(r_raw, x_raw, z, cmap='gray', vmin=np.min(z.flatten())/brighten_factor, vmax=np.max(z.flatten())/brighten_factor)
-    # raw_field.set_clim(1.25, 3)
-    
-    # cbar = ax2.figure.colorbar(raw_field)
-    # cbar.set_label(r'$I_p$', rotation=0, labelpad=15, fontsize=20)
-    fontsize = 20
-    ax2.set_xlabel(r'$r/D$', fontsize=fontsize)
-    ax2.set_ylabel(r'$x/D$', fontsize=fontsize)
-    
-    ax2.tick_params(axis='both', labelsize=fontsize)
-    ax2.tick_params(axis='both', labelsize=fontsize)
-    
-    ax2.set_aspect('equal')
-    
-    # plot flame front contour
-    ax2.plot(contour_x, contour_y, color='r', ls='solid')
-    
-    if toggle_zoom:
-        
-        ax.set_xlim(x_left_zoom, x_right_zoom)
-        ax.set_ylim(y_bottom_zoom, y_top_zoom)
-        ax2.set_xlim(x_left_zoom, x_right_zoom)
-        ax2.set_ylim(y_bottom_zoom, y_top_zoom)
-        
-    
+    ax1.set_xticks(custom_x_ticks)
+    ax1.set_xticklabels(custom_x_tick_labels)  # Use this line to set custom tick labels
+    ax1.set_yticks(custom_y_ticks)
+    ax1.set_yticklabels(custom_y_tick_labels)  # Use this line to set custom tick labels
+
     ax2.set_xticks(custom_x_ticks)
     ax2.set_xticklabels(custom_x_tick_labels)  # Use this line to set custom tick labels
-    
     ax2.set_yticks(custom_y_ticks)
     ax2.set_yticklabels(custom_y_tick_labels)  # Use this line to set custom tick labels
-    
+        
     # fig1.tight_layout()
     # fig1.savefig(f"figures/H{flame.H2_percentage}_Re{flame.Re_D}_B{image_nr}_V.eps", format="eps", dpi=300, bbox_inches="tight")
     
@@ -957,7 +957,7 @@ def process_df(df, D_in, offset_to_wall_center, offset):
 
     return df
 
-#%% START OF CODE
+#%% MAIN
 # Before executing code, Python interpreter reads source file and define few special variables/global variables. 
 # If the python interpreter is running that module (the source file) as the main program, it sets the special __name__ variable to have a value “__main__”. If this file is being imported from another module, __name__ will be set to the module’s name. Module’s name is available as value to __name__ global variable. 
 if __name__ == '__main__':
@@ -976,7 +976,7 @@ if __name__ == '__main__':
     ms5 = 10
     ms6 = 8
     
-    #%% Define cases
+    #%%% Define cases
     react_names_ls =    [
                         # ('react_h0_c3000_ls_record1', 57),
                         # ('react_h0_s4000_ls_record1', 58),
@@ -987,9 +987,9 @@ if __name__ == '__main__':
     
     react_names_hs =    [
                         # ('react_h0_f2700_hs_record1', 57),
-                        ('react_h0_c3000_hs_record1', 57),
+                        # ('react_h0_c3000_hs_record1', 57),
                         # ('react_h0_s4000_hs_record1', 58),
-                        # ('react_h100_c12500_hs_record1', 61),
+                        ('react_h100_c12500_hs_record1', 61),
                         # ('react_h100_s16000_hs_record1', 62)
                         ]
     
@@ -1053,7 +1053,7 @@ if __name__ == '__main__':
         cone_left_line = np.column_stack((r_range_left, poly_left_fit))
         cone_right_line = np.column_stack((r_range_right, poly_right_fit))
        
-    #%% PIV file column indices
+    #%%% PIV file column indices
     u_r_col_index = 2
     u_x_col_index = 3
     V_abs_col_index = 4
@@ -1084,14 +1084,13 @@ if __name__ == '__main__':
                     r'$\frac{k}{U_{b}^2}$', # \overline{v\'v\'
                     ]
     
-    #%% Calibration details
+    #%%% Calibration details
     D_in = flame.D_in # Inner diameter of the quartz tube, units: mm
     offset = 1  # Distance from calibrated y=0 to tube burner rim
     
     wall_center_to_origin = 2
     wall_thickness = 1.5
     offset_to_wall_center = wall_center_to_origin - wall_thickness/2
-    
     
     #%% Start of cases loop
     for key, values in react_dict.items():
@@ -1104,17 +1103,13 @@ if __name__ == '__main__':
             
             axs.append(ax)
             
-        
-        #%%% Lists where index:0 (reactive) and index:1 (non-reacive)
-        # Non-reactive: index 1
+        #%%% Initiate lists where index:0 (reactive) and index:1 (non-reacive)
         
         cbar_max = values[7]
         nonreact_run_nr = values[8]
         
         values_list = [values]
-        
         values = non_react_dict[nonreact_run_nr]
-        
         values_list.append(values)
         
         headers_list = []
@@ -1148,18 +1143,18 @@ if __name__ == '__main__':
             
             print(name)
             
-            Avg_Stdev_file = os.path.join(data_dir, f'session_{session_nr:03d}', recording, piv_method, 'Avg_Stdev', 'Export', 'B0001.csv')
-            
+            #%%%% Plot a cartoon
             if ii == 0:
                 
                 # image_nrs = [3167, 3169, 3171, 3173, 3175,  3177]
                 # image_nrs = [2306, 2308, 2310, 2312, 2314, 2316] #[4624] #2314 #[4496]
                 # image_nrs = [1737, 1738] #[4624] #2314 #[4496]
-                image_nrs = [2297, 2299] #[4624] #2314 #[4496]
+                 #[4624] #2314 #[4496]
                 
-                fig_i, ax_i = plt.subplots()
-                for image_nr in image_nrs:
-                    plot_cartoons(flame, fig_i, ax_i, image_nr, recording, piv_method)
+                # image_nrs = [2297, 2298]
+                image_nrs = [3172, 3174]
+                
+                plot_cartoons(flame, image_nrs, recording, piv_method)
                 
                 # fig, axs = plt.subplots(3, 2, figsize=(10, 15))
                 
@@ -1183,33 +1178,42 @@ if __name__ == '__main__':
                 # filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_sequence2'
                 # png_path = os.path.join('figures', f"{filename}.png")
                 # fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
-                        
-            df_piv = pd.read_csv(Avg_Stdev_file)
             
+            #%%%% Read the averaged PIV file and add coordinate system translation
+            # PIV directory
+            Avg_Stdev_file = os.path.join(data_dir, f'session_{session_nr:03d}', recording, piv_method, 'Avg_Stdev', 'Export', 'B0001.csv')
+            
+            # Read the averaged PIV file and add coordinate system translation
+            df_piv = pd.read_csv(Avg_Stdev_file)
             df_piv = process_df(df_piv, D_in, offset_to_wall_center, offset)
             
-            # Get the column headers
+            # Get the column headers of the PIV file
             headers = df_piv.columns
             
+            # Non-dimensional limits in r- (left, right) and x-direction (bottom, top)
             bottom_limit = -.5
             top_limit = 2.25
             left_limit = -0.575
             right_limit = 0.575
             index_name = 'y_shift_norm'
             column_name = 'x_shift_norm'
+            
+            # Cropped PIV dataframe based on Non-dimensional limits in r- (left, right) and x-direction (bottom, top)
             df_piv_cropped = df_piv[(df_piv[index_name] > bottom_limit) & (df_piv[index_name] < top_limit) & (df_piv[column_name] > left_limit) & (df_piv[column_name] < right_limit)]
             
+            # Obtain velocity fields
             pivot_u_r = pd.pivot_table(df_piv_cropped, values=headers[u_r_col_index], index=index_name, columns=column_name)
             pivot_u_x = pd.pivot_table(df_piv_cropped, values=headers[u_x_col_index], index=index_name, columns=column_name)
             pivot_V_abs = pd.pivot_table(df_piv_cropped, values=headers[V_abs_col_index], index=index_name, columns=column_name)
             
-            # Create x-y meshgrid
+            # Create r,x PIV grid
             r_norm_array = pivot_u_r.columns
             x_norm_array = pivot_u_r.index
             r_norm, x_norm = np.meshgrid(r_norm_array, x_norm_array)
             r_norm_values = r_norm.flatten()
             x_norm_values = x_norm.flatten()
             
+            # Obtain dimensionless velocity fields
             pivot_u_r_norm = pivot_u_r/u_bulk_measured
             pivot_u_x_norm = pivot_u_x/u_bulk_measured
             pivot_V_abs_norm = pivot_V_abs/u_bulk_measured
@@ -1221,7 +1225,7 @@ if __name__ == '__main__':
             pivot_u_x_norm_values = pivot_u_x_norm.values.flatten()
             pivot_V_abs_norm_values = pivot_V_abs_norm.values.flatten()
             
-            # Create a uniform grid
+            # Create a uniform r,x PIV grid
             r_uniform = np.linspace(r_norm_values.min(), r_norm_values.max(), len(r_norm_array))
             x_uniform = np.linspace(x_norm_values.min(), x_norm_values.max(), len(x_norm_array))
             r_uniform, x_uniform = np.meshgrid(r_uniform, x_uniform)
@@ -1230,6 +1234,7 @@ if __name__ == '__main__':
             u_r_uniform = griddata((r_norm_values, x_norm_values), pivot_u_r_norm_values, (r_uniform, x_uniform), method='linear')
             u_x_uniform = griddata((r_norm_values, x_norm_values), pivot_u_x_norm_values, (r_uniform, x_uniform), method='linear')
             
+            # Append to important variables to list (0: reacting, 1: non-reacting)
             headers_list.append(headers)
             df_piv_cropped_list.append(df_piv_cropped)
             df_piv_list.append(df_piv)
@@ -1253,7 +1258,7 @@ if __name__ == '__main__':
             u_r_uniform_list.append(u_r_uniform)
             u_x_uniform_list.append(u_x_uniform)
         
-   
+        #%%% Start of plots
         for i, col_index in enumerate(col_indices):
             
             ax = axs[i]
@@ -1279,7 +1284,7 @@ if __name__ == '__main__':
                 
             if i == 0:
                 
-                normalize_value = u_bulk_measured_list[0]
+                nondim_value = u_bulk_measured_list[0]
                 
                 # Define radial locations
                 r_norm_lines = [.0,]
@@ -1290,16 +1295,14 @@ if __name__ == '__main__':
                 # Define vline stepsize
                 vline_step = 0.05
                 
-                #%%%% Streamlines
-                r_start_right = 0.05
-                r_step = 0.05
-                # r_starts = np.arange(-r_start_right, r_start_right + r_step, r_step)
-                r_starts = [.1, .2, .3]
-                # r_starts = [.2,]
-                
+                #%%%% Plot streamlines
+                # Steamline starting locations
+                r_starts = [.2,]
+                # r_starts = [.1, .2, .3]
                 x_starts = np.linspace(0.2, 0.2, len(r_starts))
                 start_points = [(r_starts[i], x_starts[i]) for i in range(len(r_starts))]
                 
+                # Initialize figures
                 width, height = 6, 6
                 
                 fig, ax6 = plt.subplots()
@@ -1411,20 +1414,20 @@ if __name__ == '__main__':
                 
             elif i == 1:
                 
-                normalize_value = u_bulk_measured_list[0]
+                nondim_value = u_bulk_measured_list[0]
 
             else:
                 
-                normalize_value = u_bulk_measured_list[0]**2
+                nondim_value = u_bulk_measured_list[0]**2
             
             # fig9.tight_layout()
             
-            # Mean absolute velocity
-            flow_field = ax.pcolor(r_norm_list[0], x_norm_list[0], pivot_var_list[0].values/normalize_value, cmap=colormap)
+            #%%%% Plot average 'X' field
+            flow_field = ax.pcolor(r_norm_list[0], x_norm_list[0], pivot_var_list[0].values/nondim_value, cmap=colormap)
             
             ax._X_data = r_norm_list[0]
             ax._Y_data = x_norm_list[0]
-            ax._Z_data = pivot_var_list[0].values/normalize_value
+            ax._Z_data = pivot_var_list[0].values/nondim_value
             ax._cmap = colormap
             ax._clim = [0, cbar_max[i]]
             
@@ -1444,24 +1447,29 @@ if __name__ == '__main__':
             
             if i == 5:
                 
+                # Raw Mie-scattering directory
                 image_nr = 1
                 raw_dir = os.path.join(data_dir,  f'session_{flame.session_nr:03d}', flame.record_name, 'Correction', 'Resize', 'Frame0', 'Export')
                 raw_file = os.path.join(raw_dir, f'B{image_nr:04d}.csv')
-
-                df_raw = pd.read_csv(raw_file)
                 
+                # Read the raw Mie-scattering image and add coordinate system translation
+                df_raw = pd.read_csv(raw_file)
                 df_raw = process_df(df_raw, D_in, offset_to_wall_center, offset)
-
+                
+                # Get the column headers of the raw Mie-scattering image file
                 headers_raw = df_raw.columns
                 
-                # Read intensity
+                # Obtain intensity field
                 pivot_intensity = pd.pivot_table(df_raw, values=headers_raw[2], index=index_name, columns=column_name)
+                
+                # Create r,x raw Mie scattering grid
                 r_raw_array = pivot_intensity.columns
                 x_raw_array = pivot_intensity.index
                 r_raw, x_raw = np.meshgrid(r_raw_array, x_raw_array)
                 n_windows_r_raw, n_windows_x_raw = len(r_raw_array), len(x_raw_array)
                 window_size_r_raw, window_size_x_raw = np.mean(np.diff(r_raw_array)), -np.mean(np.diff(x_raw_array))
                 
+                # Parameters for correcting contours from pixel coordinates to physical coordinates
                 r_left_raw = r_raw_array[0]
                 r_right_raw = r_raw_array[-1]
                 x_bottom_raw = x_raw_array[0]
@@ -1520,74 +1528,74 @@ if __name__ == '__main__':
             ax.tick_params(axis='both', labelsize=fontsize)
             ax.tick_params(axis='both', labelsize=fontsize)
             
-            if i == 1:
+            # if i == 1:
                 
-                # Determine shared colorbar limits
-                vmin = 0 
-                vmax = 2
-                # vmax= 1.25
+            #     # Determine shared colorbar limits
+            #     vmin = 0 
+            #     vmax = 2
+            #     # vmax= 1.25
                 
-                # Create a figure and a 3D axis
-                fig0 = plt.figure()
+            #     # Create a figure and a 3D axis
+            #     fig0 = plt.figure()
     
-                # =============
-                # set up the axes for the first plot
-                z_bottom = 0.
-                z = pivot_var_list[1].values/u_bulk_measured_list[1]
-                z[z < z_bottom] = np.nan
+            #     # =============
+            #     # set up the axes for the first plot
+            #     z_bottom = 0.
+            #     z = pivot_var_list[1].values/u_bulk_measured_list[1]
+            #     z[z < z_bottom] = np.nan
                 
-                ax = fig0.add_subplot(1, 1, 1, projection='3d')
-                surf = ax.plot_surface(r_norm_list[1], x_norm_list[1], z, cmap=colormap, vmin=vmin, vmax=vmax, edgecolors='k', lw=0.1)
+            #     ax = fig0.add_subplot(1, 1, 1, projection='3d')
+            #     surf = ax.plot_surface(r_norm_list[1], x_norm_list[1], z, cmap=colormap, vmin=vmin, vmax=vmax, edgecolors='k', lw=0.1)
                 
-                # Adjust the limits, add labels, title, etc.
-                ax.set_xlabel(r'$r/D$', labelpad=5)
-                ax.set_ylabel(r'$x/D$', labelpad=5)
-                # ax.set_zlabel('Z Label')
-                ax.set_title('Non-reactive flow')
-                ax.set_aspect('equal')
-                ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))  # x-axis
-                ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))  # y-axis
-                ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))  # z-axis
-                ax.set_zlim(z_bottom, vmax)
-                cbar = fig0.colorbar(surf, pad=0.01)
-                cbar.set_label(cbar_titles[i], rotation=0, labelpad=15, fontsize=14)
-                ax.set_xticks([-.5, 0., .5])
-                ax.set_yticks([0, 1, 2])
-                ax.set_zticks([])
-                fig0.tight_layout()
+            #     # Adjust the limits, add labels, title, etc.
+            #     ax.set_xlabel(r'$r/D$', labelpad=5)
+            #     ax.set_ylabel(r'$x/D$', labelpad=5)
+            #     # ax.set_zlabel('Z Label')
+            #     ax.set_title('Non-reactive flow')
+            #     ax.set_aspect('equal')
+            #     ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))  # x-axis
+            #     ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))  # y-axis
+            #     ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))  # z-axis
+            #     ax.set_zlim(z_bottom, vmax)
+            #     cbar = fig0.colorbar(surf, pad=0.01)
+            #     cbar.set_label(cbar_titles[i], rotation=0, labelpad=15, fontsize=14)
+            #     ax.set_xticks([-.5, 0., .5])
+            #     ax.set_yticks([0, 1, 2])
+            #     ax.set_zticks([])
+            #     fig0.tight_layout()
                 
-                # Create a figure and a 3D axis
-                fig1 = plt.figure()
-                z = pivot_var_list[0].values/normalize_value
-                z[z < z_bottom] = np.nan
+            #     # Create a figure and a 3D axis
+            #     fig1 = plt.figure()
+            #     z = pivot_var_list[0].values/nondim_value
+            #     z[z < z_bottom] = np.nan
                 
-                z_values = z.flatten()
+            #     z_values = z.flatten()
                 
-                cone_left_line_3d = griddata((r_norm_values, x_norm_values), z_values, cone_left_line, method='linear')
-                cone_right_line_3d = griddata((r_norm_values, x_norm_values), z_values, cone_right_line, method='linear')
+            #     cone_left_line_3d = griddata((r_norm_values, x_norm_values), z_values, cone_left_line, method='linear')
+            #     cone_right_line_3d = griddata((r_norm_values, x_norm_values), z_values, cone_right_line, method='linear')
                 
-                ax = fig1.add_subplot(1, 1, 1, projection='3d')
-                ax.plot(cone_left_line[:,0], cone_left_line[:,1], cone_left_line_3d, c='k', ls='dashed', zorder=10)
-                ax.plot(cone_right_line[:,0], cone_right_line[:,1], cone_right_line_3d, c='k', ls='dashed', zorder=10)
+            #     ax = fig1.add_subplot(1, 1, 1, projection='3d')
+            #     ax.plot(cone_left_line[:,0], cone_left_line[:,1], cone_left_line_3d, c='k', ls='dashed', zorder=10)
+            #     ax.plot(cone_right_line[:,0], cone_right_line[:,1], cone_right_line_3d, c='k', ls='dashed', zorder=10)
                 
-                surf = ax.plot_surface(r_norm_list[0], x_norm_list[0], z, cmap=colormap, vmin=vmin, vmax=vmax, edgecolors='k', lw=0.1, zorder=-1)
+            #     surf = ax.plot_surface(r_norm_list[0], x_norm_list[0], z, cmap=colormap, vmin=vmin, vmax=vmax, edgecolors='k', lw=0.1, zorder=-1)
                 
-                # Adjust the limits, add labels, title, etc.
-                ax.set_xlabel(r'$r/D$', labelpad=5)
-                ax.set_ylabel(r'$x/D$', labelpad=5)
-                # ax.set_zlabel(cbar_titles[i])
-                ax.set_title('Reactive flow')
-                ax.set_aspect('equal')
-                ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))  # x-axis
-                ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))  # y-axis
-                ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))  # z-axis
-                ax.set_zlim(z_bottom, vmax)
-                cbar = fig1.colorbar(surf, pad=0.01)
-                cbar.set_label(cbar_titles[i], rotation=0, labelpad=15, fontsize=14)
-                ax.set_xticks([-.5, 0., .5])
-                ax.set_yticks([0, 1, 2])
-                ax.set_zticks([])
-                fig1.tight_layout()
+            #     # Adjust the limits, add labels, title, etc.
+            #     ax.set_xlabel(r'$r/D$', labelpad=5)
+            #     ax.set_ylabel(r'$x/D$', labelpad=5)
+            #     # ax.set_zlabel(cbar_titles[i])
+            #     ax.set_title('Reactive flow')
+            #     ax.set_aspect('equal')
+            #     ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))  # x-axis
+            #     ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))  # y-axis
+            #     ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))  # z-axis
+            #     ax.set_zlim(z_bottom, vmax)
+            #     cbar = fig1.colorbar(surf, pad=0.01)
+            #     cbar.set_label(cbar_titles[i], rotation=0, labelpad=15, fontsize=14)
+            #     ax.set_xticks([-.5, 0., .5])
+            #     ax.set_yticks([0, 1, 2])
+            #     ax.set_zticks([])
+            #     fig1.tight_layout()
 
     # print(f'The cone angle: {alpha}')
 
