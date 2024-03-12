@@ -724,16 +724,28 @@ if __name__ == '__main__':
     
     df_favre_avg = df_favre_avg[(df_favre_avg[index_name] > bottom_limit) & (df_favre_avg[index_name] < top_limit) & (df_favre_avg[column_name] > left_limit) & (df_favre_avg[column_name] < right_limit)]
     
-    var = 'rho [kg/m^3]'
-    var = 'v_favre [m/s]'
+    df_favre_avg['Velocity |V| [m/s]'] = np.sqrt(df_favre_avg['Velocity u [m/s]']**2 + df_favre_avg['Velocity v [m/s]']**2)
+    
+    df_favre_avg['|V|_favre [m/s]'] = np.sqrt(df_favre_avg['u_favre [m/s]']**2 + df_favre_avg['v_favre [m/s]']**2)
+    
+    df_favre_avg['u_favre [counts] [m/s]'] = df_favre_avg['Wmean*u [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
+    df_favre_avg['v_favre [counts] [m/s]'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
+    
+    df_favre_avg['|V|_favre [counts] [m/s]'] = np.sqrt(df_favre_avg['u_favre [counts] [m/s]']**2 + df_favre_avg['v_favre [counts] [m/s]']**2)
+    
+    # var = 'rho [kg/m^3]'
+    # var = 'v_favre [m/s]'
     # var = '0.5*(R_uu + R_vv) [m^2/s^2]'
     # var = 'Velocity v [m/s]'
+    # var = 'test'
+    
+    # var = 'Velocity |V| [m/s]'
+    # var = '|V|_favre [m/s]'
+    var = '|V|_favre [counts] [m/s]'
+    
     # var = 'Wmean [counts]'
     # var_counts = 'Wmean [counts]'
     var_counts_norm = 'Wmean_norm [counts]'
-    
-    # df_favre_avg['test'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
-    # var = 'test'
     
     pivot_var = pd.pivot_table(df_favre_avg, values=var, index=index_name, columns=column_name)
 
@@ -747,7 +759,7 @@ if __name__ == '__main__':
     fig, ax = plt.subplots()
     ax.set_title(var)
     colormap = parula
-    flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values/(u_bulk_measured**1), cmap=colormap)
+    flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values/(u_bulk_measured**1), cmap=colormap, vmin=0, vmax=1.6)
     cbar = ax.figure.colorbar(flow_field)
     
     # Overlay scatter plots for X and Y values
