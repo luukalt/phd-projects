@@ -987,9 +987,9 @@ if __name__ == '__main__':
     
     react_names_hs =    [
                         # ('react_h0_f2700_hs_record1', 57),
-                        ('react_h0_c3000_hs_record1', 57),
+                        # ('react_h0_c3000_hs_record1', 57),
                         # ('react_h0_s4000_hs_record1', 58),
-                        # ('react_h100_c12500_hs_record1', 61),
+                        ('react_h100_c12500_hs_record1', 61),
                         # ('react_h100_s16000_hs_record1', 62)
                         ]
     
