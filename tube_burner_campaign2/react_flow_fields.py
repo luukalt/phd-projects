@@ -987,9 +987,9 @@ if __name__ == '__main__':
     
     react_names_hs =    [
                         # ('react_h0_f2700_hs_record1', 57),
-                        # ('react_h0_c3000_hs_record1', 57),
+                        ('react_h0_c3000_hs_record1', 57),
                         # ('react_h0_s4000_hs_record1', 58),
-                        ('react_h100_c12500_hs_record1', 61),
+                        # ('react_h100_c12500_hs_record1', 61),
                         # ('react_h100_s16000_hs_record1', 62)
                         ]
     
@@ -1151,8 +1151,8 @@ if __name__ == '__main__':
                 # image_nrs = [1737, 1738] #[4624] #2314 #[4496]
                  #[4624] #2314 #[4496]
                 
-                # image_nrs = [2297, 2298]
-                image_nrs = [3172, 3174]
+                image_nrs = [2297, 2298]
+                # image_nrs = [3173, 3174]
                 
                 plot_cartoons(flame, image_nrs, recording, piv_method)
                 

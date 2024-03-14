@@ -9,14 +9,31 @@ Algoritmes to detect the flame front of confinded and unconfined flames from raw
 
 #%% IMPORT PACKAGES
 import os
+import sys
+
+# Add the 'main' folder to sys.path
+parent_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+# flame_front_detection_directory = os.path.abspath(os.path.join(parent_folder, 'flame_front_detection'))
+# flame_simulations_directory = os.path.abspath(os.path.join(parent_folder, 'flame_simulations'))
+plot_parameters_directory = os.path.abspath(os.path.join(parent_folder, 'plot_parameters'))
+
+# Add the flame_object_directory to sys.path
+sys.path.append(parent_folder)
+# sys.path.append(flame_front_detection_directory)
+# sys.path.append(flame_simulations_directory)
+sys.path.append(plot_parameters_directory)
+
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.signal import find_peaks, peak_prominences
 from scipy import stats
-import imutils, pickle
+import imutils
+import pickle
 
-plt.rcParams['text.usetex'] = False
+figures_folder = 'figures'
+if not os.path.exists(figures_folder):
+        os.makedirs(figures_folder)
 
 #%% GET CONTOUR DATA
 def get_contour_data(procedure_nr, window_size, pre_data_path, post_data_path, image_nr, extension, toggle_plot, save_image):
@@ -129,14 +146,14 @@ def get_contour_procedure_bilateral_filter_method(window_size, pre_data_path, po
     contour, contour_length_pixels = find_and_draw_flame_contours(img_binary)
     
     #%% [7]Turn plots on or off
-    brighten_factor = 4
+    brighten_factor = 8
     
     toggle_plot = True
     
     if toggle_plot:
         
-        fig, axs = plt.subplots(1, 3, figsize=(10, 6))
-        
+        fig, axs = plt.subplots(1, 3,) # figsize=(10, 6))
+        plt.subplots_adjust(wspace=-.3)
         plot_images(axs, img_raw, img_bilateral, brighten_factor, contour, color)
         
         fig.tight_layout()
@@ -214,7 +231,7 @@ def get_contour_procedure_bilateral_filter_method2(window_size, pre_data_path, p
         fig.tight_layout()
         filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_detection_B{image_nr}'
         eps_path = os.path.join('figures', f"{filename}.eps")
-        fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+        # fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
         
         toggle_contour = False
         # title = 'raw image (\#' + str(image_nr) + ')'
@@ -318,7 +335,7 @@ def get_thresholding_value(image, toggle_plot):
         text_right = 'R'
         ax.text(trans[0] + 0.05, 0.5, text_right, ha='left', va='center', transform=ax.transAxes, fontsize=20, fontweight='bold')
         
-        ax.legend(loc='best', prop={'size': 18})
+        ax.legend(loc='best', prop={'size': 16})
         
         fig.tight_layout()
         filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_histogram_B{image_nr}'
@@ -424,7 +441,9 @@ def plot_images(axs, image1, image2, brighten_factor, contour, color):
     ax3 = axs[2]
     
     ax1.imshow(image1, cmap="gray", vmin=np.min(image1.flatten())/brighten_factor, vmax=np.max(image1.flatten())/brighten_factor)
-    ax1.set_ylabel('pixels', fontsize=28)
+    ax1.set_ylabel('pixels', fontsize=24)
+    ax1.yaxis.set_label_coords(-.1, .8)  # Adjust the position as needed
+
     toggle_contour = False
     if toggle_contour:
         contour_x = contour[:,:,0]
@@ -435,7 +454,7 @@ def plot_images(axs, image1, image2, brighten_factor, contour, color):
     ax1.set_yticks(custom_y_ticks)
     
     ax2.imshow(image2, cmap="gray", vmin=np.min(image2.flatten())/brighten_factor, vmax=np.max(image2.flatten())/brighten_factor)
-    ax2.set_xlabel('pixels', fontsize=28)
+    ax2.set_xlabel('pixels', fontsize=24)
     toggle_contour = False
     if toggle_contour:
         contour_x = contour[:,:,0]
@@ -506,6 +525,7 @@ def plot_image(title, image, brighten_factor, contour, toggle_contour, color):
 def plot_pixel_density_histogram(image, x_lim_right):
     
     fig, ax = plt.subplots(figsize=(6, 6))
+    # fig, ax = plt.subplots()
     
     ax.grid()
     
@@ -513,18 +533,18 @@ def plot_pixel_density_histogram(image, x_lim_right):
     
     y, x, _ = ax.hist(quantity, bins='auto', density=True, color='lightblue', edgecolor='k') 
     
-    ax.set_xlim(0, .2)
-    # ax.set_ylim(0, 100)
+    ax.set_xlim(0, .1)
+    ax.set_ylim(0, 100)
     
-    # custom_x_ticks = [.0, .02, .04, .06, .08, .1]
-    # custom_x_tick_labels =  [f'{tick:.2f}' for tick in custom_x_ticks] # Replace with your desired tick labels
-    # ax.set_xticks(custom_x_ticks)
-    # ax.set_xticklabels(custom_x_tick_labels)  # Use this line to set custom tick labels
+    custom_x_ticks = [.0, .02, .04, .06, .08, .1]
+    custom_x_tick_labels =  [f'{tick:.2f}' for tick in custom_x_ticks] # Replace with your desired tick labels
+    ax.set_xticks(custom_x_ticks)
+    ax.set_xticklabels(custom_x_tick_labels)  # Use this line to set custom tick labels
     
-    # custom_y_ticks = [0, 25, 50, 75, 100]
-    # ax.set_yticks(custom_y_ticks)
+    custom_y_ticks = [0, 25, 50, 75, 100]
+    ax.set_yticks(custom_y_ticks)
     
-    # ax.tick_params(axis='both', labelsize=16)
+    ax.tick_params(axis='both', labelsize=16)
     
     ax.set_xlabel('$I_{f}$', fontsize=20)
     ax.set_ylabel('pdf', fontsize=20)
@@ -544,12 +564,12 @@ def save_contour_images(path,image_nr, img_raw, brighten_factor, contour, color)
     
     toggle_contour = False
     plot_image('', img_raw, brighten_factor, contour, toggle_contour, color)
-    plt.savefig(filename + '_raw.png', dpi=dpi)
+    # plt.savefig(filename + '_raw.png', dpi=dpi)
     # plt.clf()
     
     toggle_contour = True
     plot_image('', img_raw, brighten_factor, contour, toggle_contour, color)
-    plt.savefig(filename + '.png', dpi=dpi)
+    # plt.savefig(filename + '.png', dpi=dpi)
     # plt.clf()
     
     # Using cv2.imwrite() method
@@ -572,13 +592,33 @@ if __name__ == "__main__":
     cv2.destroyAllWindows()
     plt.close("all")
     
-    # main_dir = "Y:/tube/"
-    main_dir = os.getcwd()
-    main_dir = 'U:\\High hydrogen\\laaltenburg\\data\\tube_burner_campaign2\\selected_runs\\'
+    # data_dir = "Y:/tube/"
+    data_dir = 'U:\\staff-umbrella\\High hydrogen\\laaltenburg\\data\\tube_burner_campaign2\\selected_runs\\'
     
     cwd = os.getcwd()
     
-    spydata_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'spydata')
+    #%%% Define cases
+    react_names_ls =    [
+                        # ('react_h0_c3000_ls_record1', 57),
+                        # ('react_h0_s4000_ls_record1', 58),
+                        # ('react_h100_c12000_ls_record1', 61),
+                        # ('react_h100_c12500_ls_record1', 61),
+                        # ('react_h100_s16000_ls_record1', 62)
+                        ]
+    
+    react_names_hs =    [
+                        # ('react_h0_f2700_hs_record1', 57),
+                        ('react_h0_c3000_hs_record1', 57),
+                        # ('react_h0_s4000_hs_record1', 58),
+                        # ('react_h100_c12500_hs_record1', 61),
+                        # ('react_h100_s16000_hs_record1', 62)
+                        ]
+    
+    if react_names_ls:
+        spydata_dir = os.path.join(parent_folder, 'spydata\\udf')
+    elif react_names_hs:
+        spydata_dir = os.path.join(parent_folder, 'spydata')
+        
     pre_data_folder = "pre_data"
     post_data_folder = "post_data"
     
@@ -627,7 +667,7 @@ if __name__ == "__main__":
     
     react_names_ls =    [
                         # ('react_h0_c3000_ls_record1', 57),
-                        ('react_h0_s4000_ls_record1', 58),
+                        # ('react_h0_s4000_ls_record1', 58),
                         # ('react_h100_c12000_ls_record1', 61),
                         # ('react_h100_c12500_ls_record1', 61),
                         # ('react_h100_s16000_ls_record1', 62)
@@ -636,18 +676,19 @@ if __name__ == "__main__":
     react_names_hs =    [
                         # ('react_h0_f2700_hs_record1', 57),
                         # ('react_h0_c3000_hs_record1', 57),
-                        # ('react_h0_s4000_hs_record1', 58),
+                        ('react_h0_s4000_hs_record1', 58),
                         # ('react_h100_c12500_hs_record1', 61),
                         # ('react_h100_s16000_hs_record1', 62)
                         ]
     
-    # name = react_names_hs[0][0]
-    name = react_names_ls[0][0]
+    react_names = react_names_ls + react_names_hs
     
-    fname = f'{name}_segment_length_{segment_length_mm}mm_wsize_{window_size}pixels'
-
-    with open(os.path.join(spydata_dir, fname + '.pkl'), 'rb') as f:
-        flame = pickle.load(f)
+    for name, nonreact_run_nr in react_names:
+    
+        fname = f'{name}_segment_length_{segment_length_mm}mm_wsize_{window_size}pixels'
+    
+        with open(os.path.join(spydata_dir, fname + '.pkl'), 'rb') as f:
+            flame = pickle.load(f)
         
 # =============================================================================
 # %%%    0: Load flame data
@@ -661,8 +702,8 @@ if __name__ == "__main__":
     # with open(file_pickle, 'rb') as f:
     #     flame = pickle.load(f)
     
-    # pre_data_path = main_dir + sep + pre_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
-    # post_data_path = main_dir + sep + post_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
+    # pre_data_path = data_dir + sep + pre_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
+    # post_data_path = data_dir + sep + post_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
     
     # image_nr = 1
     
@@ -696,19 +737,19 @@ if __name__ == "__main__":
 # =============================================================================
     
     # pre_data_path = os.path.join(cwd, flame.pre_data_folder, flame.name, f'session_{flame.session_nr:03}' , flame.record_name, 'Correction', 'Resize', f'Frame{frame_nr}', 'Export_01')
-    pre_data_path = os.path.join(main_dir, f'session_{flame.session_nr:03}' , flame.record_name, 'Correction', 'Resize', f'Frame{frame_nr}', 'Export_01')
+    pre_data_path = os.path.join(data_dir, f'session_{flame.session_nr:03}' , flame.record_name, 'Correction', 'Resize', f'Frame{frame_nr}', 'Export_01')
     
     post_data_path = os.path.join(cwd, flame.post_data_folder, flame.name, f'session_{flame.session_nr:03}', f'{flame.record_name}_Frame{frame_nr}')
     
-    # pre_data_path = os.path.join(main_dir, pre_data_folder, flame_name, f"{record_name}_Frame{frame_nr}")
-    # post_data_path = os.path.join(main_dir, post_data_folder, flame_name, f"{record_name}_Frame{frame_nr}")
+    # pre_data_path = os.path.join(data_dir, pre_data_folder, flame_name, f"{record_name}_Frame{frame_nr}")
+    # post_data_path = os.path.join(data_dir, post_data_folder, flame_name, f"{record_name}_Frame{frame_nr}")
 
     image_nr = 1699
     
     toggle_plot = True
     save_image = False
     
-    procedure_nr = 1
+    procedure_nr = 2
     
     extension = flame.extension
     shape, contour, contour_length_pixels = get_contour_data(procedure_nr, window_size, pre_data_path, post_data_path, image_nr, extension, toggle_plot, save_image)
@@ -724,8 +765,8 @@ if __name__ == "__main__":
     
     # window_size = np.ceil(2*scale) // 2 * 2 + 1 # Get closest odd number
     
-    # pre_data_path = main_dir + sep + pre_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
-    # post_data_path = main_dir + sep + post_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
+    # pre_data_path = data_dir + sep + pre_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
+    # post_data_path = data_dir + sep + post_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
     
     # image_nr = 197
     # img_raw = cv2.imread(pre_data_path + 'B%.4d' % image_nr + extension, cv2.IMREAD_ANYDEPTH)
@@ -760,7 +801,7 @@ if __name__ == "__main__":
     # colors = ['r', 'g']
 
     # image_nr = 197
-    # pre_data_path = main_dir + sep + pre_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nrs[0]) + sep
+    # pre_data_path = data_dir + sep + pre_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nrs[0]) + sep
     # img_raw = cv2.imread(pre_data_path + 'B%.4d' % image_nr + extension, cv2.IMREAD_ANYDEPTH)
     
     # toggle_plot = False
@@ -772,8 +813,8 @@ if __name__ == "__main__":
     
     # for i, frame_nr in enumerate(frame_nrs):
         
-    #     pre_data_path = main_dir + sep + pre_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
-    #     post_data_path = main_dir + sep + post_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
+    #     pre_data_path = data_dir + sep + pre_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
+    #     post_data_path = data_dir + sep + post_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
 
     #     shape, contour, contour_length_pixels = get_contour_data(procedure_nr, window_size, pre_data_path, post_data_path, image_nr, extension, toggle_plot, save_image)
     
@@ -795,7 +836,7 @@ if __name__ == "__main__":
     # frame_nr = 0
     
     # image_nr = image_nrs[0]
-    # pre_data_path = main_dir + sep + pre_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
+    # pre_data_path = data_dir + sep + pre_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
     
     # img_raw = cv2.imread(pre_data_path + 'B%.4d' % image_nr + extension, cv2.IMREAD_ANYDEPTH)
     
@@ -808,8 +849,8 @@ if __name__ == "__main__":
     
     # for i, image_nr in enumerate(image_nrs):
         
-    #     pre_data_path = main_dir + sep + pre_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
-    #     post_data_path = main_dir + sep + post_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
+    #     pre_data_path = data_dir + sep + pre_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
+    #     post_data_path = data_dir + sep + post_data_folder + sep + flame_name + sep + record_name + "_Frame" + str(frame_nr) + sep
         
     #     shape, contour, contour_length_pixels = get_contour_data(procedure_nr, window_size, pre_data_path, post_data_path, image_nr, extension, toggle_plot, save_image)
     
