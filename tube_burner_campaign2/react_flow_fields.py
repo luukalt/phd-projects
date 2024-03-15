@@ -891,10 +891,10 @@ def plot_cartoons(flame, image_nrs, recording, piv_method):
     ax2.set_yticklabels(custom_y_tick_labels)  # Use this line to set custom tick labels
         
     fig1.tight_layout()
-    fig1.savefig(f"figures/H{flame.H2_percentage}_Re{flame.Re_D}_B{image_nr}_V.eps", format="eps", dpi=300, bbox_inches="tight")
+    fig1.savefig(f"figures/H{flame.H2_percentage}_Re{flame.Re_D}_B{image_nrs[0]}_V.eps", format="eps", dpi=300, bbox_inches="tight")
     
     fig2.tight_layout()
-    fig2.savefig(f"figures/H{flame.H2_percentage}_Re{flame.Re_D}_B{image_nr}_Ip.png", format="png", dpi=300, bbox_inches="tight")
+    fig2.savefig(f"figures/H{flame.H2_percentage}_Re{flame.Re_D}_B{image_nrs[0]}_Ip.png", format="png", dpi=300, bbox_inches="tight")
     
     # # Add textbox with timestamp
     # left, width = .25, .7
@@ -1155,7 +1155,7 @@ if __name__ == '__main__':
                  #[4624] #2314 #[4496]
                 
                 # image_nrs = [2297, 2298]
-                image_nrs = [3172, 3174]
+                image_nrs = [1241, 1242]
                 
                 # image_nrs = [3172, 3174]
                 # 
