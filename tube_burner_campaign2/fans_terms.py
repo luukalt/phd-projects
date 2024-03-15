@@ -739,28 +739,36 @@ if __name__ == '__main__':
     # var = 'Velocity v [m/s]'
     # var = 'test'
     
-    # var = 'Velocity |V| [m/s]'
-    # var = '|V|_favre [m/s]'
-    var = '|V|_favre [counts] [m/s]'
+    var1 = 'Velocity |V| [m/s]'
+    var2 = '|V|_favre [m/s]'
+    var3 = '|V|_favre [counts] [m/s]'
+    var_list = [var1, var2, var3]
     
     # var = 'Wmean [counts]'
     # var_counts = 'Wmean [counts]'
     var_counts_norm = 'Wmean_norm [counts]'
     
-    pivot_var = pd.pivot_table(df_favre_avg, values=var, index=index_name, columns=column_name)
+    for var in var_list:
+        
+        pivot_var = pd.pivot_table(df_favre_avg, values=var, index=index_name, columns=column_name)
 
-    # Create x-y meshgrid
-    r_norm_array = pivot_var.columns
-    x_norm_array = pivot_var.index
-    r_norm, x_norm = np.meshgrid(r_norm_array, x_norm_array)
-    r_norm_values = r_norm.flatten()
-    x_norm_values = x_norm.flatten()
-    
-    fig, ax = plt.subplots()
-    ax.set_title(var)
-    colormap = parula
-    flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values/(u_bulk_measured**1), cmap=colormap, vmin=0, vmax=1.6)
-    cbar = ax.figure.colorbar(flow_field)
+        # Create x-y meshgrid
+        r_norm_array = pivot_var.columns
+        x_norm_array = pivot_var.index
+        r_norm, x_norm = np.meshgrid(r_norm_array, x_norm_array)
+        r_norm_values = r_norm.flatten()
+        x_norm_values = x_norm.flatten()
+        
+        fig, ax = plt.subplots()
+        ax.set_title(var)
+        colormap = parula
+        flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values/(u_bulk_measured**1), cmap=colormap, vmin=0, vmax=2)
+        cbar = ax.figure.colorbar(flow_field)
+        
+        fontsize = 20
+        ax.set_aspect('equal')
+        ax.set_xlabel(r'$r/D$', fontsize=fontsize)
+        ax.set_ylabel(r'$x/D$', fontsize=fontsize)
     
     # Overlay scatter plots for X and Y values
     # Define the specific values you want to highlight
@@ -809,10 +817,7 @@ if __name__ == '__main__':
     ax2.set_title('Counts as a Function of Value')
     ax2.legend()
     
-    fontsize = 20
-    ax.set_aspect('equal')
-    ax.set_xlabel(r'$r/D$', fontsize=fontsize)
-    ax.set_ylabel(r'$x/D$', fontsize=fontsize)
+    
     
     # Flatten the meshgrid and pivot table values
     points = np.column_stack((r_norm.flatten(), x_norm.flatten()))  # (r, x) coordinate pairs

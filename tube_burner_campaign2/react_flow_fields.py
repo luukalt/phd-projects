@@ -703,7 +703,7 @@ def plot_cartoons(flame, image_nrs, recording, piv_method):
     # Vector settings for quiver plot
     vector_scale = 20
     vector_width = 0.005
-    vector_skip = 2
+    vector_skip = 1
     box_size = .7
     
     # Zoom settings
@@ -720,11 +720,12 @@ def plot_cartoons(flame, image_nrs, recording, piv_method):
         # brighten_factor = 4
         # custom_x_ticks = [-.4, -.2, .0, .2]# Replace with your desired tick positions
         
-        x_left_zoom = -.55
-        y_bottom_zoom = .25
+        box_size = .45
+        x_left_zoom = -.5
+        y_bottom_zoom = .5
         clims = (0.9, 1.3)
         brighten_factor = 4
-        custom_x_ticks = [-.4, -.2, .0, .2]# Replace with your desired tick positions
+        custom_x_ticks = [-.4, -.3, -.2, -.1]# Replace with your desired tick positions
         
     elif flame.Re_D == 12500:
     
@@ -742,9 +743,11 @@ def plot_cartoons(flame, image_nrs, recording, piv_method):
     
     fig2, ax2 = plt.subplots()
     
-    colors = ['r', 'c']
+    colors = ['r', 'lime']
+    linestyles = ['-', '--']
+    lw = 2
     
-    for color, image_nr in zip(colors, image_nrs):
+    for ls, color, image_nr in zip(linestyles, colors, image_nrs):
         
         # PIV directory
         piv_dir = os.path.join(data_dir,  f'session_{flame.session_nr:03d}', recording, piv_method, 'Export')
@@ -841,10 +844,10 @@ def plot_cartoons(flame, image_nrs, recording, piv_method):
             # cbar.set_label(r'$I_p$', rotation=0, labelpad=15, fontsize=20)
             
         # Figure 1: Plot flame front contour
-        ax1.plot(contour_x, contour_y, color=color, ls='solid', lw=2)
+        ax1.plot(contour_x, contour_y, color=color, ls=ls, lw=lw)
         
         # Figure 2: Plot flame front contour
-        ax2.plot(contour_x, contour_y, color=color, ls='solid', lw=2)
+        ax2.plot(contour_x, contour_y, color=color, ls=ls, lw=lw)
         
     # Set labels for both figures
     ax1.set_xlabel(r'$r/D$', fontsize=fontsize)
@@ -866,7 +869,7 @@ def plot_cartoons(flame, image_nrs, recording, piv_method):
     
     custom_x_tick_labels =  [f'{tick:.1f}' for tick in custom_x_ticks] # Replace with your desired tick labels
     
-    y_tick_step = .2
+    y_tick_step = .1
     custom_y_ticks = np.linspace(y_bottom_zoom, y_top_zoom, 1 + int((y_top_zoom - y_bottom_zoom)/y_tick_step)) # Replace with your desired tick positions
     custom_y_tick_labels =  [f'{tick:.1f}' for tick in custom_y_ticks] # Replace with your desired tick labels
     
@@ -887,11 +890,11 @@ def plot_cartoons(flame, image_nrs, recording, piv_method):
     ax2.set_yticks(custom_y_ticks)
     ax2.set_yticklabels(custom_y_tick_labels)  # Use this line to set custom tick labels
         
-    # fig1.tight_layout()
-    # fig1.savefig(f"figures/H{flame.H2_percentage}_Re{flame.Re_D}_B{image_nr}_V.eps", format="eps", dpi=300, bbox_inches="tight")
+    fig1.tight_layout()
+    fig1.savefig(f"figures/H{flame.H2_percentage}_Re{flame.Re_D}_B{image_nr}_V.eps", format="eps", dpi=300, bbox_inches="tight")
     
-    # fig2.tight_layout()
-    # fig2.savefig(f"figures/H{flame.H2_percentage}_Re{flame.Re_D}_B{image_nr}_Ip.png", format="png", dpi=300, bbox_inches="tight")
+    fig2.tight_layout()
+    fig2.savefig(f"figures/H{flame.H2_percentage}_Re{flame.Re_D}_B{image_nr}_Ip.png", format="png", dpi=300, bbox_inches="tight")
     
     # # Add textbox with timestamp
     # left, width = .25, .7
@@ -987,9 +990,9 @@ if __name__ == '__main__':
     
     react_names_hs =    [
                         # ('react_h0_f2700_hs_record1', 57),
-                        # ('react_h0_c3000_hs_record1', 57),
+                        ('react_h0_c3000_hs_record1', 57),
                         # ('react_h0_s4000_hs_record1', 58),
-                        ('react_h100_c12500_hs_record1', 61),
+                        # ('react_h100_c12500_hs_record1', 61),
                         # ('react_h100_s16000_hs_record1', 62)
                         ]
     
@@ -1151,9 +1154,12 @@ if __name__ == '__main__':
                 # image_nrs = [1737, 1738] #[4624] #2314 #[4496]
                  #[4624] #2314 #[4496]
                 
-                # image_nrs = [2297, 2298]
-                image_nrs = [3172, 3174]
+                # image_nrs = [2298, 2299]
+                # image_nrs = [841, 842]
+                image_nrs = [1241, 1242]
                 
+                # image_nrs = [3172, 3174]
+                # 
                 plot_cartoons(flame, image_nrs, recording, piv_method)
                 
                 # fig, axs = plt.subplots(3, 2, figsize=(10, 15))
