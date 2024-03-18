@@ -771,7 +771,7 @@ def plot_cartoons(flame, image_nrs, recording, piv_method):
         index_name = 'y_shift_norm'
         column_name = 'x_shift_norm'
         
-        # Cropped PIV dataframe based on Non-dimensional limits in r- (left, right) and x-direction (bottom, top)
+        # Cropped PIV dataframe based on non-dimensional limits in r- (left, right) and x-direction (bottom, top)
         df_piv_cropped = df_piv[(df_piv[index_name] > bottom_limit) & (df_piv[index_name] < top_limit) & (df_piv[column_name] > left_limit) & (df_piv[column_name] < right_limit)]
         
         # Obtain velocity fields
@@ -1206,7 +1206,7 @@ if __name__ == '__main__':
             index_name = 'y_shift_norm'
             column_name = 'x_shift_norm'
             
-            # Cropped PIV dataframe based on Non-dimensional limits in r- (left, right) and x-direction (bottom, top)
+            # Cropped PIV dataframe based on non-dimensional limits in r- (left, right) and x-direction (bottom, top)
             df_piv_cropped = df_piv[(df_piv[index_name] > bottom_limit) & (df_piv[index_name] < top_limit) & (df_piv[column_name] > left_limit) & (df_piv[column_name] < right_limit)]
             
             # Obtain velocity fields

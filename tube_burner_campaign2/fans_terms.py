@@ -659,6 +659,14 @@ if __name__ == '__main__':
     segment_length_mm = 1 # units: mm
     window_size = 31 # units: pixels
     
+    # Marker sizes
+    ms1 = 18
+    ms2 = 16
+    ms3 = 14
+    ms4 = 12
+    ms5 = 10
+    ms6 = 8
+    
     #%%% Define cases
     react_names_ls =    [
                         # ('react_h0_c3000_ls_record1', 57),
@@ -707,12 +715,16 @@ if __name__ == '__main__':
         
         flame.properties.rho_b = mixture.rho_b
 
-    # Save the mean DataFrame to a CSV file
-    input_file_path = os.path.join(os.path.join(parent_folder, 'spydata'), flame.name, 'AvgFavreFinal.csv')
+    # Favre average directory
+    favre_avg_file_path = os.path.join(os.path.join(parent_folder, 'spydata'), flame.name, 'AvgFavreFinal.csv')
     
-    df_favre_avg = pd.read_csv(input_file_path, index_col='index')
+    # Read the favre avrage file to dataframe
+    df_favre_avg = pd.read_csv(favre_avg_file_path, index_col='index')
+    
+    # Get the column headers of the favre avrage file
     headers = df_favre_avg.columns
     
+    # Non-dimensional limits in r- (left, right) and x-direction (bottom, top)
     # bottom_limit = -.5
     # top_limit = 2.25
     # left_limit = -0.575
@@ -722,19 +734,17 @@ if __name__ == '__main__':
     top_limit = 2.2
     left_limit = -100
     right_limit = 100 #0.575
-                           
     index_name = 'y_shift_norm'
     column_name = 'x_shift_norm'
     
+    # Cropped favre average dataframe based on non-dimensional limits in r- (left, right) and x-direction (bottom, top)
     df_favre_avg = df_favre_avg[(df_favre_avg[index_name] > bottom_limit) & (df_favre_avg[index_name] < top_limit) & (df_favre_avg[column_name] > left_limit) & (df_favre_avg[column_name] < right_limit)]
     
+    # Add extra columns to the favre average dataframe
     df_favre_avg['Velocity |V| [m/s]'] = np.sqrt(df_favre_avg['Velocity u [m/s]']**2 + df_favre_avg['Velocity v [m/s]']**2)
-    
     df_favre_avg['|V|_favre [m/s]'] = np.sqrt(df_favre_avg['u_favre [m/s]']**2 + df_favre_avg['v_favre [m/s]']**2)
-    
     df_favre_avg['u_favre [counts] [m/s]'] = df_favre_avg['Wmean*u [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
     df_favre_avg['v_favre [counts] [m/s]'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
-    
     df_favre_avg['|V|_favre [counts] [m/s]'] = np.sqrt(df_favre_avg['u_favre [counts] [m/s]']**2 + df_favre_avg['v_favre [counts] [m/s]']**2)
     
     # var = 'rho [kg/m^3]'
@@ -748,9 +758,10 @@ if __name__ == '__main__':
     var3 = '|V|_favre [counts] [m/s]'
     var_list = [var1, var2, var3]
     
-    # var = 'Wmean [counts]'
-    # var_counts = 'Wmean [counts]'
+    var1 = 'Wmean [counts]'
+    var2 = 'rho [kg/m^3]'
     var_counts_norm = 'Wmean_norm [counts]'
+    var_list = [var1, var2]
     
     for var in var_list:
         
@@ -766,7 +777,7 @@ if __name__ == '__main__':
         fig, ax = plt.subplots()
         ax.set_title(var)
         colormap = parula
-        flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values/(u_bulk_measured**1), cmap=colormap, vmin=0, vmax=2)
+        flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values/(u_bulk_measured**1), cmap=colormap) #, vmin=0, vmax=2)
         cbar = ax.figure.colorbar(flow_field)
         
         fontsize = 20
@@ -783,7 +794,6 @@ if __name__ == '__main__':
     coords_X_x, coords_X_y, counts_X, values_X = [], [], [], []
     coords_Y_x, coords_Y_y, counts_Y, values_Y = [], [], [], []
 
-    
     # Iterate through the DataFrame to find matching rows
     for index, row in df_favre_avg.iterrows():
         
@@ -822,7 +832,6 @@ if __name__ == '__main__':
     ax2.legend()
     
     
-    
     # Flatten the meshgrid and pivot table values
     points = np.column_stack((r_norm.flatten(), x_norm.flatten()))  # (r, x) coordinate pairs
     values = pivot_var.values.flatten()  # Corresponding values at each (r, x)
@@ -849,7 +858,6 @@ if __name__ == '__main__':
     u_r_uniform = griddata((r_norm_values, x_norm_values), pivot_u_r_norm_values, (r_uniform, x_uniform), method=interpolation_method)
     u_x_uniform = griddata((r_norm_values, x_norm_values), pivot_u_x_norm_values, (r_uniform, x_uniform), method=interpolation_method)
     
-    
     # # Point where you want to interpolate
     # streamline = streamlines[0]
     # point_of_interest = streamline[0] #np.array([[.1, .1]])  # (r=0, x=0)
@@ -864,14 +872,6 @@ if __name__ == '__main__':
     #     print("Interpolation at r={point_of_interest[0]}, x={point_of_interest[1]} is not possible with the given data.")
     
     mass_cons, mom_x, mom_r = fans_comp_terms(df_favre_avg, flame)
-    
-    # Marker sizes
-    ms1 = 18
-    ms2 = 16
-    ms3 = 14
-    ms4 = 12
-    ms5 = 10
-    ms6 = 8
     
     r_starts = [.1, .2, .3]
     x_starts = np.linspace(0.2, 0.2, len(r_starts))
@@ -890,38 +890,6 @@ if __name__ == '__main__':
     dpdx = mom_x[2] 
     dpdr = mom_r[2]
     plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
-    
-    #%% Plot contour
-    # from matplotlib.animation import FuncAnimation, PillowWriter, FFMpegWriter 
-
-    # # Create a function to update the plot for each frame
-    # def update(contour_nr):
-    #     ax.clear()  # Clear the axes for each frame
-        
-    #     segmented_contour = flame.frames[frame_nr].contour_data.segmented_contours[contour_nr]
-        
-    #     segmented_contour_r = segmented_contour[:, 0, 0]
-    #     segmented_contour_x = segmented_contour[:, 0, 1]
-        
-    #     ax.plot(segmented_contour_r, -segmented_contour_x, label=contour_nr + 1)
-    #     ax.set_xlim(left=0, right=520)
-    #     ax.set_ylim(top=0, bottom=-900)
-    #     ax.legend()
-    #     ax.set_aspect('equal')
-    
-    # # Set the number of frames
-    # contour_nrs = 100 #len(flame.n_images)
-    
-    # # Create a figure and axis
-    # fig, ax = plt.subplots()
-    
-    # # Create the animation
-    # fps = 10
-    # animation = FuncAnimation(fig, update, frames=contour_nrs, interval=1000/fps)  # You can adjust the interval as needed
-    
-    # # Save the animation as an MP4 file
-    # writer = PillowWriter(fps=fps) 
-    # animation.save('contour_animation.gif', writer=writer)
     
     #%% Non-reacting flow
     non_react_flow = non_react_dict[nonreact_run_nr]
