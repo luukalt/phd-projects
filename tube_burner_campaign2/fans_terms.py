@@ -65,6 +65,10 @@ import flame_object
 import premixed_flame_properties
 import rc_params_settings
 
+figures_folder = 'figures'
+if not os.path.exists(figures_folder):
+        os.makedirs(figures_folder)
+        
 # # from parameters import set_mpl_params
 # from parameters_ls import r_range_left, r_range_right, poly_left_fit, poly_right_fit
     

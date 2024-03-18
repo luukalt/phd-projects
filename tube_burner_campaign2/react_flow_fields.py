@@ -48,6 +48,9 @@ import flame_object
 import premixed_flame_properties
 import rc_params_settings
 
+figures_folder = 'figures'
+if not os.path.exists(figures_folder):
+        os.makedirs(figures_folder)
 #%% CLOSE ALL FIGURES
 plt.close('all')
 
