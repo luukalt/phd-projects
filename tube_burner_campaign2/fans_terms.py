@@ -777,7 +777,8 @@ if __name__ == '__main__':
         fig, ax = plt.subplots()
         ax.set_title(var)
         colormap = parula
-        flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values/(u_bulk_measured**1), cmap=colormap) #, vmin=0, vmax=2)
+        non_dim = 1 # u_bulk_measured**1
+        flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values/(non_dim), cmap=colormap, vmin=0,) # vmax=2)
         cbar = ax.figure.colorbar(flow_field)
         
         fontsize = 20
@@ -879,7 +880,7 @@ if __name__ == '__main__':
     
     streamline_x_start = .1
     
-    ax.scatter(0, streamline_x_start, color='k', label=f'Value = {value_X}')
+    # ax.scatter(0, streamline_x_start, color='k', label=f'Value = {value_X}')
     
     streamlines, paths, flame_front_indices, colors = plot_streamlines_reacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_uniform)
     
