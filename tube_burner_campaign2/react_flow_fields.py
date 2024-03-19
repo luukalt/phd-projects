@@ -560,7 +560,6 @@ def plot_streamlines_reacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_unifor
         ax1.plot(streamline_x[-1], streamline_y[-1], color=colors[c], marker='o', ls='None', mec='k', ms=ms5)
         
         # ax1.set_title(name)
-        fontsize = 20
         ax1.set_xlabel(r'$r/D$', fontsize=fontsize)
         ax1.set_ylabel(r'$x/D$', fontsize=fontsize)
         
@@ -568,8 +567,8 @@ def plot_streamlines_reacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_unifor
         
         # ax1.set_ylabel(cbar_titles[i], rotation=0, labelpad=15, fontsize=14)
         ax1.grid(False)
-        ax1.set_xlim([-.55, .55])  # replace with your desired x limits
-        ax1.set_ylim([0., 2.25])  # replace with your desired x limits
+        ax1.set_xlim(left=-.55, right=.55)
+        ax1.set_ylim(bottom=0, top=2.25)
         # ax1.legend()
         ax1.set_aspect('equal')
         
@@ -666,7 +665,6 @@ def plot_streamlines_nonreacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_uni
         ax1.plot(streamline_x[-1], streamline_y[-1], color=colors[c], marker='o', ls='None', mec='k', ms=ms5)
         
         # ax1.set_title(name)
-        fontsize = 20
         ax1.set_xlabel(r'$r/D$', fontsize=fontsize)
         ax1.set_ylabel(r'$x/D$', fontsize=fontsize)
         
@@ -674,8 +672,8 @@ def plot_streamlines_nonreacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_uni
         
         # ax1.set_ylabel(cbar_titles[i], rotation=0, labelpad=15, fontsize=14)
         ax1.grid(False)
-        ax1.set_xlim([-.55, .55])  # replace with your desired x limits
-        ax1.set_ylim([0., 2.25])  # replace with your desired x limits
+        ax1.set_xlim(left=-.55, right=.55)
+        ax1.set_ylim(bottom=0, top=2.25)
         
         ax1.set_aspect('equal')
         
@@ -699,9 +697,6 @@ def plot_streamlines_nonreacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_uni
     
 
 def plot_cartoons(flame, image_nrs, recording, piv_method):
-    
-    # Font size for x,y labels
-    fontsize = 20
     
     # Vector settings for quiver plot
     vector_scale = 20
@@ -1524,8 +1519,9 @@ if __name__ == '__main__':
             ax.set_xlabel(r'$r/D$', fontsize=fontsize)
             ax.set_ylabel(r'$x/D$', fontsize=fontsize)
             
-            ax.set_xlim([-.55, .55])  # replace with your desired x limits
-            ax.set_ylim([0/D_in, 2.2])  # replace with your desired y limits
+            ax.set_xlim(left=-.55, right=.55)
+            ax.set_ylim(bottom=0, top=2.2)
+            
             # ax.set_xlim(x_limits)  # replace with your desired x limits
             # ax.set_ylim(y_limits)  # replace with your desired y limits
             

@@ -244,7 +244,6 @@ def cone_angle(spydata_dir, name, distances_above_tube=[.75, 1., 1.25]):
     peaks_right = []
     
     # colors = cm.viridis(np.linspace(0, 1, len(distances_above_tube)))
-    
     r = contour_dist_df.columns
     r_begin_index = 0
     r_end_index = len(contour_dist_df.columns) - 1

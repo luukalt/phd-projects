@@ -45,9 +45,9 @@ sys.path.append(plot_parameters_directory)
 import pickle
 import pandas as pd
 import numpy as np
-import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.legend_handler import HandlerTuple
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from scipy.interpolate import griddata
@@ -139,7 +139,6 @@ def plot_streamlines_reacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_unifor
         ax1.plot(streamline_r[-1], streamline_x[-1], color=colors[c], marker='o', ls='None', mec='k', ms=ms5)
         
         # ax1.set_title(name)
-        fontsize = 20
         ax1.set_xlabel(r'$r/D$', fontsize=fontsize)
         ax1.set_ylabel(r'$x/D$', fontsize=fontsize)
         
@@ -373,7 +372,7 @@ def plot_mass_cons(ax, mass_cons, r_norm_values, x_norm_values, lines, flame_fro
 
 def plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, lines, flame_front_indices, colors):
     
-    width, height = 6, 6
+    width, height = 9, 9
     fig, ax = plt.subplots(figsize=(width, height))
     ax.grid(True)
     
@@ -422,8 +421,8 @@ def plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, lines
                     '[2] Radial advection',
                     '[3] Pressure gradient',
                     # '[4] Viscous diffusion',
-                    '[4] Reynolds normal stress',
-                    '[5] Reynolds shear stress'
+                    '[4] Favre normal stress',
+                    '[5] Favre shear stress'
                     ]
     
     mom_r_labels = [
@@ -431,8 +430,8 @@ def plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, lines
                     '[2] Radial advection',
                     '[3] Pressure gradient',
                     # '[4] Viscous diffusion',
-                    '[4] Reynolds shear stress',
-                    '[5] Reynolds normal stress'
+                    '[4] Favre shear stress',
+                    '[5] Favre normal stress'
                     ]
     
     mom_markers = ['v', '^', 'o', 's', 'p', 'd']
@@ -511,7 +510,8 @@ def plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, lines
         
 def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lines, flame_front_indices, colors):
     
-    fig1, ax1 = plt.subplots()
+    width, height = 6, 6
+    fig1, ax1 = plt.subplots(figsize=(width, height))
     
     fontsize_label = 24
     
@@ -744,24 +744,37 @@ if __name__ == '__main__':
     df_favre_avg['v_favre [counts] [m/s]'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
     df_favre_avg['|V|_favre [counts] [m/s]'] = np.sqrt(df_favre_avg['u_favre [counts] [m/s]']**2 + df_favre_avg['v_favre [counts] [m/s]']**2)
     
-    # var = 'rho [kg/m^3]'
-    # var = 'v_favre [m/s]'
-    # var = '0.5*(R_uu + R_vv) [m^2/s^2]'
-    # var = 'Velocity v [m/s]'
-    # var = 'test'
-    
-    # var1 = 'Velocity |V| [m/s]'
-    # var2 = '|V|_favre [m/s]'
-    # var3 = '|V|_favre [counts] [m/s]'
-    # var_list = [var1, var2, var3]
-    
-    var1 = 'Wmean [counts]'
-    var2 = 'Wmean [states]'
-    var3 = 'rho [kg/m^3]'
-    var_counts_norm = 'Wmean_norm [counts]'
+    var1 = 'Velocity |V| [m/s]'
+    var2 = '|V|_favre [counts] [m/s]'
+    var3 = '|V|_favre [m/s]'
     var_list = [var1, var2, var3]
     
-    for var in var_list:
+    # var1 = 'Wmean [counts]'
+    # var2 = 'Wmean [states]'
+    # var3 = 'rho [kg/m^3]'
+    # var_list = [var1, var2, var3]
+    
+    var_counts_norm = 'Wmean_norm [counts]'
+    
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    
+    fontsize = 20
+    
+    fig2, ax2 = plt.subplots()
+    
+    width, height = 6, 6
+    fig3, ax3 = plt.subplots(figsize=(width, height))
+    
+    cbar_max = 2
+    
+    handles = []
+    
+    labels = ['Reynolds',
+              'Favre [intensity count]',
+              'Favre [flame front detection]',
+              ]
+
+    for color, var, label in zip(colors[:len(var_list)], var_list, labels):
         
         pivot_var = pd.pivot_table(df_favre_avg, values=var, index=index_name, columns=column_name)
 
@@ -773,21 +786,96 @@ if __name__ == '__main__':
         x_norm_values = x_norm.flatten()
         
         fig, ax = plt.subplots()
-        ax.set_title(var)
+        ax.set_title(label)
+        cbar_title = r'$\frac{|V|}{U_{b}}$'
         colormap = parula
-        non_dim = np.max(pivot_var.values) # u_bulk_measured**1
-        # non_dim = u_bulk_measured**1
         
-        flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values/(non_dim), cmap=colormap, vmin=0, vmax=1)
+        pivot_var /= u_bulk_measured**1
+        
+        flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values, cmap=colormap, vmin=0, vmax=cbar_max)
+        
+        num_ticks = 6
+        custom_cbar_ticks = np.linspace(0, cbar_max, num_ticks)
+        
+        if cbar_max < 1:
+            custom_cbar_tick_labels = [f'{tick:.2f}' for tick in custom_cbar_ticks] # Replace with your desired tick labels
+        else:
+            custom_cbar_tick_labels = [f'{tick:.1f}' for tick in custom_cbar_ticks]
+            
         cbar = ax.figure.colorbar(flow_field)
+        cbar.set_ticks(custom_cbar_ticks)
+        cbar.set_ticklabels(custom_cbar_tick_labels)
+        cbar.set_label(cbar_title, rotation=0, labelpad=25, fontsize=28) 
+        cbar.ax.tick_params(labelsize=fontsize)
         
-        fontsize = 20
         ax.set_aspect('equal')
         ax.set_xlabel(r'$r/D$', fontsize=fontsize)
         ax.set_ylabel(r'$x/D$', fontsize=fontsize)
         
         custom_y_ticks = [.5, 1., 1.5, 2.]
         ax.set_yticks(custom_y_ticks)
+        
+        ax.set_xlim(left=-.55, right=.55)
+        ax.set_ylim(bottom=.05, top=2.2)
+        
+        ax.tick_params(axis='both', labelsize=fontsize)
+        
+        # # Find the two closest indices to the given index
+        # distances_above_tube = [.5, 1., 1.5]
+        # markers = ['o', 's', '*']
+        
+        # for marker, distance_above_tube in zip(markers, distances_above_tube):
+            
+        #     distance_above_tube_below = pivot_var.index[pivot_var.index <= distance_above_tube].max()
+        #     distance_above_tube_above = pivot_var.index[pivot_var.index >= distance_above_tube].min()
+            
+        #     pivot_var_interp = pivot_var.loc[[distance_above_tube_below, distance_above_tube_above]]
+        #     pivot_var_interp.loc[distance_above_tube] = np.nan
+        #     pivot_var_interp.sort_index(inplace=True)
+        #     pivot_var_interp.interpolate(method='index', inplace=True)
+        #     profile_contour_dist = pivot_var_interp.loc[distance_above_tube]
+        #     r_line = pivot_var.columns
+        #     ax2.scatter(r_line, profile_contour_dist, marker=marker, color=color, label=var) #, marker='o', edgecolors='k', ls='None')
+        
+        # ax2.set_ylim(bottom=.8)
+        
+        # Find the two closest indices to the given index
+        distances_radial_tube = [.0, .3,]
+        markers = ['o', '^']
+        
+        scatter_handles = []
+        
+        for marker, distance_radial_tube in zip(markers, distances_radial_tube):
+            
+            distance_radial_tube_right = pivot_var.columns[pivot_var.columns <= distance_radial_tube].max()
+            distance_radial_tube_left = pivot_var.columns[pivot_var.columns >= distance_radial_tube].min()
+            
+            pivot_var_interp = pivot_var.loc[: ,[distance_radial_tube_left, distance_radial_tube_right]]
+            pivot_var_interp.loc[:, distance_radial_tube] = np.nan
+            pivot_var_interp.sort_index(axis=1, inplace=True)
+            pivot_var_interp.interpolate(method='index', axis=1, inplace=True)
+            profile_contour_dist = pivot_var_interp.loc[:, distance_radial_tube]
+            x_line = pivot_var.index
+            
+            scatter_handle = ax3.scatter(x_line, profile_contour_dist, marker=marker, color= color, label=var)
+        
+            ax.scatter([distance_radial_tube] * len(x_line), x_line, marker=marker, color='None', edgecolors='k')
+            
+            # Append the handle to the list of handles
+            scatter_handles.append(scatter_handle)
+        
+        # Append all scatter handles to the handles list
+        handles.append(tuple(scatter_handles))
+        
+    # Create the legend with custom handler map
+    handler_map = {tuple(handle): HandlerTuple(ndivide=None) for handle in handles}
+    ax3.legend(handles, labels, handler_map=handler_map, title="Time-averaging")
+
+    ax3.set_xlabel(r'$x/D$', fontsize=fontsize)
+    ax3.set_ylabel(cbar_title, rotation=0, labelpad=15, fontsize=24)
+    ax3.set_ylim(bottom=1., top=1.7)
+    ax3.tick_params(axis='both', labelsize=fontsize)
+    ax3.grid(True)
     
     # Overlay scatter plots for X and Y values
     # Define the specific values you want to highlight
@@ -834,7 +922,6 @@ if __name__ == '__main__':
     # ax2.set_ylabel('Counts')
     # ax2.set_title('Counts as a Function of Value')
     # ax2.legend()
-    
     
     # Flatten the meshgrid and pivot table values
     points = np.column_stack((r_norm.flatten(), x_norm.flatten()))  # (r, x) coordinate pairs
