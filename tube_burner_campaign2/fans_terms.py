@@ -601,7 +601,6 @@ def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lin
             
             p_along_line[i] = p_along_line[i-1] + 0.5 * (dpdr_along_line[i] + dpdr_along_line[i-1]) * dr + 0.5 * (dpdx_along_line[i] + dpdx_along_line[i-1]) * dx
             
-        
         ax1.plot(cumulative_distances, p_along_line, c=color, marker='None', ls='solid')
         ax1.plot(cumulative_distances[flame_front_index], p_along_line[flame_front_index], c=color, marker='*', ms=ms1, mec='k')
         ax1.plot(cumulative_distances[0], p_along_line[0], color=color, marker='>', ls='None', mec='k', ms=ms4)
@@ -610,7 +609,6 @@ def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lin
         # Create an inset with zoomed-in plot
         ax1_inset.plot(cumulative_distances[0], p_along_line[0], color=color, marker='>', ls='None', mec='k', ms=ms4)
         ax1_inset.plot(cumulative_distances, p_along_line, c=color, marker='None', ls='solid')
-        
         
     # make proxy artists
     # make list of one line -- doesn't matter what the coordinates are
@@ -636,7 +634,6 @@ def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lin
     x_label = r'$s/D$'
     y_label = r'$\frac{dp^{*}}{ds^{*}}$'
 
-    
     # # create the legend
     # if flame.Re_D == 4000:
     #     ax1.legend([lc_react, lc_nonreact], ['reacting', 'non reacting'], handler_map={type(lc_react): HandlerDashedLines()},
@@ -753,15 +750,16 @@ if __name__ == '__main__':
     # var = 'Velocity v [m/s]'
     # var = 'test'
     
-    var1 = 'Velocity |V| [m/s]'
-    var2 = '|V|_favre [m/s]'
-    var3 = '|V|_favre [counts] [m/s]'
-    var_list = [var1, var2, var3]
+    # var1 = 'Velocity |V| [m/s]'
+    # var2 = '|V|_favre [m/s]'
+    # var3 = '|V|_favre [counts] [m/s]'
+    # var_list = [var1, var2, var3]
     
     var1 = 'Wmean [counts]'
-    var2 = 'rho [kg/m^3]'
+    var2 = 'Wmean [states]'
+    var3 = 'rho [kg/m^3]'
     var_counts_norm = 'Wmean_norm [counts]'
-    var_list = [var1, var2]
+    var_list = [var1, var2, var3]
     
     for var in var_list:
         
@@ -777,14 +775,19 @@ if __name__ == '__main__':
         fig, ax = plt.subplots()
         ax.set_title(var)
         colormap = parula
-        non_dim = 1 # u_bulk_measured**1
-        flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values/(non_dim), cmap=colormap, vmin=0,) # vmax=2)
+        non_dim = np.max(pivot_var.values) # u_bulk_measured**1
+        # non_dim = u_bulk_measured**1
+        
+        flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values/(non_dim), cmap=colormap, vmin=0, vmax=1)
         cbar = ax.figure.colorbar(flow_field)
         
         fontsize = 20
         ax.set_aspect('equal')
         ax.set_xlabel(r'$r/D$', fontsize=fontsize)
         ax.set_ylabel(r'$x/D$', fontsize=fontsize)
+        
+        custom_y_ticks = [.5, 1., 1.5, 2.]
+        ax.set_yticks(custom_y_ticks)
     
     # Overlay scatter plots for X and Y values
     # Define the specific values you want to highlight
@@ -821,16 +824,16 @@ if __name__ == '__main__':
     # print(np.mean(counts_X)/np.mean(counts_Y))
     # print(flame.properties.rho_u/flame.properties.rho_b)
     
-    fig2, ax2 = plt.subplots()
-    # Scatter plot for counts_X and counts_Y
-    ax2.scatter(values_X, counts_X, color='black', label=f'Counts for Value = {value_X}')
-    ax2.scatter(values_Y, counts_Y, color='red', label=f'Counts for Value = {value_Y}')
+    # fig2, ax2 = plt.subplots()
+    # # Scatter plot for counts_X and counts_Y
+    # ax2.scatter(values_X, counts_X, color='black', label=f'Counts for Value = {value_X}')
+    # ax2.scatter(values_Y, counts_Y, color='red', label=f'Counts for Value = {value_Y}')
     
-    # Adding labels and title
-    ax2.set_xlabel('Value')
-    ax2.set_ylabel('Counts')
-    ax2.set_title('Counts as a Function of Value')
-    ax2.legend()
+    # # Adding labels and title
+    # ax2.set_xlabel('Value')
+    # ax2.set_ylabel('Counts')
+    # ax2.set_title('Counts as a Function of Value')
+    # ax2.legend()
     
     
     # Flatten the meshgrid and pivot table values

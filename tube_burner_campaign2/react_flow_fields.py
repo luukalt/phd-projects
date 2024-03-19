@@ -728,7 +728,7 @@ def plot_cartoons(flame, image_nrs, recording, piv_method):
         y_bottom_zoom = .5
         clims = (0.9, 1.3)
         brighten_factor = 4
-        custom_x_ticks = [-.4, -.3, -.2, -.1]# Replace with your desired tick positions
+        custom_x_ticks = [-.4, -.3, -.2, -.1] # Replace with your desired tick positions
         
     elif flame.Re_D == 12500:
     
@@ -737,7 +737,7 @@ def plot_cartoons(flame, image_nrs, recording, piv_method):
         y_bottom_zoom = .8
         clims = (0.9, 1.3)
         brighten_factor = 16
-        custom_x_ticks = [-.1, .1, .3, .5]# Replace with your desired tick positions
+        custom_x_ticks = [-.1, .1, .3, .5] # Replace with your desired tick positions
     
     x_right_zoom = x_left_zoom + box_size
     y_top_zoom = y_bottom_zoom + box_size

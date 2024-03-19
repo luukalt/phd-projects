@@ -107,41 +107,9 @@ def find_intersection_and_angle_from_arrays(x1, y1, x2, y2):
 
 
 def cone_angle(spydata_dir, name, distances_above_tube=[.75, 1., 1.25]):
-    # =============================================================================
-    # name = 'react_h0_c3000_ls_record1'
-    # frame_nr = 0
-    # segment_length_mm = 1 # units: mm
-    # window_size = 31 # units: pixels
-    # piv_folder = 'PIV_MP(3x16x16_0%ov_ImgCorr)'
-    
-    # =============================================================================
-    
-    # =============================================================================
-    # name = 'react_h0_s4000_hs_record1'
-    # frame_nr = 0
+
     segment_length_mm = 1 # units: mm
     window_size = 31 # units: pixels
-    # piv_folder = 'PIV_MP(3x16x16_0%ov_ImgCorr)'
-    
-    # =============================================================================
-    
-    # # =============================================================================
-    # name = 'react_h100_c12500_ls_record1'
-    # frame_nr = 0
-    # segment_length_mm = 1 # units: mm
-    # window_size = 31 # units: pixels
-    # piv_folder = 'PIV_MP(3x16x16_0%ov_ImgCorr)'
-    
-    # =============================================================================
-    
-    # =============================================================================
-    # name = 'react_h100_s16000_hs_record1'
-    # frame_nr = 0
-    # segment_length_mm = 1 # units: mm
-    # window_size = 31 # units: pixels
-    # piv_folder = 'PIV_MP(3x16x16_0%ov_ImgCorr)'
-    
-    # =============================================================================
     
     #%% READ FLAME INFO [DO NOT TOUCH]
     
@@ -263,7 +231,6 @@ def cone_angle(spydata_dir, name, distances_above_tube=[.75, 1., 1.25]):
     
     ax1.set_xlabel('$r/D$', fontsize=fontsize)
     ax1.set_ylabel('$x/D$', fontsize=fontsize)
-    
     
     
     fig2, ax2 = plt.subplots(figsize=(6, 6))
