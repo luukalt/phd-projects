@@ -8,7 +8,7 @@ Created on Tue Jul  4 10:25:15 2023
 
 #%% IMPORT STANDARD PACKAGES
 import os
-import sys
+import pickle
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
@@ -16,29 +16,24 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import matplotlib.collections as mcol
 from scipy.interpolate import griddata
 
-#%% ADD SYS PATHS
-parent_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-flame_front_detection_directory = os.path.abspath(os.path.join(parent_directory, 'flame_front_detection'))
-flame_simulations_directory = os.path.abspath(os.path.join(parent_directory, 'flame_simulations'))
-plot_parameters_directory = os.path.abspath(os.path.join(parent_directory, 'plot_parameters'))
-
-# Add to sys.path
-sys.path.append(parent_directory)
-sys.path.append(flame_front_detection_directory)
-sys.path.append(flame_simulations_directory)
-
 #%% IMPORT USER DEFINED PACKAGES
-from parameters import data_dir, piv_method, flame, interpolation_method, nonreact_run_nr, colormap, fontsize, ms1, ms2, ms3, ms4, ms5, ms6
+from sys_paths import parent_directory
+from parameters import data_dir, piv_method, flame, interpolation_method, nonreact_run_nr 
+from plot_params import colormap, fontsize, ms1, ms2, ms3, ms4, ms5, ms6
 from cone_angle import cone_angle
 from nonreact_flow_fields import non_react_dict
 from time_averaging_terms import ns_incomp_terms
 from functions import process_df, contour_correction
-from plot_functions import plot_cartoons, plot_streamlines_reacting_flow, plot_streamlines_nonreacting_flow, plot_mass_cons, plot_ns_terms, plot_pressure_along_streamline
+from plot_functions import plot_cartoons, plot_streamlines_reacting_flow, plot_streamlines_nonreacting_flow, plot_mass_cons, plot_ns_terms, plot_pressure_along_streamline, plot_mass_cons_old
 
 figures_folder = 'figures'
 if not os.path.exists(figures_folder):
         os.makedirs(figures_folder)
 
+pickles_folder = 'pickles'
+if not os.path.exists(pickles_folder):
+        os.makedirs(pickles_folder)
+        
 #%% MAIN
 # Before executing code, Python interpreter reads source file and define few special variables/global variables. 
 # If the python interpreter is running that module (the source file) as the main program, it sets the special __name__ variable to have a value “__main__”. If this file is being imported from another module, __name__ will be set to the module’s name. Module’s name is available as value to __name__ global variable. 
@@ -104,7 +99,7 @@ if __name__ == '__main__':
     
     cbar_titles =   [
                     r'$\frac{\overline{u_{x}}}{U_{b}}$',
-                    r'$\frac{|V|}{U_{b}}$',
+                    r'$\frac{|\overline{V}|}{U_{b}}$',
                     r'$\frac{R_{rr}}{U_{b}^2}$', # \overline{v\'v\'
                     r'$\frac{R_{rx}}{U_{b}^2}$', # \overline{u\'v\'
                     r'$\frac{R_{xx}}{U_{b}^2}$', # \overline{v\'v\'
@@ -125,7 +120,8 @@ if __name__ == '__main__':
     
     for q in range(0, len(col_indices)):
         
-        fig, ax = plt.subplots()
+        width, height = 9, 6
+        fig, ax = plt.subplots(figsize=(width, height))
         
         axs.append(ax)
         
@@ -182,7 +178,7 @@ if __name__ == '__main__':
             
             # image_nrs = [3172, 3174]
             # 
-            plot_cartoons(flame, image_nrs, recording, piv_method)
+            # plot_cartoons(flame, image_nrs, recording, piv_method)
             
             # fig, axs = plt.subplots(3, 2, figsize=(10, 15))
             
@@ -386,7 +382,7 @@ if __name__ == '__main__':
                     incomp_indices = plot_ns_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, streamlines, dummy_indices, colors)
                     input_indices = dummy_indices
                 
-                plot_mass_cons(p, ax9, ax9_inset, mass_cons, r_norm_values, x_norm_values, streamlines, input_indices, colors)
+                plot_mass_cons_old(p, ax9, ax9_inset, mass_cons, r_norm_values, x_norm_values, streamlines, input_indices, colors)
                 
                 ax9.set_xlim([-.5, 2.2])  # replace with your desired x limits
                 ax9.set_ylim(top=8.25)  # replace with your desired x limits
@@ -416,7 +412,7 @@ if __name__ == '__main__':
                     
                     dpdx = mom_x[2] #*(u_bulk_measured**2)/(D_in*1e-3)
                     dpdr = mom_r[2] #*(u_bulk_measured**2)/(D_in*1e-3)
-                    plot_pressure_along_streamline(ax7, ax8, dpdr, dpdx, r_norm_values, x_norm_values, streamlines, incomp_indices, colors, p)
+                    # plot_pressure_along_streamline(ax7, ax8, dpdr, dpdx, r_norm_values, x_norm_values, streamlines, incomp_indices, colors, p)
                     
                 styles_react = ['solid', 'solid', 'solid']
                 styles_nonreact = ['dashed', 'dashed', 'dashed']
@@ -426,9 +422,9 @@ if __name__ == '__main__':
                 lc_react = mcol.LineCollection(3 * dummy_line, linestyles=styles_react, colors=colors)
                 lc_nonreact = mcol.LineCollection(3 * dummy_line, linestyles=styles_nonreact, colors=colors)
                 
-                # create the legend
-                ax6.legend([lc_react, lc_nonreact], ['reacting flow', 'non reacting flow'], handler_map={type(lc_react): HandlerDashedLines()},
-                           handlelength=3, handleheight=3)
+                # # Create the legend
+                # ax6.legend([lc_react, lc_nonreact], ['reacting flow', 'non reacting flow'], handler_map={type(lc_react): HandlerDashedLines()},
+                #            handlelength=3, handleheight=3)
                 
                 ax6.set_xlim(-0.05, 2.25)
                 ax6.set_ylim(0.9, 1.7)
@@ -471,7 +467,6 @@ if __name__ == '__main__':
             flow_field.set_clim(-cbar_max[i], cbar_max[i])
         else:
             flow_field.set_clim(0, cbar_max[i])
-        
         
         if i == 5:
             
@@ -633,41 +628,49 @@ if __name__ == '__main__':
 
 #%% Save images
 # Get a list of all currently opened figures
-# figure_ids = plt.get_fignums()
-# figure_ids = [1, 2, 12, 13, 21]
+figure_ids = plt.get_fignums()
+figure_ids = [8]
 
-# if react_names_ls:
-#     folder = 'ls'
-# else:
-#     folder = 'hs'
+if 'ls' in flame.name:
+    folder = 'ls'
+else:
+    folder = 'hs'
+
+figures_subfolder = os.path.join(figures_folder, folder)
+if not os.path.exists(figures_subfolder):
+        os.makedirs(figures_subfolder)
+
+pickles_subfolder = os.path.join(pickles_folder, folder)
+if not os.path.exists(pickles_subfolder):
+        os.makedirs(pickles_subfolder)
+
+# Apply tight_layout to each figure
+for fid in figure_ids:
+    fig = plt.figure(fid)
+    fig.tight_layout()
+    filename = f'H{flame.H2_percentage}_Re{Re_D_list[0]}_fig{fid}'
     
-# # Apply tight_layout to each figure
-# for fid in figure_ids:
-#     fig = plt.figure(fid)
-#     fig.tight_layout()
-#     filename = f'H{flame.H2_percentage}_Re{Re_D_list[0]}_fig{fid}'
-    
-#     # Constructing the paths
-#     if fid == 1:
+    # Constructing the paths
+    if fid == 1:
         
-#         png_path = os.path.join('figures', f'{folder}', f'{filename}.png')
-#         # pkl_path = os.path.join('pickles', f'{folder}', f'{filename}.pkl')
+        png_path = os.path.join('figures', f'{folder}', f'{filename}.png')
+        pkl_path = os.path.join('pickles', f'{folder}', f'{filename}.pkl')
         
-#         # Saving the figure in EPS format
-#         fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
+        # Saving the figure in EPS format
+        fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
         
-#     else:
+    else:
         
-#         eps_path = os.path.join('figures', f'{folder}', f'{filename}.eps')
-#         # pkl_path = os.path.join('pickles', f'{folder}', f'{filename}.pkl')
+        eps_path = os.path.join('figures', f'{folder}', f'{filename}.eps')
+        pkl_path = os.path.join('pickles', f'{folder}', f'{filename}.pkl')
         
-#         # Saving the figure in EPS format
-#         fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+        # Saving the figure in EPS format
+        fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
     
     
     # Pickling the figure
-    # with open(pkl_path, 'wb') as f:
-    #     pickle.dump(fig, f)
+    with open(pkl_path, 'wb') as f:
+        pickle.dump(fig, f)
         
 
 

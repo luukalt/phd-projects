@@ -91,14 +91,14 @@ if __name__ == '__main__':
     # Add extra columns to the favre average dataframe
     df_favre_avg['Velocity |V| [m/s]'] = np.sqrt(df_favre_avg['Velocity u [m/s]']**2 + df_favre_avg['Velocity v [m/s]']**2)
     df_favre_avg['|V|_favre [m/s]'] = np.sqrt(df_favre_avg['u_favre [m/s]']**2 + df_favre_avg['v_favre [m/s]']**2)
-    df_favre_avg['u_favre [counts] [m/s]'] = df_favre_avg['Wmean*u [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
-    df_favre_avg['v_favre [counts] [m/s]'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
-    df_favre_avg['|V|_favre [counts] [m/s]'] = np.sqrt(df_favre_avg['u_favre [counts] [m/s]']**2 + df_favre_avg['v_favre [counts] [m/s]']**2)
+    # df_favre_avg['u_favre [counts] [m/s]'] = df_favre_avg['Wmean*u [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
+    # df_favre_avg['v_favre [counts] [m/s]'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
+    # df_favre_avg['|V|_favre [counts] [m/s]'] = np.sqrt(df_favre_avg['u_favre [counts] [m/s]']**2 + df_favre_avg['v_favre [counts] [m/s]']**2)
     
     var1 = 'Velocity |V| [m/s]'
-    var2 = '|V|_favre [counts] [m/s]'
+    # var2 = '|V|_favre [counts] [m/s]'
     var3 = '|V|_favre [m/s]'
-    var_list = [var1, var2, var3]
+    var_list = [var1, var3, var3]
     
     # var1 = 'Wmean [counts]'
     # var2 = 'Wmean [states]'
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     fig2, ax2 = plt.subplots()
     
     width, height = 9, 6
-    fig3, ax3 = plt.subplots(figsize=(width, height))
+    fig3, ax3 = plt.subplots(figsize=(6, 6))
     
     cbar_max = 2
     
@@ -136,7 +136,7 @@ if __name__ == '__main__':
         
         fig, ax = plt.subplots(figsize=(width, height))
         ax.set_title(label)
-        cbar_title = r'$\frac{|V|}{U_{b}}$'
+        cbar_title = r'$\frac{|\overline{V}|}{U_{b}}$'
         
         pivot_var /= u_bulk_measured**1
         
@@ -198,13 +198,16 @@ if __name__ == '__main__':
         
     # Create the legend with custom handler map
     handler_map = {tuple(handle): HandlerTuple(ndivide=None) for handle in handles}
-    ax3.legend(handles, labels, handler_map=handler_map, title="Time-averaging")
+    ax3.legend(handles, labels, handler_map=handler_map, title="Time-averaging", prop={"size": 14})
 
     ax3.set_xlabel(r'$x/D$', fontsize=fontsize)
-    ax3.set_ylabel(cbar_title, rotation=0, labelpad=15, fontsize=24)
-    ax3.set_ylim(bottom=1., top=1.7)
+    ax3.set_ylabel(cbar_title, rotation=0, labelpad=15, fontsize=28)
+    ax3.set_ylim(bottom=1.1, top=1.8)
     ax3.tick_params(axis='both', labelsize=fontsize)
     ax3.grid(True)
+    ax3.set_aspect('auto', adjustable='box')
+    ax3.set_position([0.1, 0.1, 0.8, 0.8])  # Set the position of the axis in the figure (left, bottom, width, height)
+
     
     # Overlay scatter plots for X and Y values
     # Define the specific values you want to highlight
@@ -288,6 +291,8 @@ if __name__ == '__main__':
     #     print("Interpolation at r={point_of_interest[0]}, x={point_of_interest[1]} is not possible with the given data.")
     
     mass_cons, mom_x, mom_r = fans_terms(df_favre_avg, flame)
+    dpdx = mom_x[2] 
+    dpdr = mom_r[2]
     
     r_starts = [.1, .2, .3]
     # r_starts = [.2]
@@ -298,14 +303,12 @@ if __name__ == '__main__':
     
     streamlines, paths, flame_front_indices, colors = plot_streamlines_reacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_uniform, start_points)
     
+    #%%% Plots
     # plot_mass_cons(mass_cons, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
     # plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
-    
-    dpdx = mom_x[2] 
-    dpdr = mom_r[2]
     plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
     
-    #%% Non-reacting flow
+    #%%% Non-reacting flow
     # non_react_flow = non_react_dict[nonreact_run_nr]
     # name = non_react_flow[0]
     # session_nr = non_react_flow[1] 
@@ -336,7 +339,7 @@ if __name__ == '__main__':
     # pivot_u_r = pd.pivot_table(df_piv_cropped, values='Velocity u [m/s]', index=index_name, columns=column_name)
     # pivot_u_x = pd.pivot_table(df_piv_cropped, values='Velocity v [m/s]', index=index_name, columns=column_name)
     
-    # %% Save images
+    # %%% Save images
     # Get a list of all currently opened figures
     # figure_ids = plt.get_fignums()
     # figure_ids = [11, 12]

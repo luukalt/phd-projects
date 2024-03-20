@@ -27,7 +27,7 @@ plot_parameters_directory = os.path.abspath(os.path.join(parent_directory, 'plot
 sys.path.append(plot_parameters_directory)
 
 #%% IMPORT USER DEFINED PACKAGES
-from parameters import flame, interpolation_method
+from parameters import flame, data_dir, interpolation_method
 from plot_params import fontsize, ms1, ms2, ms3, ms4, ms5, ms6
 from cone_angle import cone_angle
 from functions import intersection
@@ -82,7 +82,7 @@ def plot_streamlines_reacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_unifor
     flame_front_indices = []
     paths = []
     
-    width, height = 9, 9
+    width, height = 9, 6
     fig1, ax1 = plt.subplots(figsize=(width, height))
     
     # Cone angle

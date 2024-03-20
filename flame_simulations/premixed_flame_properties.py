@@ -184,7 +184,6 @@ def plot_phi_vs_S_L0(filename, n=6):
             print("{:<8.3f} {:<8} {:<8.3f}".format(phi_fit[idx][0], int(H2_percentage[0]), S_L0_fit[idx][0]))
     
     
-    # ax.legend(title="$H_2\%$", loc="upper left", prop={"size": 12})
     ax.legend(title="$H_2\%$", loc="upper left", bbox_to_anchor=(0, 1), ncol=1, prop={"size": fontsize_legend})
     
     # Set aspect ratio to 'auto' to avoid stretching
