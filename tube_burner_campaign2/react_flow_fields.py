@@ -26,7 +26,6 @@ plot_parameters_directory = os.path.abspath(os.path.join(parent_directory, 'plot
 sys.path.append(parent_directory)
 sys.path.append(flame_front_detection_directory)
 sys.path.append(flame_simulations_directory)
-sys.path.append(plot_parameters_directory)
 
 #%% IMPORT USER DEFINED PACKAGES
 from parameters import data_dir, piv_method, flame, interpolation_method, nonreact_run_nr, colormap, fontsize, ms1, ms2, ms3, ms4, ms5, ms6

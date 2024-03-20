@@ -46,7 +46,6 @@ plot_parameters_directory = os.path.abspath(os.path.join(parent_directory, 'plot
 sys.path.append(parent_directory)
 sys.path.append(flame_front_detection_directory)
 sys.path.append(flame_simulations_directory)
-sys.path.append(plot_parameters_directory)
 
 #%% IMPORT USER DEFINED PACKAGES
 from parameters import flame, piv_method, interpolation_method, colormap
@@ -297,7 +296,6 @@ if __name__ == '__main__':
     pivot_u_r_norm_values = pivot_u_r_norm.values.flatten()
     pivot_u_x_norm_values = pivot_u_x_norm.values.flatten()
     
-    #%%% Interpolation method
     # Interpolate the velocity components to the uniform grid
     u_r_uniform = griddata((r_norm_values, x_norm_values), pivot_u_r_norm_values, (r_uniform, x_uniform), method=interpolation_method)
     u_x_uniform = griddata((r_norm_values, x_norm_values), pivot_u_x_norm_values, (r_uniform, x_uniform), method=interpolation_method)

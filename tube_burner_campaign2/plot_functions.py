@@ -13,13 +13,13 @@ from matplotlib.lines import Line2D
 from matplotlib.legend_handler import HandlerLineCollection, HandlerTuple
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import matplotlib.collections as mcol
-
-from parameters import spydata_dir, piv_method, react_names, flame, frame_nr, segment_length_mm, window_size, interpolation_method, fontsize, ms1, ms2, ms3, ms4, ms5, ms6
-from cone_angle import cone_angle
-from intersect import intersection
-
 from scipy.interpolate import griddata
 from scipy.interpolate import interp1d
+
+#%% IMPORT USER DEFINED PACKAGES
+from parameters import flame, interpolation_method, fontsize, ms1, ms2, ms3, ms4, ms5, ms6
+from cone_angle import cone_angle
+from functions import intersection
 
 #%% OBJECTS
 class HandlerDashedLines(HandlerLineCollection):
@@ -492,7 +492,6 @@ def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lin
     # lc_react = mcol.LineCollection(3 * dummy_line, linestyles=styles_react, colors=colors)
     # lc_nonreact = mcol.LineCollection(3 * dummy_line, linestyles=styles_nonreact, colors=colors)
     
-    
     ax1.set_xlim(right=3)  # replace with your desired x limits
     ax1.set_ylim(y_lims)  # replace with your desired x limits
     ax1.grid(True)
@@ -508,7 +507,7 @@ def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lin
     
     x_label = r'$s/D$'
     y_label = r'$\frac{dp^{*}}{ds^{*}}$'
-
+    
     # # create the legend
     # if flame.Re_D == 4000:
     #     ax1.legend([lc_react, lc_nonreact], ['reacting', 'non reacting'], handler_map={type(lc_react): HandlerDashedLines()},

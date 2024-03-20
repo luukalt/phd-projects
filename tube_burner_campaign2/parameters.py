@@ -7,14 +7,21 @@ Created on Wed Mar 20 00:10:22 2024
 
 #%% IMPORT STANDARD PACKAGES
 import os
+import sys
 import pickle 
 import socket
 
-#%% IMPORT USER DEFINED PACKAGES
-from custom_colormaps import parula
-
 #%% Project parent folder
 parent_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+#%% ADD SYS PATHS
+plot_parameters_directory = os.path.abspath(os.path.join(parent_directory, 'plot_parameters'))
+
+sys.path.append(plot_parameters_directory)
+
+#%% IMPORT USER DEFINED PACKAGES
+from custom_colormaps import parula
+import rc_params_settings
 
 #%% Plot parameters
 # Marker sizes
@@ -30,6 +37,7 @@ fontsize = 20
 
 # Color map
 colormap = parula
+
 
 #%% Define cases
 react_names_ls =    [
