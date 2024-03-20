@@ -1,5 +1,8 @@
 spydata/
 tube_burner_campaign2/__pycache__
 tube_burner_campaign2/figures
+tube_burner_campaign2/pickles
 flame_front_detection/__pycache__
 flame_front_detection/figures
+flame_simulations/__pycache__
+flame_simulations/figures
