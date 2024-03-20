@@ -13,27 +13,8 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib.ticker import ScalarFormatter
-from scipy.interpolate import griddata
 from custom_colormaps import parula
-
-#%% FIGURE SETTINGS
-
-# mpl.rcParams.update(mpl.rcParamsDefault)
-
-# def set_mpl_params():
-    
-#     # Use Latex font in plots
-#     plt.rcParams.update({
-#         'text.usetex': False,
-#         'font.family': 'serif',
-#         'font.family': 'Arial',
-        
-#         'font.serif': ['Computer Modern Roman'],
-#         'font.serif': ['Times New Roman'],
-#         'font.size': 14.0})
-    
-#     # Shading of pcolor plot
-#     plt.rcParams['pcolor.shading'] = 'auto'
+from parameters import spydata_dir, name
 
 #%%% COLORS
 jet = mpl.colormaps['jet']
@@ -106,7 +87,7 @@ def find_intersection_and_angle_from_arrays(x1, y1, x2, y2):
     return (x_intersection, y_intersection), angle_deg
 
 
-def cone_angle(spydata_dir, name, distances_above_tube=[.75, 1., 1.25]):
+def cone_angle(distances_above_tube=[.75, 1., 1.25]):
 
     segment_length_mm = 1 # units: mm
     window_size = 31 # units: pixels
@@ -254,7 +235,6 @@ def cone_angle(spydata_dir, name, distances_above_tube=[.75, 1., 1.25]):
     # colors = ['#800080', '#00FFFF', '#FF6600']
     colors = ['orange', 'cyan', 'magenta']
     
-
     for i, distance_above_tube in enumerate(distances_above_tube):
     
         # Find the two closest indices to the given index

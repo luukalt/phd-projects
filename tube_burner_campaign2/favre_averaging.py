@@ -8,47 +8,29 @@ Davis 10 has an export bug: Column header: ' [counts]' instead of 'Intensity [co
 
 """
 
-#%% IMPORT PACKAGES
+#%% IMPORT STANDARD PACKAGES
 import os
+import sys
 import pickle
 import pandas as pd
-from matplotlib import pyplot as plt
 from matplotlib.path import Path
-from tqdm import tqdm
 from multiprocessing import Pool, cpu_count
 import numpy as np
-from premixed_flame_properties import PremixedFlame
 
-#%% CLOSE ALL FIGURES
-plt.close('all')
+#%% ADD SYS PATHS
+parent_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+flame_front_detection_directory = os.path.abspath(os.path.join(parent_folder, 'flame_front_detection'))
+flame_simulations_directory = os.path.abspath(os.path.join(parent_folder, 'flame_simulations'))
+plot_parameters_directory = os.path.abspath(os.path.join(parent_folder, 'plot_parameters'))
+
+# Add to sys.path
+sys.path.append(flame_simulations_directory)
+
+#%% IMPORT USER DEFINED PACKAGES
+from premixed_flame_properties import PremixedFlame
+from functions import process_df, contour_correction
 
 #%% FUNCTIONS
-def contour_correction(flame, contour_nr, r_left_raw, r_right_raw, x_bottom_raw, x_top_raw, window_size_r_raw, window_size_x_raw, frame_nr=0):
-    
-    segmented_contour =  flame.frames[frame_nr].contour_data.segmented_contours[contour_nr]
-    
-    segmented_contour_r = segmented_contour[:, 0, 0]
-    segmented_contour_x = segmented_contour[:, 0, 1]
-    
-    # x and y coordinates of the discretized (segmented) flame front 
-    contour_r_corrected = segmented_contour_r*window_size_r_raw + r_left_raw
-    contour_x_corrected = segmented_contour_x*window_size_x_raw + x_top_raw
-    
-    # Non-dimensionalize coordinates by pipe diameter
-    contour_r_corrected /= 1 #D_in
-    contour_x_corrected /= 1 #D_in
-    
-    contour_r_corrected_array = np.array(contour_r_corrected)
-    contour_x_corrected_array = np.array(contour_x_corrected)
-    
-    # Combine the x and y coordinates into a single array of shape (n_coords, 2)
-    contour_corrected_coords = np.array([contour_r_corrected_array, contour_x_corrected_array]).T
-
-    # Create a new array of shape (n_coords, 1, 2) and assign the coordinates to it
-    contour_corrected = np.zeros((len(contour_r_corrected_array), 1, 2))
-    contour_corrected[:, 0, :] = contour_corrected_coords
-    
-    return contour_corrected   
 
 def safe_divide(a, b):
     if b == 0:
@@ -205,28 +187,6 @@ def get_values_in_interrogation_window(flame, raw_grid_df, piv_grid_df, int_wind
     df_favre['rho*v'] = df_favre['rho [kg/m^3]'] * df_favre[u_x_col]
     
     return df_favre
-
-def process_df(df, D_in, offset_to_wall_center, offset):
-    """
-    Process the DataFrame by shifting and normalizing coordinates.
-
-    :param df: DataFrame to process.
-    :param D_in: Diameter for normalization.
-    :param offset_to_wall_center: Offset for x-coordinate shifting.
-    :param offset: Offset for y-coordinate shifting.
-    :return: Processed DataFrame.
-    """
-    
-    df['x_shift [mm]'] = df['x [mm]'] - (D_in/2 - offset_to_wall_center)
-    df['y_shift [mm]'] = df['y [mm]'] + offset
-
-    df['x_shift_norm'] = df['x_shift [mm]']/D_in
-    df['y_shift_norm'] = df['y_shift [mm]']/D_in
-
-    df['x_shift [m]'] = df['x_shift [mm]']*1e-3
-    df['y_shift [m]'] = df['y_shift [mm]']*1e-3
-
-    return df
 
 def process_file(file_number, flame, D_in, offset_to_wall_center, offset, interrogation_window_size_norm, columns_to_average, bottom_limit, top_limit, left_limit, right_limit, index_name, column_name, data_dir, session_nr, recording, piv_method):
     """

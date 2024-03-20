@@ -19,5 +19,3 @@ plt.rcParams["font.size"] = 14.0
 # Add or modify figure.max_open_warning
 plt.rcParams['figure.max_open_warning'] = 50 
 
-
-# print(plt.rcParams)
