@@ -29,26 +29,16 @@ C5: Reynolds normal stress term
 
 #%% IMPORT STANDARD PACKAGES
 import os
-import sys
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.legend_handler import HandlerTuple
 from scipy.interpolate import griddata
 
-#%% ADD SYS PATHS
-parent_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-flame_front_detection_directory = os.path.abspath(os.path.join(parent_directory, 'flame_front_detection'))
-flame_simulations_directory = os.path.abspath(os.path.join(parent_directory, 'flame_simulations'))
-plot_parameters_directory = os.path.abspath(os.path.join(parent_directory, 'plot_parameters'))
-
-# Add to sys.path
-sys.path.append(parent_directory)
-sys.path.append(flame_front_detection_directory)
-sys.path.append(flame_simulations_directory)
-
 #%% IMPORT USER DEFINED PACKAGES
-from parameters import flame, piv_method, interpolation_method, colormap
+from sys_paths import parent_directory
+from parameters import flame, piv_method, interpolation_method
+from plot_params import colormap, fontsize
 from time_averaging_terms import fans_terms
 from plot_functions import plot_streamlines_reacting_flow, plot_mass_cons, plot_fans_terms, plot_pressure_along_streamline
 
@@ -315,7 +305,8 @@ if __name__ == '__main__':
     
     mass_cons, mom_x, mom_r = fans_terms(df_favre_avg, flame)
     
-    r_starts = [.1, .2, .3]
+    # r_starts = [.1, .2, .3]
+    r_starts = [.2]
     x_starts = np.linspace(0.2, 0.2, len(r_starts))
     start_points = [(r_starts[i], x_starts[i]) for i in range(len(r_starts))]
     

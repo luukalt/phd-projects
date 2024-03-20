@@ -11,33 +11,9 @@ import sys
 import pickle 
 import socket
 
-#%% Project parent folder
-parent_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
-#%% ADD SYS PATHS
-plot_parameters_directory = os.path.abspath(os.path.join(parent_directory, 'plot_parameters'))
-
-sys.path.append(plot_parameters_directory)
-
 #%% IMPORT USER DEFINED PACKAGES
-from custom_colormaps import parula
+from sys_paths import parent_directory
 import rc_params_settings
-
-#%% Plot parameters
-# Marker sizes
-ms1 = 18
-ms2 = 16
-ms3 = 14
-ms4 = 12
-ms5 = 10
-ms6 = 8
-
-# Font size for labels
-fontsize = 20
-
-# Color map
-colormap = parula
-
 
 #%% Define cases
 react_names_ls =    [

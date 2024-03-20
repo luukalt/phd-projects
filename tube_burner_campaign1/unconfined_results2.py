@@ -5,22 +5,21 @@ Created on Mon Oct 18 12:25:33 2021
 @author: Gersom
 """
 #%% IMPORT PACKAGES
+import os
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
-import pickle
+
+from sys_paths import parent_directory
 from premixed_flame_properties import PremixedFlame
+import rc_params_settings
+from plot_params import fontsize, fontsize_legend
 
-#%% START
-plt.close("all")
-
-#%% FIGURE SETTINGS
-# plt.rcParams.update({
-#     "text.usetex": True,
-#     "font.family": "serif",
-#     "font.serif": ["Computer Modern Roman"],
-#     "font.size": 14.0})
-
+figures_folder = 'figures'
+if not os.path.exists(figures_folder):
+        os.makedirs(figures_folder)
+        
 #%% CONSTANTS
 # Diameter of the copper tube
 D_copper = 25.67 #mm
@@ -70,18 +69,16 @@ flashback_quartz_data[(5, 100, 0.80, "quartz", D_quartz)] = [(0.8009, 19.1840), 
 flashback_quartz_data[(5, 100, 0.90, "quartz", D_quartz)] = [(0.9006, 20.7951), (0.9004, 20.8345), (0.9011, 20.7866)]
 flashback_quartz_data[(5, 100, 1.00, "quartz", D_quartz)] = [(1.0000, 22.2811), (1.0008, 22.6272), (1.0000, 22.2180)]
 
-
 #%% PROCESS DATA
 # Read unstretched laminar flame speed data
-filename = "S_L0_lib2"
-with open('unstreched_laminar_flame_speed_data/'+ filename + '.txt', 'rb') as f:
+filename = "S_L0_lib5"
+with open(os.path.join(parent_directory, 'flame_simulations', 'unstreched_laminar_flame_speed_data', filename + '.txt'), 'rb') as f:
     S_L0_lib = pickle.load(f)
     
 # Read strained laminar flame speed data    
-with open('strained_flame_speed_data\Tu293_pu101325\strained_flame_speed_lib.txt', 'rb') as f:
+with open(os.path.join(parent_directory, 'flame_simulations', 'strained_flame_speed_data', 'Tu293_pu101325', 'strained_flame_speed_lib.txt'), 'rb') as f:
     strained_flame_speed_lib = pickle.load(f)
     
-
 # Initialize lists
 phi_lists = [[] for i in range(n)]
 U_bulk_lists = [[] for i in range(n)]
@@ -152,34 +149,32 @@ markersize = [8, 8, 8, 8, 8, 8]
 
 colors = cm.viridis(np.linspace(0, 1, len(markers)))
 
-fig_scale = 1
 default_fig_dim = plt.rcParams["figure.figsize"]
+fig_size = default_fig_dim[0]
 
-width, height = default_fig_dim[0], default_fig_dim[1]
-width, height = 6, 6
-
-fontsize_xlabel = 16
-fontsize_ylabel = 16
+fontsize_xlabel = fontsize
+fontsize_ylabel = fontsize
 fontsize_ylabel_fraction = 24
+dpi = 300
 
-fig1, ax1 = plt.subplots(figsize=(fig_scale*width, fig_scale*height), dpi=100, constrained_layout=True)
+fig1, ax1 = plt.subplots(figsize=(fig_size, fig_size), dpi=dpi, constrained_layout=True)
 ax1.set_xlabel(r'$\phi$', fontsize=fontsize_xlabel)
 ax1.set_ylabel(r'$U_{b}$ [ms$^{-1}$]', fontsize=fontsize_ylabel) 
 
-fig2, ax2 = plt.subplots(figsize=(fig_scale*width, fig_scale*height), dpi=100, constrained_layout=True)
+fig2, ax2 = plt.subplots(figsize=(fig_size, fig_size), dpi=dpi, constrained_layout=True)
 ax2.set_xlabel(r'$\phi$', fontsize=fontsize_xlabel)
 # ax2.set_ylabel(r'$\frac{U_{b}}{S_{L0}}$', rotation=0, labelpad=0, fontsize=fontsize_ylabel_fraction) 
 ax2.set_ylabel(r'$U_{b}/S_{L0}$', fontsize=fontsize_ylabel)
 
-fig3, ax3 = plt.subplots(figsize=(fig_scale*width, fig_scale*height), dpi=100)
+fig3, ax3 = plt.subplots(figsize=(fig_size, fig_size), dpi=dpi)
 ax3.set_xlabel(r'$\phi$', fontsize=fontsize_xlabel)
 ax3.set_ylabel(r'$Re_{D}$', fontsize=fontsize_ylabel) 
 
-fig4, ax4 = plt.subplots(figsize=(fig_scale*width, fig_scale*height), dpi=100)
+fig4, ax4 = plt.subplots(figsize=(fig_size, fig_size), dpi=dpi)
 ax4.set_xlabel(r'$\phi$', fontsize=fontsize_xlabel)
 ax4.set_ylabel(r'$S_{L0}$ [ms$^{-1}$]', fontsize=fontsize_ylabel)  
 
-fig5, ax5 = plt.subplots(figsize=(fig_scale*width, fig_scale*height), dpi=100)
+fig5, ax5 = plt.subplots(figsize=(fig_size, fig_size), dpi=dpi)
 ax5.set_xlabel(r'$\phi$', fontsize=fontsize_xlabel)
 ax5.set_ylabel(r'$\frac{U_{b}}{S_{L,ext}}$', rotation=0, labelpad=15, fontsize=fontsize_ylabel_fraction)  
 
@@ -290,11 +285,26 @@ ax4.grid()
 ax5.grid()
 
 # Show legends in figures
-ax1.legend(title="$H_2\%$", loc="upper left", bbox_to_anchor=(0, 1), ncol=1, prop={"size": 16})
-ax2.legend(title="$H_2\%$", loc="upper right", bbox_to_anchor=(1, 1), ncol=1, prop={"size": 16})
-ax3.legend(title="$H_2\%$", loc="upper left", bbox_to_anchor=(0, 1), ncol=1, prop={"size": 16})
-ax4.legend(title="$H_2\%$", loc="upper left", bbox_to_anchor=(0, 1), ncol=1, prop={"size": 16})
-ax5.legend(title="$H_2\%$", loc="upper left", bbox_to_anchor=(0, 1), ncol=1, prop={"size": 16})
+ax1.legend(title="$H_2\%$", loc="upper left", bbox_to_anchor=(0, 1), ncol=1, prop={"size": fontsize_legend})
+ax2.legend(title="$H_2\%$", loc="upper right", bbox_to_anchor=(1, 1), ncol=1, prop={"size": fontsize_legend})
+ax3.legend(title="$H_2\%$", loc="upper left", bbox_to_anchor=(0, 1), ncol=1, prop={"size": fontsize_legend})
+ax4.legend(title="$H_2\%$", loc="upper left", bbox_to_anchor=(0, 1), ncol=1, prop={"size": fontsize_legend})
+ax5.legend(title="$H_2\%$", loc="upper left", bbox_to_anchor=(0, 1), ncol=1, prop={"size": fontsize_legend})
+
+# Set aspect ratio to 'auto' to avoid stretching
+ax1.set_aspect('auto', adjustable='box')
+ax2.set_aspect('auto', adjustable='box')
+ax3.set_aspect('auto', adjustable='box')
+ax4.set_aspect('auto', adjustable='box')
+ax5.set_aspect('auto', adjustable='box')
+
+# Set the size of the axis to ensure both axes have the same dimensions in inches
+ax1.set_position([0.1, 0.1, 0.8, 0.8])  # Set the position of the axis in the figure (left, bottom, width, height)
+ax2.set_position([0.1, 0.1, 0.8, 0.8])  # Set the position of the axis in the figure (left, bottom, width, height)
+ax3.set_position([0.1, 0.1, 0.8, 0.8])  # Set the position of the axis in the figure (left, bottom, width, height)
+ax4.set_position([0.1, 0.1, 0.8, 0.8])  # Set the position of the axis in the figure (left, bottom, width, height)
+ax5.set_position([0.1, 0.1, 0.8, 0.8])  # Set the position of the axis in the figure (left, bottom, width, height)
+
 
 # Get a list of all currently opened figures
 figure_ids = plt.get_fignums()
@@ -303,7 +313,7 @@ figure_ids = plt.get_fignums()
 for fid in figure_ids:
     fig = plt.figure(fid)
     fig.tight_layout()
-    fig.savefig(f"figures/fb_maps_fig{fid}_{filename}.eps", format="eps", dpi=300, bbox_inches="tight")
+    fig.savefig(f"figures/fb_maps_fig{fid}_{filename}.eps", format="eps", dpi=dpi, bbox_inches="tight")
 
 
 

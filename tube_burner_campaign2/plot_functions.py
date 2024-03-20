@@ -6,6 +6,8 @@ Created on Tue Mar 19 23:27:52 2024
 """
 
 #%% IMPORT PACKAGES
+import os
+import sys
 import pickle
 import numpy as np
 from matplotlib import pyplot as plt
@@ -16,8 +18,17 @@ import matplotlib.collections as mcol
 from scipy.interpolate import griddata
 from scipy.interpolate import interp1d
 
+#%% Project parent folder
+parent_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+#%% ADD SYS PATHS
+plot_parameters_directory = os.path.abspath(os.path.join(parent_directory, 'plot_parameters'))
+
+sys.path.append(plot_parameters_directory)
+
 #%% IMPORT USER DEFINED PACKAGES
-from parameters import flame, interpolation_method, fontsize, ms1, ms2, ms3, ms4, ms5, ms6
+from parameters import flame, interpolation_method
+from plot_params import fontsize, ms1, ms2, ms3, ms4, ms5, ms6
 from cone_angle import cone_angle
 from functions import intersection
 
@@ -71,7 +82,8 @@ def plot_streamlines_reacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_unifor
     flame_front_indices = []
     paths = []
     
-    fig1, ax1 = plt.subplots()
+    width, height = 9, 9
+    fig1, ax1 = plt.subplots(figsize=(width, height))
     
     # Cone angle
     distances_above_tube = [.25, .75, 1.25,]
@@ -142,7 +154,6 @@ def plot_streamlines_reacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_unifor
         ax1.set_aspect('equal')
         
         # Find intersecion between streamline and average cone angle
-        
         if streamline_r[0] < 0:
             r_intersect, x_intersect = intersection(r_range_left, poly_left_fit, streamline_r, streamline_x)
 
@@ -222,8 +233,8 @@ def plot_mass_cons(mass_cons, r_norm_values, x_norm_values, lines, flame_front_i
                 ax.plot(cumulative_distances[0], term_along_line[0], c=color, marker='>', ms=ms4, mec='k')
                 ax.plot(cumulative_distances[-1], term_along_line[-1], c=color, marker='o', ms=ms5, mec='k')
                 
-                ax.set_xlabel(x_label, fontsize=20)
-                ax.set_ylabel(y_label, fontsize=20) 
+                ax.set_xlabel(x_label, fontsize=fontsize)
+                ax.set_ylabel(y_label, fontsize=fontsize) 
                 
                 # Append data to each key in export_data
                 export_data['cumulative_distances'].append(cumulative_distances.tolist())
@@ -276,8 +287,8 @@ def plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, lines
                 ax.plot(cumulative_distances[0], term_along_line[0], c=color, marker='>', ls='None', mec='k', ms=ms4)
                 ax.plot(cumulative_distances[-1], term_along_line[-1], c=color, marker='o', ms=ms5, mec='k')
                 
-                ax.set_xlabel(x_label, fontsize=20)
-                ax.set_ylabel(y_label, fontsize=20) 
+                ax.set_xlabel(x_label, fontsize=fontsize)
+                ax.set_ylabel(y_label, fontsize=fontsize) 
     
     marker_dummy1 = Line2D([0], [0], label='Average flame front location', marker='*', markersize=ms1, 
          mec='k', mfc='None', linestyle='')
@@ -321,7 +332,6 @@ def plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, lines
     
     for line, flame_front_index, color in zip(lines, flame_front_indices, colors):
         
-        width, height = 9, 9
         fig2, ax2 = plt.subplots(figsize=(width, height))
         # fig2, ax2 = plt.subplots()
         
@@ -369,32 +379,31 @@ def plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, lines
                     ax3.plot(cumulative_distances[0], term_along_line[0], c=color, marker='>',  mec='k', ms=ms4)
                     ax3.plot(cumulative_distances[-1], term_along_line[-1], c=color, marker='o', ms=ms5, mec='k')
                     
-        # ax2.legend(title='Axial terms', loc="upper left", bbox_to_anchor=(1, 1), ncol=1, prop={"size": 16})
-        
-        # ax3.legend(title='Radial terms', loc="upper left", bbox_to_anchor=(1, 1), ncol=1, prop={"size": 16})
-        
-        # ax2.legend(loc='upper left', prop={'size': 18}, bbox_to_anchor=(.225, .45))
-        # ax2.legend(loc='upper left', prop={'size': 18}, bbox_to_anchor=(.0, .425))
-        
         ax2.legend(loc='lower left', prop={'size': 18})
         ax3.legend(loc='lower left', bbox_to_anchor=(0, .1), prop={'size': 18})
         
-        ax2.tick_params(axis='both', labelsize=20)
-        ax3.tick_params(axis='both', labelsize=20)
+        ax2.tick_params(axis='both', labelsize=fontsize_label)
+        ax3.tick_params(axis='both', labelsize=fontsize_label)
         
+        # Set aspect ratio to 'auto' to avoid stretching
+        ax2.set_aspect('auto', adjustable='box')
+        ax3.set_aspect('auto', adjustable='box')
+        
+        # Set the size of the axis to ensure both axes have the same dimensions in inches
+        ax2.set_position([0.1, 0.1, 0.8, 0.8])  # Set the position of the axis in the figure (left, bottom, width, height)
+        ax3.set_position([0.1, 0.1, 0.8, 0.8])  # Set the position of the axis in the figure (left, bottom, width, height)
+
         
 def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lines, flame_front_indices, colors):
     
     width, height = 6, 6
     fig1, ax1 = plt.subplots(figsize=(width, height))
     
-    fontsize_label = 24
-    
     x_label = r'$s/D$'
     y_label = r'$\overline{p^*} - \overline{p_{0}^*}$'
     
-    ax1.set_xlabel(x_label, fontsize=fontsize_label)
-    ax1.set_ylabel(y_label, fontsize=fontsize_label)
+    ax1.set_xlabel(x_label, fontsize=fontsize)
+    ax1.set_ylabel(y_label, fontsize=fontsize)
     
     # Define the region of interest for zooming
     ax1_x1, ax1_x2, ax1_y1, ax1_y2 = -.1, .5, -.01, .06  # for example, zoom in on this region
@@ -470,10 +479,6 @@ def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lin
             drds = dr/ds
             dxds = dx/ds
             
-            
-            # dr *= D_in*1e-3
-            # dx *= D_in*1e-3
-            
             p_along_line[i] = p_along_line[i-1] + 0.5 * (dpdr_along_line[i] + dpdr_along_line[i-1]) * dr + 0.5 * (dpdx_along_line[i] + dpdx_along_line[i-1]) * dx
             
         ax1.plot(cumulative_distances, p_along_line, c=color, marker='None', ls='solid')
@@ -503,7 +508,7 @@ def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lin
     # ax_inset.set_xticks([])
     # ax_inset.set_yticks([])
     
-    ax1.tick_params(axis='both', labelsize=20)
+    ax1.tick_params(axis='both', labelsize=fontsize)
     
     x_label = r'$s/D$'
     y_label = r'$\frac{dp^{*}}{ds^{*}}$'
@@ -579,16 +584,14 @@ def plot_pressure_along_streamline_old(ax1, ax2, dpdr, dpdx, r_norm_values, x_no
     lc_react = mcol.LineCollection(3 * dummy_line, linestyles=styles_react, colors=colors)
     lc_nonreact = mcol.LineCollection(3 * dummy_line, linestyles=styles_nonreact, colors=colors)
     
-    fontsize_label = 20
-    
     x_label = r'$s/D$'
     # y_label = r'$\frac{\overline{p}}{\rho_{u}U_{b}^2}$'
     # ax1.set_ylabel(y_label, rotation=0, labelpad=24, fontsize=26)
     
     y_label = r'$\overline{p^*} - \overline{p_{0}^*}$'
-    ax1.set_ylabel(y_label, fontsize=fontsize_label)
+    ax1.set_ylabel(y_label, fontsize=fontsize)
     
-    ax1.set_xlabel(x_label, fontsize=fontsize_label)
+    ax1.set_xlabel(x_label, fontsize=fontsize)
     # ax1.set_ylabel(y_label)
     ax1.set_xlim([0, 1])  # replace with your desired x limits
     ax1.set_ylim([-.01, .075])  # replace with your desired x limits
@@ -600,7 +603,7 @@ def plot_pressure_along_streamline_old(ax1, ax2, dpdr, dpdx, r_norm_values, x_no
     ax1.set_yticks(custom_y_ticks)
     # ax1.set_yticklabels(custom_y_tick_labels)  # Use this line to set custom tick labels
     
-    ax1.tick_params(axis='both', labelsize=fontsize_label)
+    ax1.tick_params(axis='both', labelsize=fontsize)
     
     x_label = r'$s/D$'
     y_label = r'$\frac{dp^{*}}{ds^{*}}$'
@@ -703,8 +706,8 @@ def plot_mass_cons_old(p, ax, ax_inset, mass_cons, r_norm_values, x_norm_values,
                 ax_inset.plot(cumulative_distances[-1], term_along_line[-1], c=color, marker='o', ms=ms6, mec='k')
                 
     
-    ax.set_xlabel(x_label, fontsize=20)
-    ax.set_ylabel(y_label, fontsize=20) 
+    ax.set_xlabel(x_label, fontsize=fontsize)
+    ax.set_ylabel(y_label, fontsize=fontsize) 
     
     # Your custom markers
     # marker_dummy1 = Line2D([0], [0], label='Average flame front location', marker='*', markersize=ms1, mec='k', mfc='None', linestyle='')
@@ -911,8 +914,8 @@ def plot_ns_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, lines, 
         
         ax3.legend(loc='best', prop={'size': 18})
         
-        ax2.tick_params(axis='both', labelsize=20)
-        ax3.tick_params(axis='both', labelsize=20)
+        ax2.tick_params(axis='both', labelsize=fontsize)
+        ax3.tick_params(axis='both', labelsize=fontsize)
         
         # ax2.legend()
         
@@ -1149,7 +1152,7 @@ def plot_cartoons(flame, image_nrs, recording, piv_method):
             # raw_field.set_clim(1.25, 3)
             
             # cbar = ax2.figure.colorbar(raw_field)
-            # cbar.set_label(r'$I_p$', rotation=0, labelpad=15, fontsize=20)
+            # cbar.set_label(r'$I_p$', rotation=0, labelpad=15, fontsize=fontsize)
             
         # Figure 1: Plot flame front contour
         ax1.plot(contour_x, contour_y, color=color, ls=ls, lw=lw)
