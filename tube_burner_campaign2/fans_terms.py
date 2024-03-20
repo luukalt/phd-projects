@@ -91,14 +91,14 @@ if __name__ == '__main__':
     # Add extra columns to the favre average dataframe
     df_favre_avg['Velocity |V| [m/s]'] = np.sqrt(df_favre_avg['Velocity u [m/s]']**2 + df_favre_avg['Velocity v [m/s]']**2)
     df_favre_avg['|V|_favre [m/s]'] = np.sqrt(df_favre_avg['u_favre [m/s]']**2 + df_favre_avg['v_favre [m/s]']**2)
-    # df_favre_avg['u_favre [counts] [m/s]'] = df_favre_avg['Wmean*u [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
-    # df_favre_avg['v_favre [counts] [m/s]'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
-    # df_favre_avg['|V|_favre [counts] [m/s]'] = np.sqrt(df_favre_avg['u_favre [counts] [m/s]']**2 + df_favre_avg['v_favre [counts] [m/s]']**2)
+    df_favre_avg['u_favre [counts] [m/s]'] = df_favre_avg['Wmean*u [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
+    df_favre_avg['v_favre [counts] [m/s]'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
+    df_favre_avg['|V|_favre [counts] [m/s]'] = np.sqrt(df_favre_avg['u_favre [counts] [m/s]']**2 + df_favre_avg['v_favre [counts] [m/s]']**2)
     
     var1 = 'Velocity |V| [m/s]'
-    # var2 = '|V|_favre [counts] [m/s]'
+    var2 = '|V|_favre [counts] [m/s]'
     var3 = '|V|_favre [m/s]'
-    var_list = [var1, var3, var3]
+    var_list = [var1, var2, var3]
     
     # var1 = 'Wmean [counts]'
     # var2 = 'Wmean [states]'
@@ -305,7 +305,7 @@ if __name__ == '__main__':
     
     #%%% Plots
     # plot_mass_cons(mass_cons, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
-    # plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
+    plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
     plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
     
     #%%% Non-reacting flow
@@ -340,9 +340,9 @@ if __name__ == '__main__':
     # pivot_u_x = pd.pivot_table(df_piv_cropped, values='Velocity v [m/s]', index=index_name, columns=column_name)
     
     # %%% Save images
-    # Get a list of all currently opened figures
+    # # Get a list of all currently opened figures
     # figure_ids = plt.get_fignums()
-    # figure_ids = [11, 12]
+    # figure_ids = [12, 13]
     
     # if 'ls' in flame.name:
     #     folder = 'ls'

@@ -307,8 +307,8 @@ def plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, lines
                     '[2] Radial advection',
                     '[3] Pressure gradient',
                     # '[4] Viscous diffusion',
-                    '[4] Favre normal stress',
-                    '[5] Favre shear stress'
+                    '[4] Change in Favre normal stress',
+                    '[5] Change in Favre shear stress'
                     ]
     
     mom_r_labels = [
@@ -316,8 +316,8 @@ def plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, lines
                     '[2] Radial advection',
                     '[3] Pressure gradient',
                     # '[4] Viscous diffusion',
-                    '[4] Favre shear stress',
-                    '[5] Favre normal stress'
+                    '[4] Change in Favre shear stress',
+                    '[5] Change in Favre normal stress'
                     ]
     
     mom_markers = ['v', '^', 'o', 's', 'p', 'd']
@@ -379,8 +379,11 @@ def plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, lines
                     ax3.plot(cumulative_distances[0], term_along_line[0], c=color, marker='>',  mec='k', ms=ms4)
                     ax3.plot(cumulative_distances[-1], term_along_line[-1], c=color, marker='o', ms=ms5, mec='k')
                     
-        ax2.legend(loc='lower left', prop={'size': 18})
-        ax3.legend(loc='lower left', bbox_to_anchor=(0, .1), prop={'size': 18})
+        legend2 = ax2.legend(loc='lower left', prop={'size': 18})
+        legend3 = ax3.legend(loc='lower left', bbox_to_anchor=(0, .1), prop={'size': 18})
+        
+        # legend2.get_frame().set_facecolor('none')  # Make the legend box transparent
+        # legend2.get_frame().set_alpha(0.5)  
         
         ax2.tick_params(axis='both', labelsize=fontsize_label)
         ax3.tick_params(axis='both', labelsize=fontsize_label)
