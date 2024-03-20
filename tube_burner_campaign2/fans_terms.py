@@ -29,6 +29,7 @@ C5: Reynolds normal stress term
 
 #%% IMPORT STANDARD PACKAGES
 import os
+import pickle
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
@@ -45,6 +46,10 @@ from plot_functions import plot_streamlines_reacting_flow, plot_mass_cons, plot_
 figures_folder = 'figures'
 if not os.path.exists(figures_folder):
         os.makedirs(figures_folder)
+        
+pickles_folder = 'pickles'
+if not os.path.exists(pickles_folder):
+        os.makedirs(pickles_folder)
         
 #%% MAIN
 if __name__ == '__main__':  
@@ -104,11 +109,9 @@ if __name__ == '__main__':
     
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
     
-    fontsize = 20
-    
     fig2, ax2 = plt.subplots()
     
-    width, height = 6, 6
+    width, height = 9, 6
     fig3, ax3 = plt.subplots(figsize=(width, height))
     
     cbar_max = 2
@@ -119,7 +122,7 @@ if __name__ == '__main__':
               'Favre [intensity count]',
               'Favre [flame front detection]',
               ]
-
+    
     for color, var, label in zip(colors[:len(var_list)], var_list, labels):
         
         pivot_var = pd.pivot_table(df_favre_avg, values=var, index=index_name, columns=column_name)
@@ -131,7 +134,7 @@ if __name__ == '__main__':
         r_norm_values = r_norm.flatten()
         x_norm_values = x_norm.flatten()
         
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(width, height))
         ax.set_title(label)
         cbar_title = r'$\frac{|V|}{U_{b}}$'
         
@@ -164,25 +167,6 @@ if __name__ == '__main__':
         ax.set_ylim(bottom=.05, top=2.2)
         
         ax.tick_params(axis='both', labelsize=fontsize)
-        
-        # # Find the two closest indices to the given index
-        # distances_above_tube = [.5, 1., 1.5]
-        # markers = ['o', 's', '*']
-        
-        # for marker, distance_above_tube in zip(markers, distances_above_tube):
-            
-        #     distance_above_tube_below = pivot_var.index[pivot_var.index <= distance_above_tube].max()
-        #     distance_above_tube_above = pivot_var.index[pivot_var.index >= distance_above_tube].min()
-            
-        #     pivot_var_interp = pivot_var.loc[[distance_above_tube_below, distance_above_tube_above]]
-        #     pivot_var_interp.loc[distance_above_tube] = np.nan
-        #     pivot_var_interp.sort_index(inplace=True)
-        #     pivot_var_interp.interpolate(method='index', inplace=True)
-        #     profile_contour_dist = pivot_var_interp.loc[distance_above_tube]
-        #     r_line = pivot_var.columns
-        #     ax2.scatter(r_line, profile_contour_dist, marker=marker, color=color, label=var) #, marker='o', edgecolors='k', ls='None')
-        
-        # ax2.set_ylim(bottom=.8)
         
         # Find the two closest indices to the given index
         distances_radial_tube = [.0, .3,]
@@ -305,8 +289,8 @@ if __name__ == '__main__':
     
     mass_cons, mom_x, mom_r = fans_terms(df_favre_avg, flame)
     
-    # r_starts = [.1, .2, .3]
-    r_starts = [.2]
+    r_starts = [.1, .2, .3]
+    # r_starts = [.2]
     x_starts = np.linspace(0.2, 0.2, len(r_starts))
     start_points = [(r_starts[i], x_starts[i]) for i in range(len(r_starts))]
     
@@ -314,8 +298,8 @@ if __name__ == '__main__':
     
     streamlines, paths, flame_front_indices, colors = plot_streamlines_reacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_uniform, start_points)
     
-    plot_mass_cons(mass_cons, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
-    plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
+    # plot_mass_cons(mass_cons, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
+    # plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
     
     dpdx = mom_x[2] 
     dpdr = mom_r[2]
@@ -352,21 +336,27 @@ if __name__ == '__main__':
     # pivot_u_r = pd.pivot_table(df_piv_cropped, values='Velocity u [m/s]', index=index_name, columns=column_name)
     # pivot_u_x = pd.pivot_table(df_piv_cropped, values='Velocity v [m/s]', index=index_name, columns=column_name)
     
-    #%% Save images
+    # %% Save images
     # Get a list of all currently opened figures
     # figure_ids = plt.get_fignums()
-    # figure_ids = [14]
+    # figure_ids = [11, 12]
     
-    # if react_names_ls:
+    # if 'ls' in flame.name:
     #     folder = 'ls'
     # else:
     #     folder = 'hs'
+    
+    # figures_subfolder = os.path.join(figures_folder, folder)
+    # if not os.path.exists(figures_subfolder):
+    #         os.makedirs(figures_subfolder)
+    
+    # pickles_subfolder = os.path.join(pickles_folder, folder)
+    # if not os.path.exists(pickles_subfolder):
+    #         os.makedirs(pickles_subfolder)
 
     # # Apply tight_layout to each figure
     # for fid in figure_ids:
     #     fig = plt.figure(fid)
-    #     fig.tight_layout()
-    #     # filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
     #     filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
         
     #     # Constructing the paths
@@ -386,10 +376,9 @@ if __name__ == '__main__':
     #         # Saving the figure in EPS format
     #         fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
         
-        
-        # # Pickling the figure
-        # with open(pkl_path, 'wb') as f:
-        #     pickle.dump(fig, f)
+    #     # Pickling the figure
+    #     with open(pkl_path, 'wb') as f:
+    #         pickle.dump(fig, f)
             
     
     

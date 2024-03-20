@@ -200,7 +200,6 @@ for i in range(n):
         ax4.plot(phi_test, S_L0_test, ls=linestyle,  marker=markers[i], ms=markersize[i], mec='k', mfc=colors[i], label=labels[i] if i != check_label else "")
         ax5.plot(phi_test, U_bulk_test/S_u_maxgradT_test, ls=linestyle,  marker=markers[i], ms=markersize[i], mec='k', mfc=colors[i], label=labels[i] if i != check_label else "")
         
-        
         if (phi_test == 0.49 and labels[i] == '$100$') or (phi_test == 1.0 and labels[i] == '$0$'):
             
             # ax1.plot(phi_test, U_bulk_test, ls=linestyle,  marker=markers[i], ms=markersize[i], mec='k', mfc=colors[i], label=labels[i] if i != check_label else "")
@@ -312,7 +311,7 @@ figure_ids = plt.get_fignums()
 # Adjust the padding between and around subplots
 for fid in figure_ids:
     fig = plt.figure(fid)
-    fig.tight_layout()
+    # fig.tight_layout()
     fig.savefig(f"figures/fb_maps_fig{fid}_{filename}.eps", format="eps", dpi=dpi, bbox_inches="tight")
 
 

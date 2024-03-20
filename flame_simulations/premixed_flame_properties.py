@@ -562,7 +562,7 @@ if __name__ == "__main__":
     # Apply tight_layout to each figure
     for fid in figure_ids:
         fig = plt.figure(fid)
-        fig.tight_layout()
+        # fig.tight_layout()
         fig.savefig(f"figures/S_L0_phi_fig{fid}_{filename}.eps", format="eps", dpi=300, bbox_inches="tight")
         
     # # # Equivalence ratios    

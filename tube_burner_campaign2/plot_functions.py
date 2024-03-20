@@ -396,14 +396,14 @@ def plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, lines
         
 def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lines, flame_front_indices, colors):
     
-    width, height = 6, 6
+    width, height = 9, 6
     fig1, ax1 = plt.subplots(figsize=(width, height))
     
     x_label = r'$s/D$'
     y_label = r'$\overline{p^*} - \overline{p_{0}^*}$'
     
-    ax1.set_xlabel(x_label, fontsize=fontsize)
-    ax1.set_ylabel(y_label, fontsize=fontsize)
+    ax1.set_xlabel(x_label, fontsize=24)
+    ax1.set_ylabel(y_label, fontsize=24)
     
     # Define the region of interest for zooming
     ax1_x1, ax1_x2, ax1_y1, ax1_y2 = -.1, .5, -.01, .06  # for example, zoom in on this region
@@ -412,14 +412,13 @@ def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lin
     ax1.add_patch(plt.Rectangle((ax1_x1, ax1_y1), ax1_x2 - ax1_x1, ax1_y2 - ax1_y1, fill=False, color='k', linestyle='solid', lw=2))
     
     if flame.Re_D == 3000:
-        y_lims = [-.325, .125]
-        bbox_to_anchor=(ax1_x1 + 1.725 , ax1_y1 + .055, ax1_x2 - ax1_x1, ax1_y2 - ax1_y1)
+        y_lims = [-.35, .125]
+        bbox_to_anchor=(ax1_x1 + 1.7 , ax1_y1 + .05, ax1_x2 - ax1_x1, ax1_y2 - ax1_y1)
         width="225%"
         height="225%"
     elif flame.Re_D == 4000:
-        y_lims = [-.325, .125]
-        # bbox_to_anchor=(ax1_x1 + .15 , ax1_y1 -.225, ax1_x2 - ax1_x1, ax1_y2 - ax1_y1)
-        bbox_to_anchor=(ax1_x1 + 1.725 , ax1_y1 + .055, ax1_x2 - ax1_x1, ax1_y2 - ax1_y1)
+        y_lims = [-.35, .125]
+        bbox_to_anchor=(ax1_x1 + 1.7 , ax1_y1 + .05, ax1_x2 - ax1_x1, ax1_y2 - ax1_y1)
         width="225%"
         height="225%"
     elif flame.Re_D == 12500:
@@ -434,11 +433,10 @@ def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lin
         height="175%"
         
     ax1_inset = inset_axes(ax1, width=width, height=height, loc='upper left',
-                      # bbox_to_anchor=(x1, y1, x2 - x1, y2 - y1),
-                      bbox_to_anchor=bbox_to_anchor,
+                       # bbox_to_anchor=(x1, y1, x2 - x1, y2 - y1),
+                       bbox_to_anchor=bbox_to_anchor,
                       bbox_transform=ax1.transData,
                       borderpad=0)
-    
     
     # Set the limits for the inset axes
     ax1_inset.set_xlim(ax1_x1, ax1_x2)
@@ -490,39 +488,14 @@ def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lin
         ax1_inset.plot(cumulative_distances[0], p_along_line[0], color=color, marker='>', ls='None', mec='k', ms=ms4)
         ax1_inset.plot(cumulative_distances, p_along_line, c=color, marker='None', ls='solid')
         
-    # make proxy artists
-    # make list of one line -- doesn't matter what the coordinates are
-    # dummy_line = [[(0, 0)]]
-    # set up the proxy artist
-    # lc_react = mcol.LineCollection(3 * dummy_line, linestyles=styles_react, colors=colors)
-    # lc_nonreact = mcol.LineCollection(3 * dummy_line, linestyles=styles_nonreact, colors=colors)
-    
     ax1.set_xlim(right=3)  # replace with your desired x limits
     ax1.set_ylim(y_lims)  # replace with your desired x limits
     ax1.grid(True)
     
-    # ax_inset.set_xlim(x1, x2)
-    # ax_inset.set_ylim(y1, y2)
-    
-    # Hide the x and y axis ticks
-    # ax_inset.set_xticks([])
-    # ax_inset.set_yticks([])
-    
     ax1.tick_params(axis='both', labelsize=fontsize)
     
-    x_label = r'$s/D$'
-    y_label = r'$\frac{dp^{*}}{ds^{*}}$'
-    
-    # # create the legend
-    # if flame.Re_D == 4000:
-    #     ax1.legend([lc_react, lc_nonreact], ['reacting', 'non reacting'], handler_map={type(lc_react): HandlerDashedLines()},
-    #                 handlelength=3, handleheight=3, loc='upper left', prop={'size': 16}, bbox_to_anchor=(.45, .65))
-    # elif flame.Re_D == 16000:
-    #     ax1.legend([lc_react, lc_nonreact], ['reacting', 'non reacting'], handler_map={type(lc_react): HandlerDashedLines()},
-    #                     handlelength=3, handleheight=3, loc='upper left', prop={'size': 16}, bbox_to_anchor=(.45, 1.))
-        
-    # ax2.legend([lc_react, lc_nonreact], ['reacting', 'non reacting'], handler_map={type(lc_react): HandlerDashedLines()},
-    #            handlelength=3, handleheight=3)  
+    # Set aspect ratio to 'auto' to avoid stretching
+    ax1.set_aspect('auto', adjustable='box')
     
 
 #%%  FUNCTIONS [reacting_flow_fields.py]
