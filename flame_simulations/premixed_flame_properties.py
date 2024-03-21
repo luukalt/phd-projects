@@ -6,26 +6,24 @@ Created on Tue Mar 15 11:23:39 2022
 
 premixed flame properties
 """
-#%% IMPORT PACKAGES
-import cantera as ct
-import sys
+#%% IMPORT STANDARD PACKAGES
 import os
-from matplotlib import pyplot as plt
-from matplotlib import cm
-import numpy as np
-import warnings
+import sys
 import pickle
+import numpy as np
+from matplotlib import pyplot as plt
+import matplotlib.cm as cm
+import cantera as ct
 
-#%% START
-plt.close("all")
+#%% IMPORT USER DEFINED PACKAGES
+import sys_paths
+import rc_params_settings
+from plot_params import fontsize, fontsize_legend
 
-#%% FIGURE SETTINGS
-# plt.rcParams.update({
-#     "text.usetex": True,
-#     "font.family": "serif",
-#     "font.serif": ["Computer Modern Roman"],
-#     "font.size": 14.0})
-
+figures_folder = 'figures'
+if not os.path.exists(figures_folder):
+        os.makedirs(figures_folder)
+        
 #%% FUNCTIONS
 
 def create_library(filename):
@@ -120,19 +118,17 @@ def plot_phi_vs_S_L0(filename, n=6):
     colors = cm.viridis(np.linspace(0, 1, len(markers)))
     labels = ['$0$', '$20$', '$40$', '$60$', '$80$', '$100$']
     
-    with open('unstreched_laminar_flame_speed_data/'+ filename + '.txt', 'rb') as f:
+    with open(os.path.join('unstreched_laminar_flame_speed_data', filename + '.txt'), 'rb') as f:
         S_L0_lib = pickle.load(f)
     
     phi_lists = [[] for i in range(n)]
     H2_percentage_lists = [[] for i in range(n)]
     S_L0_lists = [[] for i in range(n)]
     
-    
-    fig_scale = 1
     default_fig_dim = plt.rcParams["figure.figsize"]
-    fontsize = 16
-    
-    fig, ax = plt.subplots(figsize=(fig_scale*6, fig_scale*6), dpi=100)
+    fig_size = default_fig_dim[0]
+
+    fig, ax = plt.subplots(figsize=(fig_size, fig_size))
     ax.set_xlabel('$\phi$', fontsize=fontsize)
     ax.set_ylabel('$S_{L0}$ [ms$^{-1}$]', fontsize=fontsize)  
     ax.set_xlim(0.35, 1.05)
@@ -188,12 +184,14 @@ def plot_phi_vs_S_L0(filename, n=6):
             print("{:<8.3f} {:<8} {:<8.3f}".format(phi_fit[idx][0], int(H2_percentage[0]), S_L0_fit[idx][0]))
     
     
-    # ax.legend(title="$H_2\%$", loc="upper left", prop={"size": 12})
-    ax.legend(title="$H_2\%$", loc="upper left", bbox_to_anchor=(0, 1), ncol=1, prop={"size": 16})
-    ax.set_aspect('auto')
+    ax.legend(title="$H_2\%$", loc="upper left", bbox_to_anchor=(0, 1), ncol=1, prop={"size": fontsize_legend})
     
-    fig.tight_layout() 
+    # Set aspect ratio to 'auto' to avoid stretching
+    ax.set_aspect('auto', adjustable='box')
     
+    # Set the size of the axis to ensure both axes have the same dimensions in inches
+    ax.set_position([0.1, 0.1, 0.8, 0.8])  # Set the position of the axis in the figure (left, bottom, width, height)
+
     return S_L0_lib
 
 def plot_phi_vs_T_ad(filename, n=6):
@@ -216,10 +214,10 @@ def plot_phi_vs_T_ad(filename, n=6):
     H2_percentage_lists = [[] for i in range(n)]
     T_ad_lists = [[] for i in range(n)]
     
-    fig_scale = 1
     default_fig_dim = plt.rcParams["figure.figsize"]
+    fig_size = default_fig_dim[0]
     
-    fig, ax = plt.subplots(figsize=(fig_scale*default_fig_dim[0], fig_scale*default_fig_dim[1]), dpi=100)
+    fig, ax = plt.subplots(figsize=(fig_size, fig_size))
     ax.set_xlabel('$\phi$')
     ax.set_ylabel('$T_{ad}$ [K]')
     # ax.set_xlim(0.3, 1.1)
@@ -275,9 +273,6 @@ def plot_phi_vs_T_ad(filename, n=6):
     
     # ax.legend(title="$H_2\%$", loc="upper left", prop={"size": 12})
     ax.legend(title="$H_2\%$", loc="upper left", bbox_to_anchor=(0, 1), ncol=1, prop={"size": 12})
-    ax.set_aspect('auto')
-    
-    fig.tight_layout() 
     
     return S_L0_lib       
 #%% OBJECTS
@@ -556,40 +551,40 @@ if __name__ == "__main__":
     # filename = 'S_L0_lib6'
     # S_L0_lib = create_library(filename)    
     
-    # # filename = 'S_L0_lib1'
-    # S_L0_lib = plot_phi_vs_S_L0(filename)
-    # # S_L0_lib = plot_phi_vs_T_ad(filename)
+    filename = 'S_L0_lib2'
+    S_L0_lib = plot_phi_vs_S_L0(filename)
+    # S_L0_lib = plot_phi_vs_T_ad(filename)
     
-    # # Get a list of all currently opened figures
-    # figure_ids = plt.get_fignums()
+    # Get a list of all currently opened figures
+    figure_ids = plt.get_fignums()
 
-    # # Apply tight_layout to each figure
-    # for fid in figure_ids:
-    #     fig = plt.figure(fid)
-    #     fig.tight_layout()
-    #     fig.savefig(f"figures/S_L0_phi_fig{fid}_{filename}.eps", format="eps", dpi=300, bbox_inches="tight")
+    # Apply tight_layout to each figure
+    for fid in figure_ids:
+        fig = plt.figure(fid)
+        # fig.tight_layout()
+        fig.savefig(f"figures/S_L0_phi_fig{fid}_{filename}.eps", format="eps", dpi=300, bbox_inches="tight")
         
-    # # Equivalence ratios    
-    phis = [.49] # Set equivalence ratios ranging from 0.4 to 0.8
+    # # # Equivalence ratios    
+    # phis = [.49] # Set equivalence ratios ranging from 0.4 to 0.8
     
-    # Hydrogen percentages by volume of fuel
-    H2_percentages = [100] #[0, 20, 40, 60, 80, 100] # Set hydrogen volume percentages of the fuel ranging from 0 to 100 
+    # # Hydrogen percentages by volume of fuel
+    # H2_percentages = [100] #[0, 20, 40, 60, 80, 100] # Set hydrogen volume percentages of the fuel ranging from 0 to 100 
     
-    # # Define colors to make distinction between different mixtures based on hydrogen percentage
-    colors = cm.viridis(np.linspace(0, 1, len(H2_percentages)))
+    # # # Define colors to make distinction between different mixtures based on hydrogen percentage
+    # colors = cm.viridis(np.linspace(0, 1, len(H2_percentages)))
     
-    # # Initialize list for premixed flame objects
-    flames = []
+    # # # Initialize list for premixed flame objects
+    # flames = []
     
-    # Create flame objects and start simulations
-    for phi in phis:
-        for H2_percentage in H2_percentages:
+    # # Create flame objects and start simulations
+    # for phi in phis:
+    #     for H2_percentage in H2_percentages:
             
-            flame = PremixedFlame(phi, H2_percentage, T_u=273.15+24, p_u=ct.one_atm)
+    #         flame = PremixedFlame(phi, H2_percentage, T_u=273.15+24, p_u=ct.one_atm)
             
-            m_f = flame.Y_H2 + flame.Y_CH4
-            LHV_f = flame.Y_H2/m_f*LHV_H2 + flame.Y_CH4/m_f*LHV_CH4    
-            print(LHV_f)
+    #         m_f = flame.Y_H2 + flame.Y_CH4
+    #         LHV_f = flame.Y_H2/m_f*LHV_H2 + flame.Y_CH4/m_f*LHV_CH4    
+    #         print(LHV_f)
             
             # flame.solve_equations()
             # flames.append(flame)

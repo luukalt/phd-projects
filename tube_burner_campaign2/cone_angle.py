@@ -13,27 +13,8 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib.ticker import ScalarFormatter
-from scipy.interpolate import griddata
 from custom_colormaps import parula
-
-#%% FIGURE SETTINGS
-
-# mpl.rcParams.update(mpl.rcParamsDefault)
-
-# def set_mpl_params():
-    
-#     # Use Latex font in plots
-#     plt.rcParams.update({
-#         'text.usetex': False,
-#         'font.family': 'serif',
-#         'font.family': 'Arial',
-        
-#         'font.serif': ['Computer Modern Roman'],
-#         'font.serif': ['Times New Roman'],
-#         'font.size': 14.0})
-    
-#     # Shading of pcolor plot
-#     plt.rcParams['pcolor.shading'] = 'auto'
+from parameters import spydata_dir, name
 
 #%%% COLORS
 jet = mpl.colormaps['jet']
@@ -106,42 +87,10 @@ def find_intersection_and_angle_from_arrays(x1, y1, x2, y2):
     return (x_intersection, y_intersection), angle_deg
 
 
-def cone_angle(spydata_dir, name, distances_above_tube=[.75, 1., 1.25]):
-    # =============================================================================
-    # name = 'react_h0_c3000_ls_record1'
-    # frame_nr = 0
-    # segment_length_mm = 1 # units: mm
-    # window_size = 31 # units: pixels
-    # piv_folder = 'PIV_MP(3x16x16_0%ov_ImgCorr)'
-    
-    # =============================================================================
-    
-    # =============================================================================
-    # name = 'react_h0_s4000_hs_record1'
-    # frame_nr = 0
+def cone_angle(distances_above_tube=[.75, 1., 1.25]):
+
     segment_length_mm = 1 # units: mm
     window_size = 31 # units: pixels
-    # piv_folder = 'PIV_MP(3x16x16_0%ov_ImgCorr)'
-    
-    # =============================================================================
-    
-    # # =============================================================================
-    # name = 'react_h100_c12500_ls_record1'
-    # frame_nr = 0
-    # segment_length_mm = 1 # units: mm
-    # window_size = 31 # units: pixels
-    # piv_folder = 'PIV_MP(3x16x16_0%ov_ImgCorr)'
-    
-    # =============================================================================
-    
-    # =============================================================================
-    # name = 'react_h100_s16000_hs_record1'
-    # frame_nr = 0
-    # segment_length_mm = 1 # units: mm
-    # window_size = 31 # units: pixels
-    # piv_folder = 'PIV_MP(3x16x16_0%ov_ImgCorr)'
-    
-    # =============================================================================
     
     #%% READ FLAME INFO [DO NOT TOUCH]
     
@@ -265,7 +214,6 @@ def cone_angle(spydata_dir, name, distances_above_tube=[.75, 1., 1.25]):
     ax1.set_ylabel('$x/D$', fontsize=fontsize)
     
     
-    
     fig2, ax2 = plt.subplots(figsize=(6, 6))
     # ax2.set_title('Probability density for different axial locations')
     ax2.set_xlabel('$r/D$', fontsize=fontsize)
@@ -277,7 +225,6 @@ def cone_angle(spydata_dir, name, distances_above_tube=[.75, 1., 1.25]):
     peaks_right = []
     
     # colors = cm.viridis(np.linspace(0, 1, len(distances_above_tube)))
-    
     r = contour_dist_df.columns
     r_begin_index = 0
     r_end_index = len(contour_dist_df.columns) - 1
@@ -288,7 +235,6 @@ def cone_angle(spydata_dir, name, distances_above_tube=[.75, 1., 1.25]):
     # colors = ['#800080', '#00FFFF', '#FF6600']
     colors = ['orange', 'cyan', 'magenta']
     
-
     for i, distance_above_tube in enumerate(distances_above_tube):
     
         # Find the two closest indices to the given index

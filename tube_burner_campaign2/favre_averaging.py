@@ -3,49 +3,34 @@
 Created on Wed Dec 20 12:50:26 2023
 
 @author: laaltenburg
+
+Davis 10 has an export bug: Column header: ' [counts]' instead of 'Intensity [counts]'
+
 """
 
-#%% IMPORT PACKAGES
+#%% IMPORT STANDARD PACKAGES
 import os
+import sys
 import pickle
 import pandas as pd
-from matplotlib import pyplot as plt
 from matplotlib.path import Path
-from tqdm import tqdm
 from multiprocessing import Pool, cpu_count
 import numpy as np
-from premixed_flame_properties import PremixedFlame
 
-#%% CLOSE ALL FIGURES
-plt.close('all')
+#%% ADD SYS PATHS
+parent_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+flame_front_detection_directory = os.path.abspath(os.path.join(parent_folder, 'flame_front_detection'))
+flame_simulations_directory = os.path.abspath(os.path.join(parent_folder, 'flame_simulations'))
+plot_parameters_directory = os.path.abspath(os.path.join(parent_folder, 'plot_parameters'))
+
+# Add to sys.path
+sys.path.append(flame_simulations_directory)
+
+#%% IMPORT USER DEFINED PACKAGES
+from premixed_flame_properties import PremixedFlame
+from functions import process_df, contour_correction
 
 #%% FUNCTIONS
-def contour_correction(flame, contour_nr, r_left_raw, r_right_raw, x_bottom_raw, x_top_raw, window_size_r_raw, window_size_x_raw, frame_nr=0):
-    
-    segmented_contour =  flame.frames[frame_nr].contour_data.segmented_contours[contour_nr]
-    
-    segmented_contour_r = segmented_contour[:, 0, 0]
-    segmented_contour_x = segmented_contour[:, 0, 1]
-    
-    # x and y coordinates of the discretized (segmented) flame front 
-    contour_r_corrected = segmented_contour_r*window_size_r_raw + r_left_raw
-    contour_x_corrected = segmented_contour_x*window_size_x_raw + x_top_raw
-    
-    # Non-dimensionalize coordinates by pipe diameter
-    contour_r_corrected /= 1 #D_in
-    contour_x_corrected /= 1 #D_in
-    
-    contour_r_corrected_array = np.array(contour_r_corrected)
-    contour_x_corrected_array = np.array(contour_x_corrected)
-    
-    # Combine the x and y coordinates into a single array of shape (n_coords, 2)
-    contour_corrected_coords = np.array([contour_r_corrected_array, contour_x_corrected_array]).T
-
-    # Create a new array of shape (n_coords, 1, 2) and assign the coordinates to it
-    contour_corrected = np.zeros((len(contour_r_corrected_array), 1, 2))
-    contour_corrected[:, 0, :] = contour_corrected_coords
-    
-    return contour_corrected   
 
 def safe_divide(a, b):
     if b == 0:
@@ -53,7 +38,7 @@ def safe_divide(a, b):
     else:
         return a / b
 
-def get_values_in_box(flame, raw_grid_df, piv_grid_df, int_window_size):
+def get_values_in_interrogation_window(flame, raw_grid_df, piv_grid_df, int_window_size):
     """
     For each coordinate in nearest_coords_df (derived from the small grid),
     find all coordinates in raw_grid_df that fall within a box of specified size centered on the coordinate.
@@ -96,8 +81,6 @@ def get_values_in_box(flame, raw_grid_df, piv_grid_df, int_window_size):
     Wmean_u_r_counts = []
     Wmean_u_x_counts = []
     
-    # print(raw_grid_df.columns)
-    
     u_r_col = 'Velocity u [m/s]' #df_favre.columns[u_r_col_index]
     u_x_col = 'Velocity v [m/s]' #df_favre.columns[u_x_col_index]
     
@@ -129,7 +112,7 @@ def get_values_in_box(flame, raw_grid_df, piv_grid_df, int_window_size):
         mean_states_in_int_window.append(mean_states)
         
         # COUNTS
-        counts = in_int_window[' [counts]'].tolist()
+        counts = in_int_window[intensity_count_column_header].tolist()
         counts_in_int_window.append(counts)
         
         # Calculate and append sum
@@ -205,47 +188,24 @@ def get_values_in_box(flame, raw_grid_df, piv_grid_df, int_window_size):
     
     return df_favre
 
-def process_df(df, D_in, offset_to_wall_center, offset):
-    """
-    Process the DataFrame by shifting and normalizing coordinates.
-
-    :param df: DataFrame to process.
-    :param D_in: Diameter for normalization.
-    :param offset_to_wall_center: Offset for x-coordinate shifting.
-    :param offset: Offset for y-coordinate shifting.
-    :return: Processed DataFrame.
-    """
-    
-    df['x_shift [mm]'] = df['x [mm]'] - (D_in/2 - offset_to_wall_center)
-    df['y_shift [mm]'] = df['y [mm]'] + offset
-
-    df['x_shift_norm'] = df['x_shift [mm]']/D_in
-    df['y_shift_norm'] = df['y_shift [mm]']/D_in
-
-    df['x_shift [m]'] = df['x_shift [mm]']*1e-3
-    df['y_shift [m]'] = df['y_shift [mm]']*1e-3
-
-    return df
-
-def process_file(file_number, flame, D_in, offset_to_wall_center, offset, interrogation_window_size_norm, columns_to_average, bottom_limit, top_limit, left_limit, right_limit, index_name, column_name, main_dir, session_nr, recording, piv_method):
+def process_file(file_number, flame, D_in, offset_to_wall_center, offset, interrogation_window_size_norm, columns_to_average, bottom_limit, top_limit, left_limit, right_limit, index_name, column_name, data_dir, session_nr, recording, piv_method):
     """
     Process a single file. This function is executed by each worker.
     """
-    # PIV processing logic
-    piv_file = os.path.join(main_dir, f'session_{session_nr:03d}', recording, piv_method, 'Export', f'B{file_number:04d}.csv')
+    # PIV file processing 
+    piv_file = os.path.join(data_dir, f'session_{session_nr:03d}', recording, piv_method, 'Export', f'B{file_number:04d}.csv')
     df_piv = pd.read_csv(piv_file)
     df_piv = process_df(df_piv, D_in, offset_to_wall_center, offset)
     df_piv_cropped = df_piv[(df_piv[index_name] > bottom_limit) & (df_piv[index_name] < top_limit) & (df_piv[column_name] > left_limit) & (df_piv[column_name] < right_limit)]
     
-    # RAW processing logic
-    raw_file = os.path.join(main_dir, f'session_{flame.session_nr:03d}', recording, 'Correction', 'Resize', 'Frame0', 'Export', f'B{file_number:04d}.csv')
-    # raw_file = os.path.join(main_dir, f'session_{flame.session_nr:03d}', recording, 'Correction', 'Resize', 'Frame0', 'Norm by Avg Stddev Intensity Normalization', 'AboveBelow', 'Export', f'B{file_number:04d}.csv')
-    
+    # Raw Mie scattering file processing
+    raw_file = os.path.join(data_dir, f'session_{flame.session_nr:03d}', recording, 'Correction', 'Resize', 'Frame0', 'Export', f'B{file_number:04d}.csv')
+    # raw_file = os.path.join(data_dir, f'session_{flame.session_nr:03d}', recording, 'Correction', 'Resize', 'Frame0', 'Norm by Avg Stddev Intensity Normalization', 'AboveBelow', 'Export', f'B{file_number:04d}.csv')
     df_raw = pd.read_csv(raw_file)
     df_raw = process_df(df_raw, D_in, offset_to_wall_center, offset)
     
-    # Read intensity
-    pivot_intensity = pd.pivot_table(df_raw, values=' [counts]', index='y_shift_norm', columns='x_shift_norm')
+    # Read intensity of the raw Mie scattering image
+    pivot_intensity = pd.pivot_table(df_raw, values=intensity_count_column_header, index='y_shift_norm', columns='x_shift_norm')
     r_raw_array = pivot_intensity.columns
     x_raw_array = pivot_intensity.index
     r_raw, x_raw = np.meshgrid(r_raw_array, x_raw_array)
@@ -268,8 +228,6 @@ def process_file(file_number, flame, D_in, offset_to_wall_center, offset, interr
                                 [contour_x[0], contour_y[0]]
                                 ])
     
-    # print(contour_closed)
-    
     # Create a Path object
     path = Path(contour_closed)
     
@@ -290,9 +248,8 @@ def process_file(file_number, flame, D_in, offset_to_wall_center, offset, interr
     df_raw['state'] = states
 
     # Your processing function
-    df_favre = get_values_in_box(flame, df_raw, df_piv_cropped, interrogation_window_size_norm)
-    # print(df_favre.index)
-    
+    df_favre = get_values_in_interrogation_window(flame, df_raw, df_piv_cropped, interrogation_window_size_norm)
+
     # Save the DataFrame to CSV
     favre_file = os.path.join('spydata', flame.name, 'favre_csv', f'B{file_number:04d}.csv')
     # favre_file = os.path.join('spydata', flame.name, 'favre_csv', 'Below150', 'udf_3x3_max_cross', f'B{file_number:04d}.csv')
@@ -305,7 +262,6 @@ def update_file(file_number, flame):
     
     favre_file = os.path.join('spydata', flame.name, 'favre_csv', f'B{file_number:04d}.csv')
     df_favre = pd.read_csv(favre_file)
-    
     
     favre_avg_file = os.path.join('spydata', flame.name, 'AvgFavre.csv')
     df_favre_avg = pd.read_csv(favre_avg_file)
@@ -371,9 +327,9 @@ def update_file(file_number, flame):
         
     return file_number
 
-def process_raw_file(image_nr, flame, offset_to_wall_center, offset, index_name, column_name, main_dir, session_nr, recording):
+def process_raw_file(image_nr, flame, offset_to_wall_center, offset, index_name, column_name, data_dir, session_nr, recording):
     
-    raw_file = os.path.join(main_dir, f'session_{flame.session_nr:03d}', recording, 'Correction', 'Resize', 'Frame0', 'Export', f'B{image_nr:04d}.csv')
+    raw_file = os.path.join(data_dir, f'session_{flame.session_nr:03d}', recording, 'Correction', 'Resize', 'Frame0', 'Export', f'B{image_nr:04d}.csv')
     
     df_raw = pd.read_csv(raw_file)
     df_raw = process_df(df_raw, flame.D_in, offset_to_wall_center, offset)
@@ -386,7 +342,7 @@ def process_raw_file(image_nr, flame, offset_to_wall_center, offset, index_name,
     df_raw = df_raw[(df_raw[index_name] > bottom_limit) & (df_raw[index_name] < top_limit) & (df_raw[column_name] > left_limit) & (df_raw[column_name] < right_limit)]
 
     # Read intensity
-    pivot_intensity = pd.pivot_table(df_raw, values=' [counts]', index='y_shift_norm', columns='x_shift_norm')
+    pivot_intensity = pd.pivot_table(df_raw, values=intensity_count_column_header, index='y_shift_norm', columns='x_shift_norm')
     r_raw_array = pivot_intensity.columns
     x_raw_array = pivot_intensity.index
     r_raw, x_raw = np.meshgrid(r_raw_array, x_raw_array)
@@ -429,10 +385,9 @@ def process_raw_file(image_nr, flame, offset_to_wall_center, offset, index_name,
 #%% MAIN
 if __name__ == "__main__":
     
-    main_dir = 'U:\\High hydrogen\\laaltenburg\\data\\tube_burner_campaign2\\selected_runs\\'
-    # spydata_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'spydata')
-    # spydata_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'spydata\\udf')
-
+    data_dir = 'U:\\staff-umbrella\\High hydrogen\\laaltenburg\\data\\tube_burner_campaign2\\selected_runs\\'
+    
+    intensity_count_column_header = ' [counts]'
     frame_nr = 0
     segment_length_mm = 1 # units: mm
     window_size = 31 # units: pixels
@@ -462,9 +417,6 @@ if __name__ == "__main__":
         
         
     react_names = react_names_ls + react_names_hs
-    
-    # Create an empty dictionary for the (non)reacting cases
-    # react_dict = {}
     
     # piv_method = 'PIV_MP(3x16x16_75%ov_ImgCorr)'
     piv_method = 'PIV_MP(3x16x16_0%ov_ImgCorr)'
@@ -497,12 +449,19 @@ if __name__ == "__main__":
     wall_center_to_origin = 2
     wall_thickness = 1.5
     offset_to_wall_center = wall_center_to_origin - wall_thickness/2
-        
-    Avg_Stdev_file = os.path.join(main_dir, f'session_{session_nr:03d}', recording, piv_method, 'Avg_Stdev', 'Export', 'B0001.csv')
+    
+    #%%% Read the averaged PIV file and add coordinate system translation
+    # PIV directory    
+    Avg_Stdev_file = os.path.join(data_dir, f'session_{session_nr:03d}', recording, piv_method, 'Avg_Stdev', 'Export', 'B0001.csv')
+    
+    # Read the averaged PIV file and add coordinate system translation
     df_piv = pd.read_csv(Avg_Stdev_file)
     df_piv = process_df(df_piv, D_in, offset_to_wall_center, offset)
-    headers = df_piv.columns
     
+    # Get the column headers of the PIV file
+    headers = df_piv.columns
+
+    # Non-dimensional limits in r- (left, right) and x-direction (bottom, top)
     # bottom_limit = -.5
     # top_limit = 2.25
     # left_limit = -0.575
@@ -512,53 +471,29 @@ if __name__ == "__main__":
     top_limit = 100
     left_limit = -100
     right_limit = 100
-    
     index_name = 'y_shift_norm'
     column_name = 'x_shift_norm'
     
+    # Cropped PIV dataframe based on Non-dimensional limits in r- (left, right) and x-direction (bottom, top)
     df_reynolds_avg = df_piv[(df_piv[index_name] > bottom_limit) & (df_piv[index_name] < top_limit) & (df_piv[column_name] > left_limit) & (df_piv[column_name] < right_limit)]
     
+    # Set the size of the interrogation window and calucate its non-dimensionless value
     interrogation_window_size = 15 # pixels
     interrogation_window_size_norm = (interrogation_window_size/flame.scale) / D_in # Define the size of the box
     
-    # Initialize an empty DataFrame for the final result
-    session_nr = flame.session_nr
-    recording = flame.record_name
-    
-    # Read the first file to determine the DataFrame structure
-    first_piv_file_file = os.path.join(main_dir, f'session_{session_nr:03d}', recording, piv_method, 'Export', 'B0001.csv')
+    # Read the first instantenous PIV file to determine the DataFrame structure
+    first_piv_file_file = os.path.join(data_dir, f'session_{session_nr:03d}', recording, piv_method, 'Export', 'B0001.csv')
     df_piv_first = pd.read_csv(first_piv_file_file)
     df_piv_first = process_df(df_piv_first, D_in, offset_to_wall_center, offset)
+    
+    # Cropped first instantenous PIV file dataframe based on non-dimensional limits in r- (left, right) and x-direction (bottom, top)
     df_piv_first_cropped = df_piv_first[(df_piv_first[index_name] > bottom_limit) & (df_piv_first[index_name] < top_limit) & (df_piv_first[column_name] > left_limit) & (df_piv_first[column_name] < right_limit)]
     
-    #%%% Set amount of images
+    #%%% Set amount of images to average over
     image_nrs = flame.n_images
     
-    # # Initialize global dictionaries to track states for each coordinate
-    # coordinates_state_1 = {}
-    # coordinates_state_0 = {}
-    
-    # for image_nr in tqdm(range(1, 10)):  # Assuming file numbering starts from 1
-    
-    #     df_raw_state = process_raw_file(image_nr, flame, offset_to_wall_center, offset, index_name, column_name, main_dir, session_nr, recording)
-        
-    #     # Process each row to update global dictionaries
-    #     for index, row in df_raw_state.iterrows():
-    #         coord = (row['x_shift_norm'], row['y_shift_norm'])
-            
-    #         state = row['state']
-    
-    #         if state == 1:
-    #             coordinates_state_1[coord] = coordinates_state_1.get(coord, 0) + 1
-    #         elif state == 0:
-    #             coordinates_state_0[coord] = coordinates_state_0.get(coord, 0) + 1
-
-    # # Find coordinates with consistent states across all files
-    # consistent_state_1 = [coord for coord, count in coordinates_state_1.items() if count == 1]
-    # consistent_state_0 = [coord for coord, count in coordinates_state_0.items() if count == 1]
-
-    
-    # Specify the columns for which you want to calculate the mean
+    #%%% Step 1: Obtain time averages of mean part
+    # Specify the columns for which you want to calculate the average
     columns_to_average = ['x_shift [m]', 'y_shift [m]', 'x_shift [mm]', 'y_shift [mm]', 'x_shift_norm', 'y_shift_norm', 
                           'Velocity u [m/s]', 'Velocity v [m/s]', 
                           'Wsum [states]', 'Wmean [states]',
@@ -569,14 +504,15 @@ if __name__ == "__main__":
                           'rho [kg/m^3]', 'rho*u', 'rho*v'
                           ]
 
-    # Initialize df_lists with the same indices and columns as df_first
+    # Initialize df_lists with the same indices and columns as the cropped first instantenous PIV file
     df_favre_lists = pd.DataFrame(index=df_piv_first_cropped.index)
     for col in columns_to_average:  # df_piv_first_cropped.columns:
         df_favre_lists[col] = [[] for _ in range(len(df_piv_first_cropped))]
 
     # Bundle all arguments into a tuple
-    args = (flame, D_in, offset_to_wall_center, offset, interrogation_window_size_norm, columns_to_average, bottom_limit, top_limit, left_limit, right_limit, index_name, column_name, main_dir, session_nr, recording, piv_method)
+    args = (flame, D_in, offset_to_wall_center, offset, interrogation_window_size_norm, columns_to_average, bottom_limit, top_limit, left_limit, right_limit, index_name, column_name, data_dir, session_nr, recording, piv_method)
     
+    # Set number of cpus for parallel computing
     n_cpus = cpu_count()
     
     with Pool(n_cpus - 1) as pool:
@@ -593,19 +529,17 @@ if __name__ == "__main__":
                         df_favre_lists.at[idx, col].append(df_favre.at[idx, col])
                     else:
                         df_favre_lists.at[idx, col].append(None)
-            
-            # print('Processing files completed')
-            
+         
     print('Processing files completed')
 
     df_favre_avg = df_favre_lists.applymap(lambda lst: sum(lst) / len(lst) if lst else None)
     
-    # # Save the mean DataFrame to a CSV file
+    #%%%% Save the Favre average of Step 1 to a CSV file
     output_file = os.path.join('spydata', flame.name, 'AvgFavre.csv')
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     df_favre_avg.to_csv(output_file, index=True, index_label='index')
     
-    
+    #%%% Step 2: Obtain time averages of fluctuating part
     columns_to_average += ['u_fluc [m/s]', 'v_fluc [m/s]', 
                           'u_fluc*u_fluc', 'v_fluc*v_fluc', 'u_fluc*v_fluc',
                           'u_fluc_favre [m/s]', 'v_fluc_favre [m/s]',
@@ -638,8 +572,6 @@ if __name__ == "__main__":
                     else:
                         df_favre_lists2.at[idx, col].append(None)
                         
-            # print('Updating files completed')
-    
     print('Updating files completed')
     
     df_favre_avg2 = df_favre_lists2.applymap(lambda lst: sum(lst) / len(lst) if lst else None)
@@ -660,7 +592,7 @@ if __name__ == "__main__":
     df_favre_avg2['0.5*(R_uu + R_vv) [m^2/s^2]'] = 0.5 * (df_favre_avg2['R_uu [m^2/s^2]'] + df_favre_avg2['R_vv [m^2/s^2]'])
     df_favre_avg2['0.75*(R_uu + R_vv) [m^2/s^2]'] = 0.75 * (df_favre_avg2['R_uu [m^2/s^2]'] + df_favre_avg2['R_vv [m^2/s^2]'])
     
-    # Save the mean DataFrame to a CSV file
+    #%%%% Save the Favre average of Step 2 to a CSV file
     output_file = os.path.join('spydata', flame.name, 'AvgFavreFinal.csv')
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     df_favre_avg2.to_csv(output_file, index=True, index_label='index')
