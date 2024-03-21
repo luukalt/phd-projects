@@ -13,21 +13,6 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 
-#%% FIGURE SETTINGS
-
-# def set_mpl_params():
-    
-#     # Use Latex font in plots
-#     plt.rcParams.update({
-#         'text.usetex': False,
-#         # 'font.family': 'serif',
-#         # 'font.serif': ['Computer Modern Roman'],
-#         'font.serif': ['Times New Roman'],
-#         'font.size': 14.0})
-    
-#     # Shading of pcolor plot
-#     plt.rcParams['pcolor.shading'] = 'auto'
-
 #%%% COLORS
 jet = mpl.colormaps['jet']
 tab10 = mpl.colormaps['tab10']
