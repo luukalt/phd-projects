@@ -186,7 +186,7 @@ if __name__ == '__main__':
             profile_contour_dist = pivot_var_interp.loc[:, distance_radial_tube]
             x_line = pivot_var.index
             
-            scatter_handle = ax3.scatter(x_line, profile_contour_dist, marker=marker, color= color, label=var)
+            scatter_handle = ax3.scatter(x_line, profile_contour_dist, marker=marker, color= color, edgecolors='k', label=var)
         
             ax.scatter([distance_radial_tube] * len(x_line), x_line, marker=marker, color='None', edgecolors='k')
             
