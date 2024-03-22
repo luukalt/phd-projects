@@ -551,36 +551,36 @@ if __name__ == "__main__":
     # filename = 'S_L0_lib6'
     # S_L0_lib = create_library(filename)    
     
-    filename = 'S_L0_lib2'
-    S_L0_lib = plot_phi_vs_S_L0(filename)
-    # S_L0_lib = plot_phi_vs_T_ad(filename)
+    # filename = 'S_L0_lib2'
+    # S_L0_lib = plot_phi_vs_S_L0(filename)
+    # # S_L0_lib = plot_phi_vs_T_ad(filename)
     
-    # Get a list of all currently opened figures
-    figure_ids = plt.get_fignums()
+    # # Get a list of all currently opened figures
+    # figure_ids = plt.get_fignums()
 
-    # Apply tight_layout to each figure
-    for fid in figure_ids:
-        fig = plt.figure(fid)
-        # fig.tight_layout()
-        fig.savefig(f"figures/S_L0_phi_fig{fid}_{filename}.eps", format="eps", dpi=300, bbox_inches="tight")
+    # # Apply tight_layout to each figure
+    # for fid in figure_ids:
+    #     fig = plt.figure(fid)
+    #     # fig.tight_layout()
+    #     fig.savefig(f"figures/S_L0_phi_fig{fid}_{filename}.eps", format="eps", dpi=300, bbox_inches="tight")
         
-    # # # Equivalence ratios    
-    # phis = [.49] # Set equivalence ratios ranging from 0.4 to 0.8
+    # # Equivalence ratios    
+    phis = [1] # Set equivalence ratios ranging from 0.4 to 0.8
     
-    # # Hydrogen percentages by volume of fuel
-    # H2_percentages = [100] #[0, 20, 40, 60, 80, 100] # Set hydrogen volume percentages of the fuel ranging from 0 to 100 
+    # Hydrogen percentages by volume of fuel
+    H2_percentages = [0] #[0, 20, 40, 60, 80, 100] # Set hydrogen volume percentages of the fuel ranging from 0 to 100 
     
-    # # # Define colors to make distinction between different mixtures based on hydrogen percentage
-    # colors = cm.viridis(np.linspace(0, 1, len(H2_percentages)))
+    # # Define colors to make distinction between different mixtures based on hydrogen percentage
+    colors = cm.viridis(np.linspace(0, 1, len(H2_percentages)))
     
-    # # # Initialize list for premixed flame objects
-    # flames = []
+    # # Initialize list for premixed flame objects
+    flames = []
     
-    # # Create flame objects and start simulations
-    # for phi in phis:
-    #     for H2_percentage in H2_percentages:
+    # Create flame objects and start simulations
+    for phi in phis:
+        for H2_percentage in H2_percentages:
             
-    #         flame = PremixedFlame(phi, H2_percentage, T_u=273.15+24, p_u=ct.one_atm)
+            flame = PremixedFlame(phi, H2_percentage, T_u=273.15+24, p_u=ct.one_atm)
             
     #         m_f = flame.Y_H2 + flame.Y_CH4
     #         LHV_f = flame.Y_H2/m_f*LHV_H2 + flame.Y_CH4/m_f*LHV_CH4    
