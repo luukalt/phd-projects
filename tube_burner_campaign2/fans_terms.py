@@ -95,21 +95,29 @@ if __name__ == '__main__':
     df_favre_avg['v_favre [counts] [m/s]'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
     df_favre_avg['|V|_favre [counts] [m/s]'] = np.sqrt(df_favre_avg['u_favre [counts] [m/s]']**2 + df_favre_avg['v_favre [counts] [m/s]']**2)
     
-    var1 = 'Velocity |V| [m/s]'
-    var2 = '|V|_favre [counts] [m/s]'
-    var3 = '|V|_favre [m/s]'
-    var_list = [var1, var2, var3]
-    
-    # var1 = 'Wmean [counts]'
-    # var2 = 'Wmean [states]'
-    # var3 = 'rho [kg/m^3]'
+    # var1 = 'Velocity |V| [m/s]'
+    # var2 = '|V|_favre [counts] [m/s]'
+    # var3 = '|V|_favre [m/s]'
     # var_list = [var1, var2, var3]
+    labels = ['Reynolds',
+              'Favre [intensity count]',
+              'Favre [flame front detection]',
+              ]
+    
+    var1 = 'Wmean [counts]'
+    var2 = 'Wmean [states]'
+    var3 = 'rho [kg/m^3]'
+    var_list = [var1, var2, var3]
+    labels = [var1,
+              var2,
+              var3
+              ]
     
     var_counts_norm = 'Wmean_norm [counts]'
     
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
     
-    fig2, ax2 = plt.subplots()
+    # fig2, ax2 = plt.subplots()
     
     width, height = 9, 6
     fig3, ax3 = plt.subplots(figsize=(6, 6))
@@ -118,10 +126,7 @@ if __name__ == '__main__':
     
     handles = []
     
-    labels = ['Reynolds',
-              'Favre [intensity count]',
-              'Favre [flame front detection]',
-              ]
+    
     
     for color, var, label in zip(colors[:len(var_list)], var_list, labels):
         
@@ -140,7 +145,7 @@ if __name__ == '__main__':
         
         pivot_var /= u_bulk_measured**1
         
-        flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values, cmap=colormap, vmin=0, vmax=cbar_max)
+        flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values, cmap=colormap, vmin=0) #, vmax=cbar_max)
         
         num_ticks = 6
         custom_cbar_ticks = np.linspace(0, cbar_max, num_ticks)
@@ -188,7 +193,7 @@ if __name__ == '__main__':
             
             scatter_handle = ax3.scatter(x_line, profile_contour_dist, marker=marker, color= color, edgecolors='k', label=var)
         
-            ax.scatter([distance_radial_tube] * len(x_line), x_line, marker=marker, color='None', edgecolors='k')
+            # ax.scatter([distance_radial_tube] * len(x_line), x_line, marker=marker, color='None', edgecolors='k')
             
             # Append the handle to the list of handles
             scatter_handles.append(scatter_handle)
