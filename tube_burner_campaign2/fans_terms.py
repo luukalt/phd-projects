@@ -97,33 +97,32 @@ if __name__ == '__main__':
     df_favre_avg['v_favre [counts] [m/s]'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
     df_favre_avg['|V|_favre [counts] [m/s]'] = np.sqrt(df_favre_avg['u_favre [counts] [m/s]']**2 + df_favre_avg['v_favre [counts] [m/s]']**2)
     
-    # var1 = 'Velocity |V| [m/s]'
-    # var2 = '|V|_favre [counts] [m/s]'
-    # var3 = '|V|_favre [m/s]'
-    # var_list = [var1, var2, var3]
+    var1 = 'Velocity |V| [m/s]'
+    var2 = '|V|_favre [counts] [m/s]'
+    var3 = '|V|_favre [m/s]'
+    var_list = [var1, var2, var3]
     labels = ['Reynolds',
               'Favre [intensity count]',
               'Favre [flame front detection]',
               ]
     cbar_titles = [r'$\frac{|\overline{V}|}{U_{b}}$',
-                   r'$\frac{|\overline{V}|}{U_{b}}$',
-                   r'$\frac{|\overline{V}|}{U_{b}}$',
+                    r'$\frac{|\overline{V}|}{U_{b}}$',
+                    r'$\frac{|\overline{V}|}{U_{b}}$',
                   ]
                                 
-               
-    var1 = 'Wmean [counts]'
-    var2 = 'Wmean [states]'
-    var3 = 'rho [kg/m^3]'
-    var_list = [var1, var2, var3]
-    labels = [var1,
-              var2,
-              var3
-              ]
+    # var1 = 'Wmean [counts]'
+    # var2 = 'Wmean [states]'
+    # var3 = 'rho [kg/m^3]'
+    # var_list = [var1, var2, var3]
+    # labels = [var1,
+    #           var2,
+    #           var3
+    #           ]
     
-    cbar_titles = [r'$\frac{\overline{I}}{\overline{I}_{max}}$',
-                   r'State',
-                   r'$\overline{\rho^{*}}$',
-                  ]
+    # cbar_titles = [r'$\frac{\overline{I}}{\overline{I}_{max}}$',
+    #                 r'State',
+    #                 r'$\overline{\rho^{*}}$',
+    #               ]
     
     
     var_counts_norm = 'Wmean_norm [counts]'
@@ -157,7 +156,9 @@ if __name__ == '__main__':
         
         cbar_max = np.max(df_favre_avg[var])
         
-        pivot_var /= cbar_max
+        pivot_var /= u_bulk_measured
+        # pivot_var /= cbar_max
+        
         
         flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values, cmap=colormap, vmin=0, vmax=1)
         
@@ -180,6 +181,7 @@ if __name__ == '__main__':
         # cbar.ax.tick_params(labelsize=fontsize)
         
         ax.set_aspect('equal')
+        fontsize = 16
         ax.set_xlabel(r'$r/D$', fontsize=fontsize)
         ax.set_ylabel(r'$x/D$', fontsize=fontsize)
         
@@ -190,7 +192,6 @@ if __name__ == '__main__':
         ax.set_ylim(bottom=.05, top=2.2)
         
         ax.tick_params(axis='both', labelsize=fontsize)
-        
         
         # Find the two closest indices to the given index
         distances_radial_tube = [.0, .3,]
@@ -223,9 +224,11 @@ if __name__ == '__main__':
     # Create the legend with custom handler map
     handler_map = {tuple(handle): HandlerTuple(ndivide=None) for handle in handles}
     ax3.legend(handles, labels, handler_map=handler_map, title="Time-averaging", prop={"size": 14})
-
+    
+    fontsize = 20
     ax3.set_xlabel(r'$x/D$', fontsize=fontsize)
-    ax3.set_ylabel(cbar_title, rotation=0, labelpad=15, fontsize=28)
+    ylabel = ax3.set_ylabel(r'$\frac{|\tilde{V}|}{U_{b}}$''\n'r'$,$''\n'r'$\frac{|\overline{V}|}{U_{b}}$', rotation=0, labelpad=15, fontsize=28, multialignment='center')
+    ylabel.set_position((ylabel.get_position()[0], 0.25))
     ax3.set_ylim(bottom=1.1, top=1.8)
     ax3.tick_params(axis='both', labelsize=fontsize)
     ax3.grid(True)
@@ -288,8 +291,10 @@ if __name__ == '__main__':
     x_uniform = np.linspace(x_norm_values.min(), x_norm_values.max(), len(x_norm_array))
     r_uniform, x_uniform = np.meshgrid(r_uniform, x_uniform)
     
-    pivot_u_r = pd.pivot_table(df_favre_avg, values='Velocity u [m/s]', index=index_name, columns=column_name)
-    pivot_u_x = pd.pivot_table(df_favre_avg, values='Velocity v [m/s]', index=index_name, columns=column_name)
+    # pivot_u_r = pd.pivot_table(df_favre_avg, values='Velocity u [m/s]', index=index_name, columns=column_name)
+    # pivot_u_x = pd.pivot_table(df_favre_avg, values='Velocity v [m/s]', index=index_name, columns=column_name)
+    pivot_u_r = pd.pivot_table(df_favre_avg, values='u_favre [m/s]', index=index_name, columns=column_name)
+    pivot_u_x = pd.pivot_table(df_favre_avg, values='v_favre [m/s]', index=index_name, columns=column_name)
     
     pivot_u_r_norm = pivot_u_r/u_bulk_measured
     pivot_u_x_norm = pivot_u_x/u_bulk_measured
@@ -318,8 +323,8 @@ if __name__ == '__main__':
     dpdx = mom_x[2] 
     dpdr = mom_r[2]
     
-    # r_starts = [.1, .2, .3]
-    r_starts = [.2]
+    r_starts = [.1, .2, .3]
+    # r_starts = [.2]
     x_starts = np.linspace(0.2, 0.2, len(r_starts))
     start_points = [(r_starts[i], x_starts[i]) for i in range(len(r_starts))]
     
@@ -366,7 +371,7 @@ if __name__ == '__main__':
     # %%% Save images
     # Get a list of all currently opened figures
     figure_ids = plt.get_fignums()
-    figure_ids = [2, 4]
+    figure_ids = [1]
     
     if 'ls' in flame.name:
         folder = 'ls'
@@ -387,7 +392,7 @@ if __name__ == '__main__':
         filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
         
         # Constructing the paths
-        if fid == 1:
+        if fid == 100:
             
             png_path = os.path.join('figures', f'{folder}', f"{filename}.png")
             pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")

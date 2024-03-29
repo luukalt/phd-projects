@@ -96,8 +96,8 @@ def ns_incomp_terms(df, D, U, Re_D):
     C3 = nu*(np.gradient(du_rdx, x_array, axis=0) + (1/r)*np.gradient(r*du_rdr, r_array, axis=1) - u_r/(r**2))
     C4 = np.gradient(R_rx, x_array, axis=0)
     C5 = (1/r)*np.gradient(r*R_rr, r_array, axis=1)
-    # C5 = np.gradient(R_rr, r_array, axis=1)
-    # C5 = R_rr/r
+    # C5 = np.gradient(F_rr, r_array, axis=1)
+    # C5 = F_rr/r
     
     dpdx = -B1 - B2 - -B3 - B4 - B5 
     dpdr = -C1 - C2 - C3 - C4 - C5
@@ -154,9 +154,9 @@ def fans_terms(df, flame):
     u_r_tilde = pd.pivot_table(df, values='u_favre [m/s]', index=var_index, columns=var_column)
     u_x_tilde = pd.pivot_table(df, values='v_favre [m/s]', index=var_index, columns=var_column)
 
-    R_rr = pd.pivot_table(df, values='rho*u_fluc_favre*u_fluc_favre', index=var_index, columns=var_column)
-    R_rx = pd.pivot_table(df, values='rho*u_fluc_favre*v_fluc_favre', index=var_index, columns=var_column)
-    R_xx = pd.pivot_table(df, values='rho*v_fluc_favre*v_fluc_favre', index=var_index, columns=var_column)
+    F_rr = pd.pivot_table(df, values='rho*u_fluc_favre*u_fluc_favre', index=var_index, columns=var_column)
+    F_rx = pd.pivot_table(df, values='rho*u_fluc_favre*v_fluc_favre', index=var_index, columns=var_column)
+    F_xx = pd.pivot_table(df, values='rho*v_fluc_favre*v_fluc_favre', index=var_index, columns=var_column)
     
     # Create x-y meshgrid
     r_array = u_r_tilde.columns
@@ -187,8 +187,8 @@ def fans_terms(df, flame):
     du_xdx = np.gradient(u_x_tilde, x_array, axis=0)
     du_xdr = np.gradient(u_x_tilde, r_array, axis=1)
     B3 = nu*(np.gradient(du_xdx, x_array, axis=0) + (1/r)*np.gradient(r*du_xdr, r_array, axis=1))
-    B4 = np.gradient(R_xx, x_array, axis=0)
-    B5 = (1/r)*np.gradient(r*R_rx, r_array, axis=1)
+    B4 = np.gradient(F_xx, x_array, axis=0)
+    B5 = (1/r)*np.gradient(r*F_rx, r_array, axis=1)
     
     
     # [C] Conservation of momentum [Radial]
@@ -207,8 +207,8 @@ def fans_terms(df, flame):
     du_rdx = np.gradient(u_r_tilde, x_array, axis=0)
     du_rdr = np.gradient(u_r_tilde, r_array, axis=1)
     C3 = nu*(np.gradient(du_rdx, x_array, axis=0) + (1/r)*np.gradient(r*du_rdr, r_array, axis=1) - u_r/(r**2))
-    C4 = np.gradient(R_rx, x_array, axis=0)
-    C5 = (1/r)*np.gradient(r*R_rr, r_array, axis=1)
+    C4 = np.gradient(F_rx, x_array, axis=0)
+    C5 = (1/r)*np.gradient(r*F_rr, r_array, axis=1)
     
     dpdx = -B1 - B2 - B3 - B4 - B5 
     dpdr = -C1 - C2 - C3 - C4 - C5
