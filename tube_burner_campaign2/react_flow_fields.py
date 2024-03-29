@@ -18,6 +18,8 @@ from scipy.interpolate import griddata
 
 #%% IMPORT USER DEFINED PACKAGES
 from sys_paths import parent_directory
+import sys_paths
+import rc_params_settings
 from parameters import data_dir, piv_method, flame, interpolation_method, nonreact_run_nr 
 from plot_params import colormap, fontsize, ms1, ms2, ms3, ms4, ms5, ms6
 from cone_angle import cone_angle

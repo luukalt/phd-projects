@@ -38,6 +38,8 @@ from scipy.interpolate import griddata
 
 #%% IMPORT USER DEFINED PACKAGES
 from sys_paths import parent_directory
+import sys_paths
+import rc_params_settings
 from parameters import flame, piv_method, interpolation_method
 from plot_params import colormap, fontsize
 from time_averaging_terms import fans_terms
@@ -103,7 +105,12 @@ if __name__ == '__main__':
               'Favre [intensity count]',
               'Favre [flame front detection]',
               ]
-    
+    cbar_titles = [r'$\frac{|\overline{V}|}{U_{b}}$',
+                   r'$\frac{|\overline{V}|}{U_{b}}$',
+                   r'$\frac{|\overline{V}|}{U_{b}}$',
+                  ]
+                                
+               
     var1 = 'Wmean [counts]'
     var2 = 'Wmean [states]'
     var3 = 'rho [kg/m^3]'
@@ -112,6 +119,12 @@ if __name__ == '__main__':
               var2,
               var3
               ]
+    
+    cbar_titles = [r'$\frac{\overline{I}}{\overline{I}_{max}}$',
+                   r'State',
+                   r'$\overline{\rho^{*}}$',
+                  ]
+    
     
     var_counts_norm = 'Wmean_norm [counts]'
     
@@ -122,13 +135,11 @@ if __name__ == '__main__':
     width, height = 9, 6
     fig3, ax3 = plt.subplots(figsize=(6, 6))
     
-    cbar_max = 2
+    # cbar_max = 2
     
     handles = []
     
-    
-    
-    for color, var, label in zip(colors[:len(var_list)], var_list, labels):
+    for color, var, label, cbar_title in zip(colors[:len(var_list)], var_list, labels, cbar_titles):
         
         pivot_var = pd.pivot_table(df_favre_avg, values=var, index=index_name, columns=column_name)
 
@@ -140,26 +151,33 @@ if __name__ == '__main__':
         x_norm_values = x_norm.flatten()
         
         fig, ax = plt.subplots(figsize=(width, height))
-        ax.set_title(label)
-        cbar_title = r'$\frac{|\overline{V}|}{U_{b}}$'
+        # ax.set_title(label)
         
-        pivot_var /= u_bulk_measured**1
+        cbar_min = np.min(df_favre_avg[var])
         
-        flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values, cmap=colormap, vmin=0) #, vmax=cbar_max)
+        cbar_max = np.max(df_favre_avg[var])
         
-        num_ticks = 6
-        custom_cbar_ticks = np.linspace(0, cbar_max, num_ticks)
+        pivot_var /= cbar_max
         
-        if cbar_max < 1:
-            custom_cbar_tick_labels = [f'{tick:.2f}' for tick in custom_cbar_ticks] # Replace with your desired tick labels
-        else:
-            custom_cbar_tick_labels = [f'{tick:.1f}' for tick in custom_cbar_ticks]
+        flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values, cmap=colormap, vmin=0, vmax=1)
+        
+        # num_ticks = 6
+        # custom_cbar_ticks = np.linspace(0, cbar_max, num_ticks)
+        
+        # if cbar_max < 1:
+        #     custom_cbar_tick_labels = [f'{tick:.2f}' for tick in custom_cbar_ticks] # Replace with your desired tick labels
+        # else:
+        #     custom_cbar_tick_labels = [f'{tick:.1f}' for tick in custom_cbar_ticks]
             
         cbar = ax.figure.colorbar(flow_field)
-        cbar.set_ticks(custom_cbar_ticks)
-        cbar.set_ticklabels(custom_cbar_tick_labels)
-        cbar.set_label(cbar_title, rotation=0, labelpad=25, fontsize=28) 
-        cbar.ax.tick_params(labelsize=fontsize)
+        # cbar.set_ticks(custom_cbar_ticks)
+        # cbar.set_ticklabels(custom_cbar_tick_labels)
+        if var == var2:
+            cbar.set_label(cbar_title, fontsize=20)
+        else:
+            
+            cbar.set_label(cbar_title, rotation=0, labelpad=25, fontsize=24) 
+        # cbar.ax.tick_params(labelsize=fontsize)
         
         ax.set_aspect('equal')
         ax.set_xlabel(r'$r/D$', fontsize=fontsize)
@@ -172,6 +190,7 @@ if __name__ == '__main__':
         ax.set_ylim(bottom=.05, top=2.2)
         
         ax.tick_params(axis='both', labelsize=fontsize)
+        
         
         # Find the two closest indices to the given index
         distances_radial_tube = [.0, .3,]
@@ -299,8 +318,8 @@ if __name__ == '__main__':
     dpdx = mom_x[2] 
     dpdr = mom_r[2]
     
-    r_starts = [.1, .2, .3]
-    # r_starts = [.2]
+    # r_starts = [.1, .2, .3]
+    r_starts = [.2]
     x_starts = np.linspace(0.2, 0.2, len(r_starts))
     start_points = [(r_starts[i], x_starts[i]) for i in range(len(r_starts))]
     
@@ -345,48 +364,48 @@ if __name__ == '__main__':
     # pivot_u_x = pd.pivot_table(df_piv_cropped, values='Velocity v [m/s]', index=index_name, columns=column_name)
     
     # %%% Save images
-    # # Get a list of all currently opened figures
-    # figure_ids = plt.get_fignums()
-    # figure_ids = [12, 13]
+    # Get a list of all currently opened figures
+    figure_ids = plt.get_fignums()
+    figure_ids = [2, 4]
     
-    # if 'ls' in flame.name:
-    #     folder = 'ls'
-    # else:
-    #     folder = 'hs'
+    if 'ls' in flame.name:
+        folder = 'ls'
+    else:
+        folder = 'hs'
     
-    # figures_subfolder = os.path.join(figures_folder, folder)
-    # if not os.path.exists(figures_subfolder):
-    #         os.makedirs(figures_subfolder)
+    figures_subfolder = os.path.join(figures_folder, folder)
+    if not os.path.exists(figures_subfolder):
+            os.makedirs(figures_subfolder)
     
-    # pickles_subfolder = os.path.join(pickles_folder, folder)
-    # if not os.path.exists(pickles_subfolder):
-    #         os.makedirs(pickles_subfolder)
+    pickles_subfolder = os.path.join(pickles_folder, folder)
+    if not os.path.exists(pickles_subfolder):
+            os.makedirs(pickles_subfolder)
 
-    # # Apply tight_layout to each figure
-    # for fid in figure_ids:
-    #     fig = plt.figure(fid)
-    #     filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
+    # Apply tight_layout to each figure
+    for fid in figure_ids:
+        fig = plt.figure(fid)
+        filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
         
-    #     # Constructing the paths
-    #     if fid == 1:
+        # Constructing the paths
+        if fid == 1:
             
-    #         png_path = os.path.join('figures', f'{folder}', f"{filename}.png")
-    #         pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
+            png_path = os.path.join('figures', f'{folder}', f"{filename}.png")
+            pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
             
-    #         # Saving the figure in EPS format
-    #         fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
+            # Saving the figure in EPS format
+            fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
             
-    #     else:
+        else:
             
-    #         eps_path = os.path.join('figures', f'{folder}', f"{filename}.eps")
-    #         pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
+            eps_path = os.path.join('figures', f'{folder}', f"{filename}.eps")
+            pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
             
-    #         # Saving the figure in EPS format
-    #         fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+            # Saving the figure in EPS format
+            fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
         
-    #     # Pickling the figure
-    #     with open(pkl_path, 'wb') as f:
-    #         pickle.dump(fig, f)
+        # Pickling the figure
+        with open(pkl_path, 'wb') as f:
+            pickle.dump(fig, f)
             
     
     
