@@ -97,32 +97,33 @@ if __name__ == '__main__':
     df_favre_avg['v_favre [counts] [m/s]'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
     df_favre_avg['|V|_favre [counts] [m/s]'] = np.sqrt(df_favre_avg['u_favre [counts] [m/s]']**2 + df_favre_avg['v_favre [counts] [m/s]']**2)
     
-    var1 = 'Velocity |V| [m/s]'
-    var2 = '|V|_favre [counts] [m/s]'
-    var3 = '|V|_favre [m/s]'
-    var_list = [var1, var2, var3]
-    labels = ['Reynolds',
-              'Favre [intensity count]',
-              'Favre [flame front detection]',
-              ]
-    cbar_titles = [r'$\frac{|\overline{V}|}{U_{b}}$',
-                    r'$\frac{|\overline{V}|}{U_{b}}$',
-                    r'$\frac{|\overline{V}|}{U_{b}}$',
-                  ]
-                                
-    # var1 = 'Wmean [counts]'
-    # var2 = 'Wmean [states]'
-    # var3 = 'rho [kg/m^3]'
+    # var1 = 'Velocity |V| [m/s]'
+    # var2 = '|V|_favre [counts] [m/s]'
+    # var3 = '|V|_favre [m/s]'
     # var_list = [var1, var2, var3]
-    # labels = [var1,
-    #           var2,
-    #           var3
+    # labels = ['Reynolds',
+    #           'Favre [intensity count]',
+    #           'Favre [flame front detection]',
     #           ]
-    
-    # cbar_titles = [r'$\frac{\overline{I}}{\overline{I}_{max}}$',
-    #                 r'State',
-    #                 r'$\overline{\rho^{*}}$',
+    # cbar_titles = [r'$\frac{|\overline{V}|}{U_{b}}$',
+    #                 r'$\frac{|\overline{V}|}{U_{b}}$',
+    #                 r'$\frac{|\overline{V}|}{U_{b}}$',
     #               ]
+                                
+    var1 = 'Wmean [counts]'
+    var2 = 'Wmean [states]'
+    var3 = 'rho [kg/m^3]'
+    var_list = [var1, var2, var3]
+    labels = [var1,
+              var2,
+              var3
+              ]
+    
+    cbar_titles = [r'$\frac{\overline{I}}{\overline{I}_{max}}$',
+                    r'State',
+                    r'$\overline{\rho^{*}}$',
+                    # r'$\frac{\overline{\rho}}{{\rho}_{u}}$',
+                  ]
     
     
     var_counts_norm = 'Wmean_norm [counts]'
@@ -156,9 +157,8 @@ if __name__ == '__main__':
         
         cbar_max = np.max(df_favre_avg[var])
         
-        pivot_var /= u_bulk_measured
-        # pivot_var /= cbar_max
-        
+        # pivot_var /= u_bulk_measured
+        pivot_var /= cbar_max
         
         flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values, cmap=colormap, vmin=0, vmax=1)
         
@@ -179,6 +179,12 @@ if __name__ == '__main__':
             
             cbar.set_label(cbar_title, rotation=0, labelpad=25, fontsize=24) 
         # cbar.ax.tick_params(labelsize=fontsize)
+        
+        # Get the current width and height of the figure
+        current_width, current_height = fig.get_size_inches()
+        
+        print("Current Width:", current_width)
+        print("Current Height:", current_height)
         
         ax.set_aspect('equal')
         fontsize = 16
@@ -371,7 +377,7 @@ if __name__ == '__main__':
     # %%% Save images
     # Get a list of all currently opened figures
     figure_ids = plt.get_fignums()
-    figure_ids = [1]
+    figure_ids = [2, 4]
     
     if 'ls' in flame.name:
         folder = 'ls'
@@ -391,6 +397,12 @@ if __name__ == '__main__':
         fig = plt.figure(fid)
         filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
         
+        # Get the current width and height of the figure
+        current_width, current_height = fig.get_size_inches()
+        
+        print("Current Width:", current_width)
+        print("Current Height:", current_height)
+
         # Constructing the paths
         if fid == 100:
             
@@ -407,6 +419,12 @@ if __name__ == '__main__':
             
             # Saving the figure in EPS format
             fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+            
+            # Get the current width and height of the figure
+            current_width, current_height = fig.get_size_inches()
+            
+            print("Current Width:", current_width)
+            print("Current Height:", current_height)
         
         # Pickling the figure
         with open(pkl_path, 'wb') as f:
