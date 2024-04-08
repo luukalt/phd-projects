@@ -125,7 +125,6 @@ if __name__ == '__main__':
                     # r'$\frac{\overline{\rho}}{{\rho}_{u}}$',
                   ]
     
-    
     var_counts_norm = 'Wmean_norm [counts]'
     
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
