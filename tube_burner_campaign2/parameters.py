@@ -18,9 +18,9 @@ import rc_params_settings
 #%% Define cases
 react_names_ls =    [
                     # ('react_h0_c3000_ls_record1', 57),
-                    ('react_h0_s4000_ls_record1', 58),
+                    # ('react_h0_s4000_ls_record1', 58),
                     # ('react_h100_c12000_ls_record1', 61),
-                    # ('react_h100_c12500_ls_record1', 61),
+                    ('react_h100_c12500_ls_record1', 61),
                     # ('react_h100_s16000_ls_record1', 62)
                     ]
 
