@@ -6,7 +6,7 @@ Created on Tue Jul  4 10:25:15 2023
 
 """
 
-#%% IMPORT PACKAGES
+#%% IMPORT STANDARD PACKAGES
 import os
 import numpy as np
 import pandas as pd
@@ -15,6 +15,10 @@ from matplotlib import pyplot as plt
 import scipy.io
 from custom_colormaps import parula
 # from parameters import set_mpl_params
+
+#%% IMPORT USER DEFINED PACKAGES
+from sys_paths import parent_directory
+import sys_paths
 
 #%% CLOSE ALL FIGURES
 plt.close('all')
