@@ -13,16 +13,18 @@ import pandas as pd
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 import scipy.io
-from custom_colormaps import parula
+# from custom_colormaps import parula
 # from parameters import set_mpl_params
 
 #%% IMPORT USER DEFINED PACKAGES
 from sys_paths import parent_directory
 import sys_paths
+import rc_params_settings
+from parameters import data_dir
+from plot_params import colormap, fontsize, fontsize_fraction, fontsize_legend
 
 #%% CLOSE ALL FIGURES
 plt.close('all')
-
 
 #%% SET MATPLOTLIB PARAMETERS
 
@@ -37,8 +39,7 @@ jet = mpl.colormaps['jet']
 viridis = mpl.colormaps['viridis']
 
 #%% START
-main_dir = 'U:\\High hydrogen\\laaltenburg\\data\\tube_burner_campaign2\\selected_runs\\'
-
+# data_dir = 'U:\\High hydrogen\\laaltenburg\\data\\tube_burner_campaign2\\selected_runs\\'
 
 # Create an empty dictionary
 non_react_dict = {}
@@ -124,21 +125,22 @@ if __name__ == '__main__':
     D_in = 25.16 # Inner diameter of the quartz tube, units: mm
     offset = 1  # Distance from calibrated y=0 to tube burner rim
     
+    width, height = 9, 6
     # Initialize axial velocity plot
-    fig1, ax1 = plt.subplots()
+    fig1, ax1 = plt.subplots(figsize=(width, height))
     
     # Initialize Ruu velocity plot (RADIAL DIRECTION)
-    fig2, ax2 = plt.subplots()
+    fig2, ax2 = plt.subplots(figsize=(width, height))
     
     # Initialize Rxy velocity plot
-    fig3, ax3 = plt.subplots()
+    fig3, ax3 = plt.subplots(figsize=(width, height))
     
     # Initialize Ryy velocity plot (AXIAL DIRECTION)
-    fig4, ax4 = plt.subplots()
+    fig4, ax4 = plt.subplots(figsize=(width, height))
     
     # Set color map
-    # colormap = parula(np.linspace(0, 1, len(non_react_dict)))
-    colormap = viridis(np.linspace(0, 1, len(non_react_dict)))
+    colormap = colormap(np.linspace(0, 1, len(non_react_dict)))
+    # colormap = viridis(np.linspace(0, 1, len(non_react_dict)))
     
     # Create color iterator for plotting the data
     colormap_iter = iter(colormap)
@@ -160,7 +162,7 @@ if __name__ == '__main__':
         u_bulk_set = values[5]
         u_bulk_measured = values[6]
         
-        Avg_Stdev_file = os.path.join(main_dir, f'session_{session_nr:03d}', recording, piv_dir, 'Avg_Stdev', 'Export', 'B0001.csv')
+        Avg_Stdev_file = os.path.join(data_dir, f'session_{session_nr:03d}', recording, piv_dir, 'Avg_Stdev', 'Export', 'B0001.csv')
     
         df = read_csv(Avg_Stdev_file)
         
@@ -243,7 +245,7 @@ if __name__ == '__main__':
     Re_D_ref = 23000
     label_ref = r'${:d}$, LDA'.format(Re_D_ref)
     
-    u_axial_ref_file = read_mat(os.path.join('ref_data', filename_u_axial_ref))
+    u_axial_ref_file = read_mat(os.path.join(parent_directory, 'ref_data', filename_u_axial_ref)) #read_mat(os.path.join('ref_data', filename_u_axial_ref))
     u_axial_ref = u_axial_ref_file['ydat'].flatten()
     r_ref = u_axial_ref_file['xdat'].flatten()
     ax1.scatter(r_ref, u_axial_ref, marker='s', color='k', ls='None', label=label_ref)
@@ -253,10 +255,10 @@ if __name__ == '__main__':
     # ax1.set_aspect('equal')
     xlabel = r'$r/D$'
     ylabel = r'$\frac{\overline{u_{x}}}{U_{b}}$'
-    ax1.set_xlabel(xlabel)
-    ax1.set_ylabel(ylabel, rotation=0, labelpad=15, fontsize=18)
+    ax1.set_xlabel(xlabel, fontsize=fontsize)
+    ax1.set_ylabel(ylabel, rotation=0, labelpad=15, fontsize=fontsize_fraction)
     
-    Rxx_ref_file = read_mat(os.path.join('ref_data', filename_Rxx_ref))
+    Rxx_ref_file = read_mat(os.path.join(parent_directory, 'ref_data', filename_Rxx_ref))
     Rxx_ref = Rxx_ref_file['ydat'].flatten()
     r_ref = Rxx_ref_file['xdat'].flatten()
     ax2.scatter(r_ref, Rxx_ref, marker='s', color='k', ls='None', label=label_ref)
@@ -265,10 +267,10 @@ if __name__ == '__main__':
     ax2.grid()
     # ax2.set_aspect('equal')
     ylabel = r'$\frac{R_{rr}}{U_{b}^2}$'
-    ax2.set_xlabel(xlabel)
-    ax2.set_ylabel(ylabel, rotation=0, labelpad=15, fontsize=18)
+    ax2.set_xlabel(xlabel, fontsize=fontsize)
+    ax2.set_ylabel(ylabel, rotation=0, labelpad=15, fontsize=fontsize_fraction)
     
-    Rxy_ref_file = read_mat(os.path.join('ref_data', filename_Rxy_ref))
+    Rxy_ref_file = read_mat(os.path.join(parent_directory, 'ref_data', filename_Rxy_ref))
     Rxy_ref = Rxy_ref_file['ydat'].flatten()
     r_ref = Rxy_ref_file['xdat'].flatten()
     ax3.scatter(r_ref, Rxy_ref, marker='s', color='k', ls='None', label=label_ref)
@@ -277,10 +279,10 @@ if __name__ == '__main__':
     ax3.grid()
     # ax3.set_aspect('equal')
     ylabel = r'$\frac{R_{rx}}{U_{b}^2}$' # \overline{u\'v\'
-    ax3.set_xlabel(xlabel)
-    ax3.set_ylabel(ylabel, rotation=0, labelpad=15, fontsize=18)
+    ax3.set_xlabel(xlabel, fontsize=fontsize)
+    ax3.set_ylabel(ylabel, rotation=0, labelpad=15, fontsize=fontsize_fraction)
     
-    Ryy_ref_file = read_mat(os.path.join('ref_data', filename_Ryy_ref))
+    Ryy_ref_file = read_mat(os.path.join(parent_directory, 'ref_data', filename_Ryy_ref))
     Ryy_ref = Ryy_ref_file['ydat'].flatten()
     r_ref = Ryy_ref_file['xdat'].flatten()
     ax4.scatter(r_ref, Ryy_ref, marker='s', color='k', ls='None', label=label_ref)
@@ -289,18 +291,18 @@ if __name__ == '__main__':
     ax4.grid()
     # ax4.set_aspect('equal')
     ylabel = r'$\frac{R_{xx}}{U_{b}^2}$' # \overline{v\'v\'
-    ax4.set_xlabel(xlabel)
-    ax4.set_ylabel(ylabel, rotation=0, labelpad=15, fontsize=14)
+    ax4.set_xlabel(xlabel, fontsize=fontsize)
+    ax4.set_ylabel(ylabel, rotation=0, labelpad=15, fontsize=fontsize_fraction)
     
-    ax1.legend()
-    ax2.legend()
-    ax3.legend()
-    ax4.legend()
+    # ax1.legend()
+    # ax2.legend()
+    # ax3.legend()
+    # ax4.legend()
     
-    ax1.legend(title="$Re_D$",)
-    ax2.legend(title="$Re_D$",)
-    ax3.legend(title="$Re_D$",)
-    ax4.legend(title="$Re_D$",)
+    ax1.legend(title="$Re_D$", prop={'size': fontsize_legend})
+    ax2.legend(title="$Re_D$", prop={'size': fontsize_legend})
+    ax3.legend(title="$Re_D$", prop={'size': fontsize_legend})
+    ax4.legend(title="$Re_D$", prop={'size': fontsize_legend})
     
     # # Get a list of all currently opened figures
     # figure_ids = plt.get_fignums()
