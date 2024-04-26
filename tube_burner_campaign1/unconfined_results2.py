@@ -313,6 +313,7 @@ for fid in figure_ids:
     fig = plt.figure(fid)
     # fig.tight_layout()
     fig.savefig(f"figures/fb_maps_fig{fid}_{filename}.eps", format="eps", dpi=dpi, bbox_inches="tight")
+    fig.savefig(f"figures/fb_maps_fig{fid}_{filename}.svg", format="svg", dpi=dpi, bbox_inches="tight")
 
 
 

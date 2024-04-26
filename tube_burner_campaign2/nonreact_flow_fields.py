@@ -304,14 +304,15 @@ if __name__ == '__main__':
     ax3.legend(title="$Re_D$", prop={'size': fontsize_legend})
     ax4.legend(title="$Re_D$", prop={'size': fontsize_legend})
     
-    # # Get a list of all currently opened figures
-    # figure_ids = plt.get_fignums()
+    # Get a list of all currently opened figures
+    figure_ids = plt.get_fignums()
 
-    # # Apply tight_layout to each figure
-    # for fid in figure_ids:
-    #     fig = plt.figure(fid)
-    #     fig.tight_layout()
-    #     fig.savefig(f"nonreact_figure_{fid}.svg", format="svg", dpi=300, bbox_inches="tight")
+    # Apply tight_layout to each figure
+    for fid in figure_ids:
+        fig = plt.figure(fid)
+        fig.tight_layout()
+        svg_path = os.path.join('figures', 'nonreacting_flow', f'nonreact_fig{fid}.svg')
+        fig.savefig(svg_path, format="svg", dpi=300, bbox_inches="tight")
         
     
     
