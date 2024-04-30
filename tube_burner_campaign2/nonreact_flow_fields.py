@@ -21,7 +21,7 @@ from sys_paths import parent_directory
 import sys_paths
 import rc_params_settings
 from parameters import data_dir
-from plot_params import colormap, fontsize, fontsize_fraction, fontsize_legend
+from plot_params import colormap, fontsize, fontsize_fraction, fontsize_label, fontsize_legend
 
 #%% CLOSE ALL FIGURES
 plt.close('all')
@@ -125,7 +125,8 @@ if __name__ == '__main__':
     D_in = 25.16 # Inner diameter of the quartz tube, units: mm
     offset = 1  # Distance from calibrated y=0 to tube burner rim
     
-    width, height = 9, 6
+    width = 7
+    height = 7 #width/1.5
     # Initialize axial velocity plot
     fig1, ax1 = plt.subplots(figsize=(width, height))
     
@@ -256,7 +257,7 @@ if __name__ == '__main__':
     xlabel = r'$r/D$'
     ylabel = r'$\frac{\overline{u_{x}}}{U_{b}}$'
     ax1.set_xlabel(xlabel, fontsize=fontsize)
-    ax1.set_ylabel(ylabel, rotation=0, labelpad=15, fontsize=fontsize_fraction)
+    ax1.set_ylabel(ylabel, rotation=0, labelpad=15, fontsize=fontsize_label)
     
     Rxx_ref_file = read_mat(os.path.join(parent_directory, 'ref_data', filename_Rxx_ref))
     Rxx_ref = Rxx_ref_file['ydat'].flatten()
@@ -268,7 +269,7 @@ if __name__ == '__main__':
     # ax2.set_aspect('equal')
     ylabel = r'$\frac{R_{rr}}{U_{b}^2}$'
     ax2.set_xlabel(xlabel, fontsize=fontsize)
-    ax2.set_ylabel(ylabel, rotation=0, labelpad=15, fontsize=fontsize_fraction)
+    ax2.set_ylabel(ylabel, rotation=0, labelpad=15, fontsize=fontsize_label)
     
     Rxy_ref_file = read_mat(os.path.join(parent_directory, 'ref_data', filename_Rxy_ref))
     Rxy_ref = Rxy_ref_file['ydat'].flatten()
@@ -280,7 +281,7 @@ if __name__ == '__main__':
     # ax3.set_aspect('equal')
     ylabel = r'$\frac{R_{rx}}{U_{b}^2}$' # \overline{u\'v\'
     ax3.set_xlabel(xlabel, fontsize=fontsize)
-    ax3.set_ylabel(ylabel, rotation=0, labelpad=15, fontsize=fontsize_fraction)
+    ax3.set_ylabel(ylabel, rotation=0, labelpad=15, fontsize=fontsize_label)
     
     Ryy_ref_file = read_mat(os.path.join(parent_directory, 'ref_data', filename_Ryy_ref))
     Ryy_ref = Ryy_ref_file['ydat'].flatten()
@@ -292,18 +293,31 @@ if __name__ == '__main__':
     # ax4.set_aspect('equal')
     ylabel = r'$\frac{R_{xx}}{U_{b}^2}$' # \overline{v\'v\'
     ax4.set_xlabel(xlabel, fontsize=fontsize)
-    ax4.set_ylabel(ylabel, rotation=0, labelpad=15, fontsize=fontsize_fraction)
+    ax4.set_ylabel(ylabel, rotation=0, labelpad=15, fontsize=fontsize_label)
     
-    # ax1.legend()
-    # ax2.legend()
-    # ax3.legend()
-    # ax4.legend()
+    # fontsize_legend = 20
+    ax1.legend(title="$Re_D$", title_fontsize= fontsize_legend, prop={'size': fontsize_legend})
+    ax2.legend(title="$Re_D$", title_fontsize= fontsize_legend, prop={'size': fontsize_legend})
+    ax3.legend(title="$Re_D$", title_fontsize= fontsize_legend, prop={'size': fontsize_legend})
+    ax4.legend(title="$Re_D$", title_fontsize= fontsize_legend, prop={'size': fontsize_legend})
     
-    ax1.legend(title="$Re_D$", prop={'size': fontsize_legend})
-    ax2.legend(title="$Re_D$", prop={'size': fontsize_legend})
-    ax3.legend(title="$Re_D$", prop={'size': fontsize_legend})
-    ax4.legend(title="$Re_D$", prop={'size': fontsize_legend})
+    fontsize = 16
+    ax1.tick_params(axis='both', labelsize=fontsize)
+    ax2.tick_params(axis='both', labelsize=fontsize)
+    ax3.tick_params(axis='both', labelsize=fontsize)
+    ax4.tick_params(axis='both', labelsize=fontsize)
     
+    ax1.set_aspect('auto', adjustable='box')
+    ax2.set_aspect('auto', adjustable='box')
+    ax3.set_aspect('auto', adjustable='box')
+    ax4.set_aspect('auto', adjustable='box')
+    
+    ax1.set_position([0.1, 0.1, 0.8, 0.8])  # Set the position of the axis in the figure (left, bottom, width, height)
+    ax2.set_position([0.1, 0.1, 0.8, 0.8])  # Set the position of the axis in the figure (left, bottom, width, height)
+    ax3.set_position([0.1, 0.1, 0.8, 0.8])  # Set the position of the axis in the figure (left, bottom, width, height)
+    ax4.set_position([0.1, 0.1, 0.8, 0.8])  # Set the position of the axis in the figure (left, bottom, width, height)
+
+
     # Get a list of all currently opened figures
     figure_ids = plt.get_fignums()
 

@@ -11,8 +11,10 @@ fontsize = 20
 # Font size for labels
 fontsize_legend = 16
 
+fontsize_label = 24
+
 # Font size for labels
-fontsize_fraction = 24
+fontsize_fraction = 28
 
 # Marker sizes
 ms1 = 18
