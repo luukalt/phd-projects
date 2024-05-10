@@ -8,6 +8,12 @@ from matplotlib.colorbar import Colorbar
 from matplotlib.ticker import ScalarFormatter, FuncFormatter, FormatStrFormatter
 import matplotlib.ticker
 
+from sys_paths import parent_directory
+import sys_paths
+import rc_params_settings
+from parameters import flame, piv_method, interpolation_method
+from plot_params import colormap, fontsize
+
 def copy_content(fig, old_ax, new_ax):
     # Copy lines
     for line in old_ax.lines:
@@ -104,14 +110,16 @@ def copy_content(fig, old_ax, new_ax):
 
 
 # Load pickled figures
-# filename1 = 'H0_Re4000_fig4'
-filename1 = 'H100_Re16000_fig4'
+# filename1 = 'H0_Re4000_fig8'
+# filename1 = 'H100_Re16000_fig4'
+filename1 = 'H0_Re4000_fig2_favre'
 
 file_path1 = os.path.join('pickles', 'ls', f'{filename1}.pkl')
 
-# filename2 = 'H0_Re3000_fig4'
-filename2 = 'H100_Re12500_fig4'
+# filename2 = 'H0_Re3000_fig8'
+# filename2 = 'H100_Re12500_fig4'
 # filename2 = 'H0_Re4000_fig21'
+filename2 = 'H0_Re4000_fig4_favre'
 
 file_path2 = os.path.join('pickles', 'ls', f"{filename2}.pkl")
 
@@ -125,7 +133,7 @@ with open(file_path2, 'rb') as f:
 fig, axs = plt.subplots(1, 2, figsize=(8, 6)) # fig 4 and 8
 # fig, axs = plt.subplots(1, 2, figsize=(7, 6)) # fig 13 and 21
 
-fontsize = 20
+fontsize = fontsize
 
 # Copy contents
 copy_content(fig, fig1.axes[0], axs[0])
@@ -148,7 +156,6 @@ axs[1].tick_params(axis='y', labelleft=False)
 current_xlabel = axs[0].get_xlabel()
 current_ylabel = axs[0].get_ylabel()
 
-
 # Set the x-axis label with the same text and a different fontsize
 axs[0].set_xlabel(current_xlabel, fontsize=fontsize)  # Adjust the fontsize as needed
 axs[1].set_xlabel(current_xlabel, fontsize=fontsize)  # Adjust the fontsize as needed
@@ -157,41 +164,47 @@ axs[0].set_ylabel(current_ylabel, fontsize=fontsize)  # Adjust the fontsize as n
 axs[0].tick_params(axis='both', labelsize=fontsize)
 axs[1].tick_params(axis='both', labelsize=fontsize)
 
-# Add textbox with timestamp
-left, width = .05 , .0
-bottom, height = .25, .7
+# Add textbox
+left, width = .1 , .0
+bottom, height = .225, .7
 right = left + width
 top = bottom + height
 
-# Re_D_check = 4000
-Re_D_check = 16000
+Re_D_check = 4000
+# Re_D_check = 16000
 
 if Re_D_check in [3000, 4000]:
     fuel_type = 'DNG'
 elif Re_D_check in [12500, 16000]:
     fuel_type = 'H$_{2}$'
-        
-axs[0].text(left, top,  f'{fuel_type}-{Re_D_check}', 
+
+text = f'{fuel_type}-{Re_D_check}'
+text = 'a'
+
+axs[0].text(left, top, text, 
         horizontalalignment='left',
         verticalalignment='center',
         transform=axs[0].transAxes,
-        fontsize=16,
+        fontsize=24,
         bbox=dict(facecolor="w", edgecolor='k', boxstyle='round')
         )
 
-# Re_D_check = 3000
-Re_D_check = 12500
+Re_D_check = 3000
+# Re_D_check = 12500
 
 if Re_D_check in [3000, 4000]:
     fuel_type = 'DNG'
 elif Re_D_check in [12500, 16000]:
     fuel_type = 'H$_{2}$'
+
+text = f'{fuel_type}-{Re_D_check}'
+text = 'b'
         
-axs[1].text(left, top,  f'{fuel_type}-{Re_D_check}', 
+axs[1].text(left, top, text, 
         horizontalalignment='left',
         verticalalignment='center',
         transform=axs[1].transAxes,
-        fontsize=16,
+        fontsize=24,
         bbox=dict(facecolor='w', edgecolor='k', boxstyle='round')
         )
 

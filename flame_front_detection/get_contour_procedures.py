@@ -14,13 +14,13 @@ import sys
 # Add the 'main' folder to sys.path
 parent_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 # flame_front_detection_directory = os.path.abspath(os.path.join(parent_folder, 'flame_front_detection'))
-# flame_simulations_directory = os.path.abspath(os.path.join(parent_folder, 'flame_simulations'))
+flame_simulations_directory = os.path.abspath(os.path.join(parent_folder, 'flame_simulations'))
 plot_parameters_directory = os.path.abspath(os.path.join(parent_folder, 'plot_parameters'))
 
 # Add the flame_object_directory to sys.path
 sys.path.append(parent_folder)
 # sys.path.append(flame_front_detection_directory)
-# sys.path.append(flame_simulations_directory)
+sys.path.append(flame_simulations_directory)
 sys.path.append(plot_parameters_directory)
 
 import cv2
@@ -315,10 +315,10 @@ def get_thresholding_value(image, toggle_plot):
         fig, ax = plot_pixel_density_histogram(image, percentile_99_double)
         
         ax.plot(dist_data_x, dist_data_y, color='#000080', ls='-', label='kernel density estimation')
-        ax.plot(quantity_coord, probability_coord, color='#db3236', marker='x', ms=10, mew=2, ls='None', label='minimum probability')
+        # ax.plot(quantity_coord, probability_coord, color='#db3236', marker='x', ms=10, mew=2, ls='None')
         
         # Plot the vertical line on the axis
-        ax.axvline(x=quantity_coord, ymin=0, ymax=0.6, color='#db3236', ls='--') 
+        ax.axvline(x=quantity_coord, ymin=0, ymax=0.6, color='#db3236', ls='--', label='minimum probability') 
         # ax.axvline(x=0.5*(quantity_range[0] + quantity_range[-1]), ymin=0, ymax=0.6, color='k', ls='--') 
         
         # This is in data coordinates
@@ -328,12 +328,12 @@ def get_thresholding_value(image, toggle_plot):
         trans = ax.transAxes.inverted().transform(trans)
 
         # Add text to the left of the line
-        text_left = 'P'
-        ax.text(trans[0] - 0.05, 0.5, text_left, ha='right', va='center', transform=ax.transAxes, fontsize=20, fontweight='bold')
+        text_left = 'products'
+        ax.text(trans[0] - 0.025, 0.5, text_left, ha='right', va='center', transform=ax.transAxes, fontsize=12)
 
         # Add text to the right of the line
-        text_right = 'R'
-        ax.text(trans[0] + 0.05, 0.5, text_right, ha='left', va='center', transform=ax.transAxes, fontsize=20, fontweight='bold')
+        text_right = 'reactants'
+        ax.text(trans[0] + 0.025, 0.5, text_right, ha='left', va='center', transform=ax.transAxes, fontsize=12)
         
         ax.legend(loc='best', prop={'size': 16})
         
