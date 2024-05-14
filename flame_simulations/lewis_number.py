@@ -204,8 +204,19 @@ S_L0 = 0.365
 flame = PremixedFlame(phi, H2_percentage)
 flame.solve_equations()
 
+# Compute flame thickness
+z = flame.flame.grid
+T = flame.flame.T
+size = len(z)-1
+grad = np.zeros(size)
 
-diffusivity = flame.lambda_b / (flame.cp_u*flame.rho_u)
+for i in range(size):
+    grad[i] = (T[i+1]-T[i])/(z[i+1]-z[i])
+    
+thickness_thermal = (max(T) - min(T)) / max(grad)
+print('laminar flame thickness [thermal thickness] = ', thickness_thermal*1e3, str(" mm"))
+
+diffusivity = flame.lambda_u / (flame.cp_u*flame.rho_u)
 
 delta_f = diffusivity/flame.S_L0
 
@@ -228,17 +239,12 @@ print(f"Mass Diffusivity [DiN2_law] (D): {DiN2_law:.{decimals}e} m²/s")
 print(f"Binary Lewis Number: {lewis_binary:.{decimals}f}")
 print(f"Mixture-Averaged Lewis Number: {lewis_mixavg:.{decimals}f}")
 
-
 print(f"Binary Schmidt Number: {Sc_binary:.{decimals}f}")
 print(f"Mixture-Averaged Schmidt Number: {Sc_binary:.{decimals}f}")
 
-print(f"THermal Diffusivity [diffusivity] (D): {diffusivity:.{decimals}e} m²/s")
+print(f"Thermal Diffusivity [diffusivity] (D): {diffusivity:.{decimals}e} m²/s")
 
 print(f"Flame Thickness (δ_f): {delta_f*1e3:.3e} mm") 
-
-
-
-
 
 
 # #%% Dimensions of the scaled Flamesheet

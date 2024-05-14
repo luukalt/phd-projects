@@ -40,10 +40,11 @@ from scipy.interpolate import griddata
 from sys_paths import parent_directory
 import sys_paths
 import rc_params_settings
-from parameters import flame, piv_method, interpolation_method
+from parameters import data_dir, flame, piv_method, interpolation_method
 from plot_params import colormap, fontsize
 from time_averaging_terms import fans_terms
 from plot_functions import plot_streamlines_reacting_flow, plot_mass_cons, plot_fans_terms, plot_pressure_along_streamline
+from functions import process_df, contour_correction
 
 figures_folder = 'figures'
 if not os.path.exists(figures_folder):
@@ -52,6 +53,69 @@ if not os.path.exists(figures_folder):
 pickles_folder = 'pickles'
 if not os.path.exists(pickles_folder):
         os.makedirs(pickles_folder)
+
+#%% FUNCTIONS
+def plot_slopes(contour_nr, frame_nr=0):
+    
+    # Raw Mie-scattering directory
+    image_nr = 1
+    raw_dir = os.path.join(data_dir,  f'session_{flame.session_nr:03d}', flame.record_name, 'Correction', 'Resize', 'Frame0', 'Export')
+    raw_file = os.path.join(raw_dir, f'B{image_nr:04d}.csv')
+    
+    # Read the raw Mie-scattering image and add coordinate system translation
+    df_raw = pd.read_csv(raw_file)
+    
+    D_in = flame.D_in # Inner diameter of the quartz tube, units: mm
+    offset = 1  # Distance from calibrated y=0 to tube burner rim
+    
+    wall_center_to_origin = 2
+    wall_thickness = 1.5
+    offset_to_wall_center = wall_center_to_origin - wall_thickness/2
+    df_raw = process_df(df_raw, D_in, offset_to_wall_center, offset)
+    
+    # Get the column headers of the raw Mie-scattering image file
+    headers_raw = df_raw.columns
+    
+    # Obtain intensity field
+    pivot_intensity = pd.pivot_table(df_raw, values=headers_raw[2], index=index_name, columns=column_name)
+    
+    # Create r,x raw Mie scattering grid
+    r_raw_array = pivot_intensity.columns
+    x_raw_array = pivot_intensity.index
+    r_raw, x_raw = np.meshgrid(r_raw_array, x_raw_array)
+    n_windows_r_raw, n_windows_x_raw = len(r_raw_array), len(x_raw_array)
+    window_size_r_raw, window_size_x_raw = np.mean(np.diff(r_raw_array)), -np.mean(np.diff(x_raw_array))
+    
+    # Parameters for correcting contours from pixel coordinates to physical coordinates
+    r_left_raw = r_raw_array[0]
+    r_right_raw = r_raw_array[-1]
+    x_bottom_raw = x_raw_array[0]
+    x_top_raw = x_raw_array[-1]
+    
+    fig, ax = plt.subplots()
+    
+    # contour_corrected = contour_correction(contour_nr)
+    contour_corrected = contour_correction(flame, contour_nr, r_left_raw, r_right_raw, x_bottom_raw, x_top_raw, window_size_r_raw, window_size_x_raw, frame_nr=0)
+    contour_slopes = flame.frames[frame_nr].contour_data.slopes_of_segmented_contours[contour_nr]
+    
+    contour_x, contour_y =  contour_corrected[:,0,0], contour_corrected[:,0,1]
+    
+    # plot flame front contour
+    ax.plot(contour_x, contour_y, color='k', ls='-', lw=1)
+    
+    # set aspect ratio of plot 
+    ax.set_aspect('equal')
+    
+    for i, slope in enumerate(contour_slopes):
+        
+        # this is because slopes_of_segmented_contours was calculated with the origin of the image,
+        # which is top left instead of the conventional bottom left
+        
+        slope = np.abs(slope)
+        
+        x_coord_text = (contour_corrected[i,0,0] + contour_corrected[i+1,0,0])/2
+        y_coord_text = (contour_corrected[i,0,1] + contour_corrected[i+1,0,1])/2
+        ax.text(x_coord_text, y_coord_text, str(np.round(slope, 3)), color='k', fontsize=4)
         
 #%% MAIN
 if __name__ == '__main__':  
@@ -94,9 +158,9 @@ if __name__ == '__main__':
     # Add extra columns to the favre average dataframe
     df_favre_avg['Velocity |V| [m/s]'] = np.sqrt(df_favre_avg['Velocity u [m/s]']**2 + df_favre_avg['Velocity v [m/s]']**2)
     df_favre_avg['|V|_favre [m/s]'] = np.sqrt(df_favre_avg['u_favre [m/s]']**2 + df_favre_avg['v_favre [m/s]']**2)
-    df_favre_avg['u_favre [counts] [m/s]'] = df_favre_avg['Wmean*u [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
-    df_favre_avg['v_favre [counts] [m/s]'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
-    df_favre_avg['|V|_favre [counts] [m/s]'] = np.sqrt(df_favre_avg['u_favre [counts] [m/s]']**2 + df_favre_avg['v_favre [counts] [m/s]']**2)
+    # df_favre_avg['u_favre [counts] [m/s]'] = df_favre_avg['Wmean*u [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
+    # df_favre_avg['v_favre [counts] [m/s]'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
+    # df_favre_avg['|V|_favre [counts] [m/s]'] = np.sqrt(df_favre_avg['u_favre [counts] [m/s]']**2 + df_favre_avg['v_favre [counts] [m/s]']**2)
     
     # var1 = 'Velocity |V| [m/s]'
     # var2 = '|V|_favre [counts] [m/s]'
@@ -191,8 +255,8 @@ if __name__ == '__main__':
         # Get the current width and height of the figure
         current_width, current_height = fig.get_size_inches()
         
-        print("Current Width:", current_width)
-        print("Current Height:", current_height)
+        # print("Current Width:", current_width)
+        # print("Current Height:", current_height)
         
         ax.set_aspect('equal')
         fontsize = 16
@@ -348,8 +412,81 @@ if __name__ == '__main__':
     
     #%%% Plots
     # plot_mass_cons(mass_cons, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
-    plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
-    plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
+    # plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
+    # plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
+    
+    #%%% Test
+    plot_slopes(101)
+    
+    
+    # Raw Mie-scattering directory
+    image_nr = 1
+    raw_dir = os.path.join(data_dir,  f'session_{flame.session_nr:03d}', flame.record_name, 'Correction', 'Resize', 'Frame0', 'Export')
+    raw_file = os.path.join(raw_dir, f'B{image_nr:04d}.csv')
+    
+    # Read the raw Mie-scattering image and add coordinate system translation
+    df_raw = pd.read_csv(raw_file)
+    
+    D_in = flame.D_in # Inner diameter of the quartz tube, units: mm
+    offset = 1  # Distance from calibrated y=0 to tube burner rim
+    
+    wall_center_to_origin = 2
+    wall_thickness = 1.5
+    offset_to_wall_center = wall_center_to_origin - wall_thickness/2
+    df_raw = process_df(df_raw, D_in, offset_to_wall_center, offset)
+    
+    # Get the column headers of the raw Mie-scattering image file
+    headers_raw = df_raw.columns
+    
+    # Obtain intensity field
+    pivot_intensity = pd.pivot_table(df_raw, values=headers_raw[2], index=index_name, columns=column_name)
+    
+    # Create r,x raw Mie scattering grid
+    r_raw_array = pivot_intensity.columns
+    x_raw_array = pivot_intensity.index
+    r_raw, x_raw = np.meshgrid(r_raw_array, x_raw_array)
+    n_windows_r_raw, n_windows_x_raw = len(r_raw_array), len(x_raw_array)
+    window_size_r_raw, window_size_x_raw = np.mean(np.diff(r_raw_array)), -np.mean(np.diff(x_raw_array))
+    
+    # Parameters for correcting contours from pixel coordinates to physical coordinates
+    r_left_raw = r_raw_array[0]
+    r_right_raw = r_raw_array[-1]
+    x_bottom_raw = x_raw_array[0]
+    x_top_raw = x_raw_array[-1]
+    
+    frame_nr = 0
+    
+    all_contour_slope_values = []
+    
+    contour_nrs = len(flame.frames[frame_nr].contour_data.segmented_contours)
+    
+    
+    for contour_nr in range(contour_nrs):
+        
+        # contour_corrected = contour_correction(contour_nr)
+        contour_corrected = contour_correction(flame, contour_nr, r_left_raw, r_right_raw, x_bottom_raw, x_top_raw, window_size_r_raw, window_size_x_raw, frame_nr=0)
+        contour_slopes = flame.frames[frame_nr].contour_data.slopes_of_segmented_contours[contour_nr]
+        
+        for i, slope in enumerate(contour_slopes):
+            
+            x_mid_coord = (contour_corrected[i,0,1] + contour_corrected[i+1,0,1])/2
+            
+            if x_mid_coord >= 0.25 and x_mid_coord <= 1.25:
+        
+                all_contour_slope_values.append(np.abs(slope))
+    
+    
+    figs, axs = plt.subplots(figsize=(12, 10))
+    axs.hist(all_contour_slope_values, color='blue', alpha=0.7, bins=50, edgecolor='black', density=True)
+    
+    print(vars(flame))
+    print(np.mean(all_contour_slope_values))
+    
+    axs.grid(True)
+    axs.set_title(flame.name)
+    axs.set_xlabel('slope', fontsize=fontsize)
+    axs.set_ylabel('pdf', fontsize=fontsize)
+    axs.set_ylim(top=4)
     
     #%%% Non-reacting flow
     # non_react_flow = non_react_dict[nonreact_run_nr]
@@ -384,59 +521,59 @@ if __name__ == '__main__':
     
     # %%% Save images
     # Get a list of all currently opened figures
-    figure_ids = plt.get_fignums()
-    figure_ids = [2, 4]
+    # figure_ids = plt.get_fignums()
+    # figure_ids = [2, 4]
     
-    if 'ls' in flame.name:
-        folder = 'ls'
-    else:
-        folder = 'hs'
+    # if 'ls' in flame.name:
+    #     folder = 'ls'
+    # else:
+    #     folder = 'hs'
     
-    figures_subfolder = os.path.join(figures_folder, folder)
-    if not os.path.exists(figures_subfolder):
-            os.makedirs(figures_subfolder)
+    # figures_subfolder = os.path.join(figures_folder, folder)
+    # if not os.path.exists(figures_subfolder):
+    #         os.makedirs(figures_subfolder)
     
-    pickles_subfolder = os.path.join(pickles_folder, folder)
-    if not os.path.exists(pickles_subfolder):
-            os.makedirs(pickles_subfolder)
+    # pickles_subfolder = os.path.join(pickles_folder, folder)
+    # if not os.path.exists(pickles_subfolder):
+    #         os.makedirs(pickles_subfolder)
 
-    # Apply tight_layout to each figure
-    for fid in figure_ids:
-        fig = plt.figure(fid)
-        filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
+    # # Apply tight_layout to each figure
+    # for fid in figure_ids:
+    #     fig = plt.figure(fid)
+    #     filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
         
-        # Get the current width and height of the figure
-        current_width, current_height = fig.get_size_inches()
+    #     # Get the current width and height of the figure
+    #     current_width, current_height = fig.get_size_inches()
         
-        print("Current Width:", current_width)
-        print("Current Height:", current_height)
+    #     print("Current Width:", current_width)
+    #     print("Current Height:", current_height)
 
-        # Constructing the paths
-        if fid == 100:
+    #     # Constructing the paths
+    #     if fid == 100:
             
-            png_path = os.path.join('figures', f'{folder}', f"{filename}.png")
-            pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
+    #         png_path = os.path.join('figures', f'{folder}', f"{filename}.png")
+    #         pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
             
-            # Saving the figure in EPS format
-            fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
+    #         # Saving the figure in EPS format
+    #         fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
             
-        else:
+    #     else:
             
-            eps_path = os.path.join('figures', f'{folder}', f"{filename}.eps")
-            pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
+    #         eps_path = os.path.join('figures', f'{folder}', f"{filename}.eps")
+    #         pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
             
-            # Saving the figure in EPS format
-            fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+    #         # Saving the figure in EPS format
+    #         fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
             
-            # Get the current width and height of the figure
-            current_width, current_height = fig.get_size_inches()
+    #         # Get the current width and height of the figure
+    #         current_width, current_height = fig.get_size_inches()
             
-            print("Current Width:", current_width)
-            print("Current Height:", current_height)
+    #         print("Current Width:", current_width)
+    #         print("Current Height:", current_height)
         
-        # Pickling the figure
-        with open(pkl_path, 'wb') as f:
-            pickle.dump(fig, f)
+    #     # Pickling the figure
+    #     with open(pkl_path, 'wb') as f:
+    #         pickle.dump(fig, f)
             
     
     
