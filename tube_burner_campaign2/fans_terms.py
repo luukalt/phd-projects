@@ -115,7 +115,10 @@ def plot_slopes(contour_nr, frame_nr=0):
         
         x_coord_text = (contour_corrected[i,0,0] + contour_corrected[i+1,0,0])/2
         y_coord_text = (contour_corrected[i,0,1] + contour_corrected[i+1,0,1])/2
-        ax.text(x_coord_text, y_coord_text, str(np.round(slope, 3)), color='k', fontsize=4)
+        
+        if y_coord_text >= 0.25 and y_coord_text <= 1.75:
+            
+            ax.text(x_coord_text, y_coord_text, str(np.round(slope, 3)), color='k', fontsize=4)
         
 #%% MAIN
 if __name__ == '__main__':  
@@ -416,7 +419,7 @@ if __name__ == '__main__':
     # plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
     
     #%%% Test
-    plot_slopes(101)
+    plot_slopes(1)
     
     
     # Raw Mie-scattering directory
@@ -460,7 +463,6 @@ if __name__ == '__main__':
     
     contour_nrs = len(flame.frames[frame_nr].contour_data.segmented_contours)
     
-    
     for contour_nr in range(contour_nrs):
         
         # contour_corrected = contour_correction(contour_nr)
@@ -471,16 +473,20 @@ if __name__ == '__main__':
             
             x_mid_coord = (contour_corrected[i,0,1] + contour_corrected[i+1,0,1])/2
             
-            if x_mid_coord >= 0.25 and x_mid_coord <= 1.25:
+            if x_mid_coord >= 0.25 and x_mid_coord <= 1.75:
         
                 all_contour_slope_values.append(np.abs(slope))
+                # all_contour_slope_values.append(slope)
+                
     
     
     figs, axs = plt.subplots(figsize=(12, 10))
-    axs.hist(all_contour_slope_values, color='blue', alpha=0.7, bins=50, edgecolor='black', density=True)
+    n, bins, _ = axs.hist(all_contour_slope_values, color='blue', alpha=0.7, bins=26, edgecolor='black', density=True)
     
+    axs.axvline(x=.5, color='red', linestyle='--', linewidth=2)
     print(vars(flame))
     print(np.mean(all_contour_slope_values))
+    print(len(all_contour_slope_values))
     
     axs.grid(True)
     axs.set_title(flame.name)
@@ -488,6 +494,13 @@ if __name__ == '__main__':
     axs.set_ylabel('pdf', fontsize=fontsize)
     axs.set_ylim(top=4)
     
+    # Calculate the width of each bin
+    bin_width = bins[1] - bins[0]
+    
+    # Calculate the sum of areas of the bins
+    total_area = sum(n * bin_width)
+    
+    print("Sum of areas of bins after normalization:", total_area)
     #%%% Non-reacting flow
     # non_react_flow = non_react_dict[nonreact_run_nr]
     # name = non_react_flow[0]

@@ -34,6 +34,9 @@ def process_df(df, D_in, offset_to_wall_center, offset):
 
 def contour_correction(flame, contour_nr, r_left_raw, r_right_raw, x_bottom_raw, x_top_raw, window_size_r_raw, window_size_x_raw, frame_nr=0):
     
+    if contour_nr == 1:
+        print(flame.name)
+        
     segmented_contour =  flame.frames[frame_nr].contour_data.segmented_contours[contour_nr]
     
     segmented_contour_r = segmented_contour[:, 0, 0]
