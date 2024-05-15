@@ -158,6 +158,9 @@ if __name__ == '__main__':
     # Add extra columns to the favre average dataframe
     df_favre_avg['Velocity |V| [m/s]'] = np.sqrt(df_favre_avg['Velocity u [m/s]']**2 + df_favre_avg['Velocity v [m/s]']**2)
     df_favre_avg['|V|_favre [m/s]'] = np.sqrt(df_favre_avg['u_favre [m/s]']**2 + df_favre_avg['v_favre [m/s]']**2)
+    df_favre_avg['TKE_favre1'] = df_favre_avg['u_fluc_favre*u_fluc_favre'] + df_favre_avg['v_fluc_favre*v_fluc_favre']
+    df_favre_avg['TKE_favre2'] = df_favre_avg['rho*u_fluc_favre*u_fluc_favre'].div(df_favre_avg['rho [kg/m^3]']).fillna(0) + df_favre_avg['rho*v_fluc_favre*v_fluc_favre'].div(df_favre_avg['rho [kg/m^3]']).fillna(0)
+    
     # df_favre_avg['u_favre [counts] [m/s]'] = df_favre_avg['Wmean*u [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
     # df_favre_avg['v_favre [counts] [m/s]'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
     # df_favre_avg['|V|_favre [counts] [m/s]'] = np.sqrt(df_favre_avg['u_favre [counts] [m/s]']**2 + df_favre_avg['v_favre [counts] [m/s]']**2)
@@ -175,22 +178,40 @@ if __name__ == '__main__':
     #                 r'$\frac{|\overline{V}|}{U_{b}}$',
     #               ]
                                 
-    var1 = 'Wmean [counts]'
-    var2 = 'Wmean [states]'
-    var3 = 'rho [kg/m^3]'
-    var_list = [var1, var2, var3]
+    # var1 = 'Wmean [counts]'
+    # var2 = 'Wmean [states]'
+    # var3 = 'rho [kg/m^3]'
+    # var_list = [var1, var2, var3]
+    # labels = [var1,
+    #           var2,
+    #           var3
+    #           ]
+    
+    # cbar_titles = [r'$\frac{\overline{I}}{\overline{I}_{max}}$',
+    #                 r'State',
+    #                 r'$\overline{\rho^{*}}$',
+    #                 # r'$\frac{\overline{\rho}}{{\rho}_{u}}$',
+    #               ]
+    
+    # var_counts_norm = 'Wmean_norm [counts]'
+    
+    var1 = 'TKE_favre1'
+    var2 = 'TKE_favre2'
+    var3 = '0.5*(R_uu + R_vv) [m^2/s^2]'
+    
+    var_list = [var1,
+                var2,
+                var3,
+                # var4
+                ]
     labels = [var1,
               var2,
               var3
               ]
-    
-    cbar_titles = [r'$\frac{\overline{I}}{\overline{I}_{max}}$',
-                    r'State',
-                    r'$\overline{\rho^{*}}$',
-                    # r'$\frac{\overline{\rho}}{{\rho}_{u}}$',
+    cbar_titles = [r'$\frac{\tilde{k}}{U_{b}^{2}}$',
+                   r'$\frac{\tilde{k}}{U_{b}^{2}}$',
+                  r'$\frac{\tilde{k}}{U_{b}^{2}}$',
                   ]
-    
-    var_counts_norm = 'Wmean_norm [counts]'
     
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
     
@@ -217,20 +238,22 @@ if __name__ == '__main__':
         fig, ax = plt.subplots(figsize=(width, height))
         # ax.set_title(label)
         
-        cbar_min = np.min(df_favre_avg[var])
         
-        cbar_max = np.max(df_favre_avg[var])
+        pivot_var /= u_bulk_measured**2
+        # pivot_var /= cbar_max
         
-        # pivot_var /= u_bulk_measured
-        pivot_var /= cbar_max
+        cbar_min = np.min(pivot_var.values)
         
-        flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values, cmap=colormap, vmin=0, vmax=1)
+        cbar_max = np.max(pivot_var.values)
+        
+        
+        flow_field = ax.pcolor(r_norm, x_norm, pivot_var.values, cmap=colormap, vmin=0, vmax=.1)
         
         ax._X_data = r_norm
         ax._Y_data = x_norm
         ax._Z_data = pivot_var.values
         ax._cmap = colormap
-        ax._clim = [0, 1]
+        # ax._clim = [0, 1]
         
         # num_ticks = 6
         # custom_cbar_ticks = np.linspace(0, cbar_max, num_ticks)
@@ -240,16 +263,16 @@ if __name__ == '__main__':
         # else:
         #     custom_cbar_tick_labels = [f'{tick:.1f}' for tick in custom_cbar_ticks]
         
-        if var == var3:
+        # if var == var1 or var == var2:
             
-            cbar = ax.figure.colorbar(flow_field)
+        cbar = ax.figure.colorbar(flow_field)
             # cbar.set_ticks(custom_cbar_ticks)
             # cbar.set_ticklabels(custom_cbar_tick_labels)
-            if var == var2:
-                cbar.set_label(cbar_title, fontsize=20)
-            else:
+            # if var == var2:
+            #     cbar.set_label(cbar_title, fontsize=20)
+            # else:
                 
-                cbar.set_label(cbar_title, rotation=0, labelpad=25, fontsize=24) 
+            #     cbar.set_label(cbar_title, rotation=0, labelpad=25, fontsize=24) 
             # cbar.ax.tick_params(labelsize=fontsize)
         
         # Get the current width and height of the figure
@@ -323,24 +346,24 @@ if __name__ == '__main__':
     coords_X_x, coords_X_y, counts_X, values_X = [], [], [], []
     coords_Y_x, coords_Y_y, counts_Y, values_Y = [], [], [], []
 
-    # Iterate through the DataFrame to find matching rows
-    for index, row in df_favre_avg.iterrows():
+    # # Iterate through the DataFrame to find matching rows
+    # for index, row in df_favre_avg.iterrows():
         
-        coord_r, coord_x = row['x_shift_norm'], row['y_shift_norm']
+    #     coord_r, coord_x = row['x_shift_norm'], row['y_shift_norm']
         
-        if coord_x > 0.1:
+    #     if coord_x > 0.1:
             
-            if row[var] == value_X:
-                coords_X_x.append(row[column_name])
-                coords_X_y.append(row[index_name])
-                counts_X.append(row[var_counts_norm])
-                values_X.append(row[var])
+    #         if row[var] == value_X:
+    #             coords_X_x.append(row[column_name])
+    #             coords_X_y.append(row[index_name])
+    #             counts_X.append(row[var_counts_norm])
+    #             values_X.append(row[var])
                 
-            elif row[var] == value_Y:
-                coords_Y_x.append(row[column_name])
-                coords_Y_y.append(row[index_name])
-                counts_Y.append(row[var_counts_norm])
-                values_Y.append(row[var])
+    #         elif row[var] == value_Y:
+    #             coords_Y_x.append(row[column_name])
+    #             coords_Y_y.append(row[index_name])
+    #             counts_Y.append(row[var_counts_norm])
+    #             values_Y.append(row[var])
             
     # Overlay scatter plots for X and Y values
     # ax.scatter(coords_X_x, coords_X_y, color='black', label=f'Value = {value_X}')
@@ -418,7 +441,6 @@ if __name__ == '__main__':
     #%%% Test
     plot_slopes(101)
     
-    
     # Raw Mie-scattering directory
     image_nr = 1
     raw_dir = os.path.join(data_dir,  f'session_{flame.session_nr:03d}', flame.record_name, 'Correction', 'Resize', 'Frame0', 'Export')
@@ -459,8 +481,7 @@ if __name__ == '__main__':
     all_contour_slope_values = []
     
     contour_nrs = len(flame.frames[frame_nr].contour_data.segmented_contours)
-    
-    
+        
     for contour_nr in range(contour_nrs):
         
         # contour_corrected = contour_correction(contour_nr)
@@ -477,10 +498,11 @@ if __name__ == '__main__':
     
     
     figs, axs = plt.subplots(figsize=(12, 10))
-    axs.hist(all_contour_slope_values, color='blue', alpha=0.7, bins=50, edgecolor='black', density=True)
+    axs.hist(all_contour_slope_values, color='blue', alpha=0.7, bins=25, edgecolor='black', density=True)
     
     print(vars(flame))
     print(np.mean(all_contour_slope_values))
+    print(len(all_contour_slope_values))
     
     axs.grid(True)
     axs.set_title(flame.name)
