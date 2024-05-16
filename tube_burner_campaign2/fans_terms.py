@@ -496,7 +496,7 @@ if __name__ == '__main__':
             
             x_mid_coord = (contour_corrected[i,0,1] + contour_corrected[i+1,0,1])/2
             
-            if x_mid_coord >= 0.25 and x_mid_coord <= 1.75:
+            if x_mid_coord >= 0.25 and x_mid_coord <= 1.25:
         
                 all_contour_slope_values.append(np.abs(slope))
                 # all_contour_slope_values.append(slope)
@@ -504,7 +504,7 @@ if __name__ == '__main__':
     
     
     figs, axs = plt.subplots(figsize=(12, 10))
-    n, bins, _ = axs.hist(all_contour_slope_values, color='blue', alpha=0.7, bins=26, edgecolor='black', density=True)
+    n, bins, _ = axs.hist(all_contour_slope_values, color='tab:blue', alpha=0.5, bins=25, edgecolor='black', density=True)
     
     axs.axvline(x=.5, color='red', linestyle='--', linewidth=2)
     print(vars(flame))
@@ -524,6 +524,15 @@ if __name__ == '__main__':
     total_area = sum(n * bin_width)
     
     print("Sum of areas of bins after normalization:", total_area)
+    
+    import json
+    # Save list to a file
+    with open(os.path.join("json", f'{flame.name}_all_contour_slope_values_between_025_125.json'), 'w') as f:
+        json.dump(all_contour_slope_values, f)
+    
+    # # Load list from file
+    # with open('my_list.json', 'r') as f:
+    #     loaded_list = json.load(f)
     #%%% Non-reacting flow
     # non_react_flow = non_react_dict[nonreact_run_nr]
     # name = non_react_flow[0]
