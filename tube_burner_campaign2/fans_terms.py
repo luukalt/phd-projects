@@ -162,7 +162,7 @@ if __name__ == '__main__':
     df_favre_avg['Velocity |V| [m/s]'] = np.sqrt(df_favre_avg['Velocity u [m/s]']**2 + df_favre_avg['Velocity v [m/s]']**2)
     df_favre_avg['|V|_favre [m/s]'] = np.sqrt(df_favre_avg['u_favre [m/s]']**2 + df_favre_avg['v_favre [m/s]']**2)
     df_favre_avg['TKE_favre1'] = df_favre_avg['u_fluc_favre*u_fluc_favre'] + df_favre_avg['v_fluc_favre*v_fluc_favre']
-    df_favre_avg['TKE_favre2'] = df_favre_avg['rho*u_fluc_favre*u_fluc_favre'].div(df_favre_avg['rho [kg/m^3]']).fillna(0) + df_favre_avg['rho*v_fluc_favre*v_fluc_favre'].div(df_favre_avg['rho [kg/m^3]']).fillna(0)
+    df_favre_avg['TKE_favre2'] = 0.5*(df_favre_avg['rho*u_fluc_favre*u_fluc_favre'].div(df_favre_avg['rho [kg/m^3]']).fillna(0) + df_favre_avg['rho*v_fluc_favre*v_fluc_favre'].div(df_favre_avg['rho [kg/m^3]']).fillna(0))
     
     # df_favre_avg['u_favre [counts] [m/s]'] = df_favre_avg['Wmean*u [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
     # df_favre_avg['v_favre [counts] [m/s]'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)

@@ -46,9 +46,9 @@ flame_names = ['react_h0_s4000_ls_record1', 'react_h0_c3000_ls_record1']
 labels = ['DNG-4000', 'DNG-3000'] 
 ytop_limit = 4
 
-flame_names = ['react_h100_s16000_ls_record1', 'react_h100_c12500_ls_record1']
-labels = [r'H$_{2}$-16000', r'H$_{2}$-12500']
-ytop_limit = 2
+# flame_names = ['react_h100_s16000_ls_record1', 'react_h100_c12500_ls_record1']
+# labels = [r'H$_{2}$-16000', r'H$_{2}$-12500']
+# ytop_limit = 2
 
 colors = ['tab:blue', 'tab:red']
 
