@@ -442,7 +442,7 @@ if __name__ == '__main__':
     # plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
     
     #%%% Test
-    plot_slopes(1)
+    plot_slopes(200)
     
     
     # Raw Mie-scattering directory

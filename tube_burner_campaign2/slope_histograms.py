@@ -40,7 +40,8 @@ if not os.path.exists(pickles_folder):
 # with open(os.path.join("json", f'{flame.name}_all_contour_slope_values_between_025_175.json'), 'w') as f:
 #     json.dump(all_contour_slope_values, f)
 
-fig, ax = plt.subplots()
+width, height = 9, 6
+fig, ax = plt.subplots(figsize=(width, height))
 
 # Load list from file
 # flame_names = ['react_h0_s4000_ls_record1', 'react_h0_c3000_ls_record1']
@@ -52,6 +53,8 @@ labels = [r'H$_{2}$-16000', r'H$_{2}$-12500']
 ytop_limit = .01
 
 colors = ['tab:blue', 'tab:red']
+
+all_contour_slope_values_degrees_list = []
 
 for flame_name, color, label in zip(flame_names, colors, labels):
     
@@ -68,44 +71,48 @@ for flame_name, color, label in zip(flame_names, colors, labels):
     # Calculate the angles in degrees for all values in the list
     all_contour_slope_values_degrees = [np.degrees(alpha_tan * norm) - 90 for alpha_tan in all_contour_slope_values]
     
-    n, bins, _ = ax.hist(all_contour_slope_values_degrees, color=color, alpha=0.5, bins=25, edgecolor='black', density=True, label=label)
+    all_contour_slope_values_degrees_list.append(all_contour_slope_values_degrees)
     
+    # n, bins, _ = ax.hist(all_contour_slope_values_degrees, color=color, alpha=0.5, bins=25, edgecolor='black', density=True, label=label)
+
+
     # ax.axvline(x=.5, color='red', linestyle='--', linewidth=2)
-    print(vars(flame))
+    # print(vars(flame))
+    print(np.mean(all_contour_slope_values_degrees) * 2)
     print(np.mean(all_contour_slope_values))
-    print(len(all_contour_slope_values))
+    print(len(all_contour_slope_values_degrees))
     
-    ax.grid(True)
-    # ax.set_title(flame.name)
-    ax.set_xlabel(r'$\theta$', fontsize=fontsize_fraction)
-    ax.set_ylabel('probability density', fontsize=fontsize_label)
+    # # Calculate the width of each bin
+    # bin_width = bins[1] - bins[0]
     
-    num_ticks = 7
-    xticks = np.linspace(-90, 90, num_ticks)
-    ax.set_xticks(xticks)
+    # # Calculate the sum of areas of the bins
+    # total_area = sum(n * bin_width)
     
-    ax.set_ylim(top=ytop_limit)
-    y_min, y_max = ax.get_ylim()
-    num_ticks = 6
-    yticks = np.linspace(y_min, y_max, num_ticks)
-    ax.set_yticks(yticks)
-    ax.yaxis.set_major_formatter(FormatStrFormatter('%.3f'))
-    
-    ax.legend(fontsize=fontsize)
-    ax.tick_params(axis='both', labelsize=fontsize)
-    
-    fig.tight_layout()
-    
-    
-    
-    # Calculate the width of each bin
-    bin_width = bins[1] - bins[0]
-    
-    # Calculate the sum of areas of the bins
-    total_area = sum(n * bin_width)
-    
-    print("Sum of areas of bins after normalization:", total_area)
-    
+    # print("Sum of areas of bins after normalization:", total_area)
+
+bins = 25
+ax.hist(all_contour_slope_values_degrees_list, bins, label=labels, edgecolor='black', density=True,)
+ax.grid(True)
+# ax.set_title(flame.name)
+ax.set_xlabel(r'$\theta$', fontsize=fontsize_fraction)
+ax.set_ylabel('probability density', fontsize=fontsize_label)
+
+num_ticks = 7
+xticks = np.linspace(-90, 90, num_ticks)
+ax.set_xticks(xticks)
+
+ax.set_ylim(top=ytop_limit)
+y_min, y_max = ax.get_ylim()
+num_ticks = 6
+yticks = np.linspace(y_min, y_max, num_ticks)
+ax.set_yticks(yticks)
+ax.yaxis.set_major_formatter(FormatStrFormatter('%.3f'))
+
+ax.legend(fontsize=fontsize)
+ax.tick_params(axis='both', labelsize=fontsize)
+
+fig.tight_layout()
+   
 # %%% Save images
 # Get a list of all currently opened figures
 figure_ids = plt.get_fignums()
@@ -129,10 +136,10 @@ for fid in figure_ids:
     current_width, current_height = fig.get_size_inches()
     
   
-    eps_path = os.path.join('figures', f'{folder}', f"{filename}.svg")
+    eps_path = os.path.join('figures', f'{folder}', f"{filename}.eps")
    
     # Saving the figure in EPS format
-    fig.savefig(eps_path, format='svg', dpi=300, bbox_inches='tight')
+    fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
     
     # Get the current width and height of the figure
     current_width, current_height = fig.get_size_inches()

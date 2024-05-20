@@ -99,6 +99,8 @@ def cone_angle(distances_above_tube=[.75, 1., 1.25]):
     
     fname = f'{name}_segment_length_{segment_length_mm}mm_wsize_{window_size}pixels'
     
+    # print(fname)
+    
     with open(os.path.join(spydata_dir, fname + '.pkl'), 'rb') as f:
         flame = pickle.load(f)
     

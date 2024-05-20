@@ -76,6 +76,12 @@ if __name__ == '__main__':
     
     cone_left_line = np.column_stack((r_range_left, poly_left_fit))
     cone_right_line = np.column_stack((r_range_right, poly_right_fit))
+    
+    print(f'The cone angle (radians): {np.radians(alpha)}')
+    print(f'The cone angle (degrees): {alpha}')
+    
+    Ub_over_Uu = 7.6* np.sin(np.radians(alpha)/2)
+    print(f'Ub_over_Uu: {Ub_over_Uu}')
        
     #%%% PIV file column indices
     u_r_col_index = 2
@@ -621,7 +627,6 @@ if __name__ == '__main__':
         #     ax.set_zticks([])
         #     fig1.tight_layout()
 
-# print(f'The cone angle: {alpha}')
 
 # ax1.legend()
 # ax2.legend()

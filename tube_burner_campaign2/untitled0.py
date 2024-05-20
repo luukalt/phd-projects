@@ -7,7 +7,7 @@ Created on Mon May 13 17:14:44 2024
 
 import numpy as np
 
-alpha_tan = .43
+alpha_tan = 0.5519715598046225
 norm = np.pi
 
 # Calculate the angle in degrees
