@@ -28,10 +28,10 @@ length = 3
 fig, ax = plt.subplots()
 
 # Fill left side with blue
-ax.fill_betweenx(y_rot, x1=-10, x2=x_rot, where=(x_rot <= np.inf), color='tab:blue', alpha=1)
+ax.fill_betweenx(y_rot, x1=-10, x2=x_rot, where=(x_rot <= np.inf), color='tab:blue', alpha=.5)
 
 # Fill right side with orange
-ax.fill_betweenx(y_rot, x1=x_rot, x2=10, where=(x_rot >= -np.inf), color='tab:orange', alpha=1)
+ax.fill_betweenx(y_rot, x1=x_rot, x2=10, where=(x_rot >= -np.inf), color='tab:orange', alpha=.5)
 
 # Plot the rotated sine wave
 # ax.plot(x_rot, y_rot, color='k')
@@ -83,15 +83,15 @@ for line_ycenter in line_ycenters:
     ax.plot(x_value * np.cos(angle) - y_value * np.sin(angle), x_value * np.sin(angle) + y_value * np.cos(angle), 'ko')
 
 
-ax.text(-.85, 7.2, r'$\theta < 0$', fontsize=12,  ha='center', color='k')
+ax.text(-.8, 7.2, r'$\theta < 0$', fontsize=12,  ha='center', color='k')
 
 ax.text(0, -4.1, r'$\theta > 0$', fontsize=12, ha='center')
 
-ax.text(-6., start_y - 1.25, 'Direction of \n the bulk flow', fontsize=6, ha='center')
+ax.text(-5.5, start_y - 1.5, 'Direction of \n the bulk flow', fontsize=8, ha='center')
 
-ax.text(-5.5, 1., r'Unburnt mixture', fontsize=6, ha='center')
+ax.text(-4.5, 1., r'Unburnt mixture', fontsize=8, ha='center')
 
-ax.text(2.5, 5., 'Burnt mixture', fontsize=6, ha='center')
+ax.text(2., 4.5, 'Burnt mixture', fontsize=8, ha='center')
 
 
 
@@ -110,10 +110,10 @@ ax.set_aspect('equal')
 ax.axis('off')
 
 filename = 'theta_sketch'
-eps_path = os.path.join('figures', f"{filename}.eps")
+eps_path = os.path.join('figures', f"{filename}.svg")
  
 # Saving the figure in EPS format
-fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+fig.savefig(eps_path, format='svg', dpi=300, bbox_inches='tight')
 
 
 

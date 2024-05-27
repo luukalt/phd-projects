@@ -10,6 +10,13 @@ Algoritmes to detect the flame front of confinded and unconfined flames from raw
 #%% IMPORT PACKAGES
 import os
 import sys
+import cv2
+import numpy as np
+from matplotlib import pyplot as plt
+from scipy.signal import find_peaks, peak_prominences
+from scipy import stats
+import imutils
+import pickle
 
 # Add the 'main' folder to sys.path
 parent_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -23,13 +30,7 @@ sys.path.append(parent_folder)
 sys.path.append(flame_simulations_directory)
 sys.path.append(plot_parameters_directory)
 
-import cv2
-import numpy as np
-from matplotlib import pyplot as plt
-from scipy.signal import find_peaks, peak_prominences
-from scipy import stats
-import imutils
-import pickle
+from contour_properties import contour_segmentation
 
 figures_folder = 'figures'
 if not os.path.exists(figures_folder):
@@ -129,7 +130,7 @@ def get_contour_procedure_bilateral_filter_method(window_size, pre_data_path, po
     img_normalized = cv2.normalize(img_raw, dst=None, alpha=0, beta=1.0, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
     
     #%% [3] Apply bilateral filter on normalized image
-    w_size = int(window_size)
+    w_size = int(window_size*.5)
     filter_diameter = w_size
     sigma_color = 0.1
     sigma_space = filter_diameter/2.0
@@ -502,13 +503,23 @@ def plot_image(title, image, brighten_factor, contour, toggle_contour, color):
     ax.set_xlabel('pixels', fontsize=20)
     ax.set_ylabel('pixels', fontsize=20)
     
+    segmented_contour_x, segmented_contour_y, segmented_contour = contour_segmentation(contour, flame.segment_length_pixels)
+    
     if toggle_contour:
         contour_x = contour[:,:,0]
         contour_y = contour[:,:,1]
         ax.plot(contour_x, contour_y, color)
     
+    if toggle_contour:
+        contour_x = segmented_contour[:,:,0]
+        contour_y = segmented_contour[:,:,1]
+        ax.plot(contour_x, contour_y, c='y', marker='o', ms=6, ls='solid')
+    
     custom_y_ticks = [0,  800]
     ax.set_yticks(custom_y_ticks)
+    
+    ax.set_xlim(left=50, right=200)
+    ax.set_ylim(bottom=600, top=300)
     
     # plt.title(title)
     # plt.imshow(image, cmap="gray", vmin=np.min(image.flatten())/brighten_factor, vmax=np.max(image.flatten())/brighten_factor)
@@ -608,8 +619,8 @@ if __name__ == "__main__":
     
     react_names_hs =    [
                         # ('react_h0_f2700_hs_record1', 57),
-                        ('react_h0_c3000_hs_record1', 57),
-                        # ('react_h0_s4000_hs_record1', 58),
+                        # ('react_h0_c3000_hs_record1', 57),
+                        ('react_h0_s4000_hs_record1', 58),
                         # ('react_h100_c12500_hs_record1', 61),
                         # ('react_h100_s16000_hs_record1', 62)
                         ]

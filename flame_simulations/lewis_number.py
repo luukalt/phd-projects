@@ -15,7 +15,7 @@ R_gas = 0.082057 # L*atm/(mol*K)
 R_gas_default = 8.31446261815324 # J/(K*mol)
 kb = 1.380649e-23 # Boltzmann constant in J/K
 N_A =  6.02214076e23 # Avogrado's number
-
+decimals = 2
 #%% Temperature and pressure of unburned mixture
 T_u = 273.15 + 20   # temperature of the unburned mixture in K
 p_u = 101325 # pressure of the unburned mixture in Pa
@@ -68,31 +68,30 @@ rho_stoich =  ((n_O2*W_O2) + (n_N2*W_N2) + (n_Ar*W_Ar) + (n_H2_stoich*W_H2))/(V_
 #%% [NON-STOCHIOMETRIC] Number of moles of fuel-air mixture components
 
 # Define volume fractions of species in air [units: -]
-# f_O2 = 0.21
-# f_N2 = 0.78
-# f_AR = 0.01
-
 f_O2 = 0.21
-f_N2 = 0.79
-f_AR = 0
+f_N2 = 0.78
+f_AR = 0.01
+
+# f_O2 = 0.21
+# f_N2 = 0.79
+# f_AR = 0
 
 # Define composition of DNG in volume percentages
-# REST_in_DNG_percentage = 0.6
-# CH4_percentage = 81.3*(1 + REST_in_DNG_percentage/100) # Volume percentage of CH4 in DNG
-# C2H6_percentage = 3.7*(1 + REST_in_DNG_percentage/100) # Volume percentage of C2H6 in DNG
-# N2_in_DNG_percentage = 14.4*(1 + REST_in_DNG_percentage/100) # Volume percentage of N2 in DNG
+REST_in_DNG_percentage = 0.6
+CH4_percentage = 81.3*(1 + REST_in_DNG_percentage/100) # Volume percentage of CH4 in DNG
+C2H6_percentage = 3.7*(1 + REST_in_DNG_percentage/100) # Volume percentage of C2H6 in DNG
+N2_in_DNG_percentage = 14.4*(1 + REST_in_DNG_percentage/100) # Volume percentage of N2 in DNG
 
-REST_in_DNG_percentage = 0
-CH4_percentage = 100 
-C2H6_percentage = 0
-N2_in_DNG_percentage = 0
-
+# REST_in_DNG_percentage = 0
+# CH4_percentage = 100 
+# C2H6_percentage = 0
+# N2_in_DNG_percentage = 0
 
 # Equivalence ratio
-phi = 1
+phi = .49
 
 # Hydrogen volume percentage of fuel
-H2_percentage = 0
+H2_percentage = 100
 
 # DNG percentage of fuel
 DNG_percentage = 100 - H2_percentage
@@ -107,9 +106,6 @@ f_N2_in_DNG = f_DNG*(N2_in_DNG_percentage/100)
 # Create standard gas mixture
 gas = ct.Solution('gri30.yaml')
 
-# # Define the molar ratios of the fuel-air mixture with respect to oxygen (this means that n_O2=1)
-# mix = fuel + ':' + str(phi*n_H2_stoich) + ', O2:1, N2' + ':' + str(n_N2) + ',Ar:' + str(n_Ar)
-
 # 2. Define the fuel and air composition by molar composition [= volume]
 fuel = {'H2':f_H2, 'CH4':f_CH4, 'C2H6':f_C2H6, 'N2':f_N2_in_DNG}
 air = {'N2':f_N2/f_O2, 'O2':1.0, 'AR':f_AR/f_O2}   
@@ -117,39 +113,70 @@ air = {'N2':f_N2/f_O2, 'O2':1.0, 'AR':f_AR/f_O2}
 # 3. Set the equivalence ratio
 gas.set_equivalence_ratio(phi, fuel, air)
 
-
 # The transport model 
-gas.transport_model = 'Multi'
+gas.transport_model = 'multicomponent'
 gas.TP = T_u, p_u
 rho_H2 = gas.TD[1]*gas[fuel].Y[0]*(n_tot/n_H2_stoich) # density of hydrogen [kg*m^-3]
-rho_u = gas.TD[1]
 
+rho_u = gas.TD[1]
 lambda_u = gas.thermal_conductivity
 cp_u = gas.cp_mass
+alpha_u = lambda_u / (rho_u*cp_u)
 
+# Indices of species in the gas mixture object
+index_of_H2 = gas.species_index('H2')
+index_of_CH4 = gas.species_index('CH4')
+index_of_C2H6 = gas.species_index('C2H6')
+index_of_O2 = gas.species_index('O2')
+index_of_N2 = gas.species_index('N2')
+indices_of_fuel = [index_of_H2, index_of_CH4, index_of_C2H6]
+
+# 'f' indicates volumetric fraction
+f_fuel = [f_H2, f_CH4, f_C2H6]
+sum_f = sum(f_fuel)
+f_fuel = [f/sum_f for f in f_fuel]
+
+# Mass diffusivity matrix
 Dij_mixavg = gas.mix_diff_coeffs_mass
 Dij_binary = gas.binary_diff_coeffs
 
-index_of_H2 = gas.species_index('H2')
-index_of_CH4 = gas.species_index('CH4')
-
-index_of_O2 = gas.species_index('O2')
-index_of_N2 = gas.species_index('N2')
-
 phi_limit = 2
 
-if H2_percentage == 0:
-    index_of_fuel = index_of_CH4
-elif H2_percentage == 100:
-    index_of_fuel = index_of_H2
-    
+Le_binary_list = []
+Le_mixavg_list = []
+DiN2_DjN2_list = []
 
 if phi < phi_limit:
-    DiN2 = Dij_binary[index_of_fuel, index_of_N2] # H2 into N2
-    Dij_mixavg = Dij_mixavg[index_of_fuel]
-    mass_fraction_of_i = gas['H2'].Y
-    Dij_test = (1 - mass_fraction_of_i)/(gas['O2'].X/Dij_binary[index_of_fuel, index_of_O2] + gas['N2'].X/Dij_binary[index_of_fuel, index_of_N2])
-    Dij_test = Dij_test[0]
+    for index_of_fuel in indices_of_fuel:
+
+        DiN2 = Dij_binary[index_of_fuel, index_of_N2] # H2 into N2
+        DjN2 = Dij_binary[index_of_O2, index_of_N2]
+        DiN2_DjN2 = DiN2/DjN2
+        
+        Dij_imixavg = Dij_mixavg[index_of_fuel]
+        
+        print(f"[Binary] Mass Diffusivity (DiN2) of {gas.species_name(index_of_fuel)}: {DiN2:.{decimals}e} m²/s")
+        print(f"[Binary] Mass Diffusivity (DjN2) of {gas.species_name(index_of_O2)}: {DjN2:.{decimals}e} m²/s")
+        print(f"Preferential diffusion DiN2/DjN2 : {DiN2_DjN2:.{decimals}f}")
+
+        print(f"[Mixture-Averaged] Mass Diffusivity (D_imixavg) of {gas.species_name(index_of_fuel)}: {Dij_imixavg:.{decimals}e} m²/s")
+        
+        print(32*'-')
+        Le_binary_list.append(alpha_u / DiN2)
+        Le_mixavg_list.append(alpha_u / Dij_imixavg)
+        DiN2_DjN2_list.append(DiN2_DjN2)
+    
+    # Lewis numbers Volume-based (V)
+    Le_binary_V_list = [Le_i * f for Le_i, f in zip(Le_binary_list, f_fuel)]
+    Le_binary_V = sum(Le_binary_V_list)
+    
+    Le_mixavg_V_list = [Le_i * f for Le_i, f in zip(Le_mixavg_list, f_fuel)]
+    Le_mixavg_V = sum(Le_mixavg_V_list)
+    
+    # Preferential diffusion numbers Volume-based (V)
+    DiN2_DjN2_V_list = [DiN2_DjN2 * f for DiN2_DjN2, f in zip(DiN2_DjN2_list, f_fuel)]
+    DiN2_DjN2_V = sum(DiN2_DjN2_V_list)
+    
     
     sigma_A = 2.920 # collision diameter in angstrom = 10^-10 m
     sigma_B = 3.621 # collision diameter in angstrom = 10^-10 m
@@ -165,25 +192,25 @@ if phi < phi_limit:
     Omega_star11 = 0.86
     DiN2_law = 1.8583e-7*np.sqrt(T_u**3*((1/M_A)+(1/M_B)))/(p_u_atm*Omega_star11*1*sigma_AB**2)
 
-elif phi >= phi_limit:
-    DiN2 = Dij_binary[index_of_O2, index_of_N2] # O2 into N2
-    Dij_mixavg = Dij_mixavg[index_of_O2]
-    mass_fraction_of_i = gas['O2'].X
-    Dij_test = (1 - mass_fraction_of_i)/(gas['H2'].X/Dij_binary[index_of_O2, index_of_fuel] + gas['N2'].X/Dij_binary[index_of_O2, index_of_N2])
+# elif phi >= phi_limit:
+#     DiN2 = Dij_binary[index_of_O2, index_of_N2] # O2 into N2
+#     Dij_mixavg = Dij_mixavg[index_of_O2]
+#     mass_fraction_of_i = gas['O2'].X
+#     Dij_test = (1 - mass_fraction_of_i)/(gas['H2'].X/Dij_binary[index_of_O2, index_of_fuel] + gas['N2'].X/Dij_binary[index_of_O2, index_of_N2])
     
-    sigma_A = 3.458 # collision diameter in angstrom = 10^-10 m
-    sigma_B = 3.621 # collision diameter in angstrom = 10^-10 m
-    sigma_AB = (sigma_A + sigma_B)/2 # averageed collision diameter in angstrom = 10^-10 m
-    M_A = 32 # molecular weight of species A
-    M_B = 28 # molecular weight of species B
+#     sigma_A = 3.458 # collision diameter in angstrom = 10^-10 m
+#     sigma_B = 3.621 # collision diameter in angstrom = 10^-10 m
+#     sigma_AB = (sigma_A + sigma_B)/2 # averageed collision diameter in angstrom = 10^-10 m
+#     M_A = 32 # molecular weight of species A
+#     M_B = 28 # molecular weight of species B
 
-    eps_A_over_kb =  107.4
-    eps_B_over_kb = 97.53
-    eps_AB = np.sqrt(eps_A_over_kb*eps_B_over_kb)
-    T_star =  T_u/eps_AB
-    sigma_AB = (sigma_A + sigma_B)/2
-    Omega_star11 = 1
-    DiN2_law = 1.8583e-7*np.sqrt(T_u**3*((1/M_A)+(1/M_B)))/(p_u_atm*Omega_star11*1*sigma_AB**2)
+#     eps_A_over_kb =  107.4
+#     eps_B_over_kb = 97.53
+#     eps_AB = np.sqrt(eps_A_over_kb*eps_B_over_kb)
+#     T_star =  T_u/eps_AB
+#     sigma_AB = (sigma_A + sigma_B)/2
+#     Omega_star11 = 1
+#     DiN2_law = 1.8583e-7*np.sqrt(T_u**3*((1/M_A)+(1/M_B)))/(p_u_atm*Omega_star11*1*sigma_AB**2)
 
 
 # Assuming gas is a predefined object with properties like density and viscosity
@@ -191,60 +218,75 @@ rho = gas.density_mass  # Gas density in kg/m^3
 mu = gas.viscosity      # Gas dynamic viscosity in Pa.s (Pascal-seconds)
 nu = mu / rho           # Kinematic viscosity in m^2/s
 
+# alpha_u = lambda_u / (rho_u*cp_u)
+# lewis_binary = alpha_u / DiN2
+# lewis_mixavg = alpha_u / Dij_mixavg
+# lewis_test = alpha_u / Dij_test
 
-alpha = lambda_u / (rho_u*cp_u)
-lewis_binary = alpha / DiN2
-lewis_mixavg = alpha / Dij_mixavg
-lewis_test = alpha / Dij_test
+# Sc_binary = nu / DiN2
+# Sc_mixavg = nu / Dij_mixavg
 
-Sc_binary = nu / DiN2
-Sc_mixavg = nu / Dij_mixavg
-
-S_L0 = 0.365
+# S_L0 = 0.365
 flame = PremixedFlame(phi, H2_percentage)
 flame.solve_equations()
 
-# Compute flame thickness
-z = flame.flame.grid
-T = flame.flame.T
-size = len(z)-1
-grad = np.zeros(size)
+# # Compute flame thickness
+# z = flame.flame.grid
+# T = flame.flame.T
+# size = len(z)-1
+# grad = np.zeros(size)
 
-for i in range(size):
-    grad[i] = (T[i+1]-T[i])/(z[i+1]-z[i])
+# for i in range(size):
+#     grad[i] = (T[i+1]-T[i])/(z[i+1]-z[i])
     
-thickness_thermal = (max(T) - min(T)) / max(grad)
-print('laminar flame thickness [thermal thickness] = ', thickness_thermal*1e3, str(" mm"))
+# thickness_thermal = (max(T) - min(T)) / max(grad)
+# print('laminar flame thickness [thermal thickness] = ', thickness_thermal*1e3, str(" mm"))
 
-diffusivity = flame.lambda_u / (flame.cp_u*flame.rho_u)
+# diffusivity = flame.lambda_u / (flame.cp_u*flame.rho_u)
 
-delta_f = diffusivity/flame.S_L0
+# delta_f = diffusivity/flame.S_L0
 
 
 
 # Printing with formatting to three decimal places
-decimals = 2
+print(32*'-')
 print(f"Temperature (T): {T_u:.{decimals}f} K")
 print(f"Pressure (p): {p_u:.{decimals}f} Pa")
 print(f"Gas Density (ρ): {rho:.{decimals}f} kg/m³")
 print(f"Gas Dynamic Viscosity (μ): {mu:.{decimals}e} Pa.s")
 print(f"Kinematic Viscosity (ν): {nu:.{decimals}e} m²/s")
 
-print(f"Thermal Diffusivity (α): {alpha:.{decimals}e} m²/s")
-print(f"Mass Diffusivity [Binary] (D): {DiN2:.{decimals}e} m²/s")
-print(f"Mass Diffusivity [Mixture-Averaged] (D): {Dij_mixavg:.{decimals}e} m²/s")
+print(32*'-')
+print(f"Unstretched laminar flame speed (S_L0): {flame.S_L0:.{decimals}e} m²/s")
+
+print(32*'-')
+print(f"Thermal Diffusivity (α): {alpha_u:.{decimals}e} m²/s")
+
+print(32*'-')
+print('BINARY')
+print(f"Binary Lewis Number: {Le_binary_V:.{decimals}f}")
+
+
+print(32*'-')
+print('MIXTURE-AVERAGED')
+print(f"Mixture-Averaged Lewis Number: {Le_mixavg_V:.{decimals}f}")
+
+print(32*'-')
+print('PREFERENTIAL DIFFUSION')
+print(f"Volume weighted Preferential diffusion (DiN2/DjN2)_V : {DiN2_DjN2_V:.{decimals}f}")
+
+# print(f"Binary Schmidt Number: {Sc_binary:.{decimals}f}")
+# print(f"Mixture-Averaged Schmidt Number: {Sc_binary:.{decimals}f}")
+
+
+
 # print(f"Mass Diffusivity [Dij_test] (D): {Dij_test:.{decimals}e} m²/s")
-print(f"Mass Diffusivity [DiN2_law] (D): {DiN2_law:.{decimals}e} m²/s")
+# print(f"Mass Diffusivity [DiN2_law] (D): {DiN2_law:.{decimals}e} m²/s")
 
-print(f"Binary Lewis Number: {lewis_binary:.{decimals}f}")
-print(f"Mixture-Averaged Lewis Number: {lewis_mixavg:.{decimals}f}")
 
-print(f"Binary Schmidt Number: {Sc_binary:.{decimals}f}")
-print(f"Mixture-Averaged Schmidt Number: {Sc_binary:.{decimals}f}")
+# print(f"Thermal Diffusivity [diffusivity] (α): {diffusivity:.{decimals}e} m²/s")
 
-print(f"Thermal Diffusivity [diffusivity] (D): {diffusivity:.{decimals}e} m²/s")
-
-print(f"Flame Thickness (δ_f): {delta_f*1e3:.3e} mm") 
+# print(f"Flame Thickness (δ_f): {delta_f*1e3:.3e} mm") 
 
 
 # #%% Dimensions of the scaled Flamesheet

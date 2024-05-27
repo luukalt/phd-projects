@@ -44,15 +44,15 @@ width, height = 9, 6
 fig, ax = plt.subplots(figsize=(width, height))
 
 # Load list from file
-# flame_names = ['react_h0_s4000_ls_record1', 'react_h0_c3000_ls_record1']
-# labels = ['DNG-4000', 'DNG-3000'] 
-# ytop_limit = .025
+flame_names = ['react_h0_s4000_ls_record1', 'react_h0_c3000_ls_record1']
+labels = ['DNG-4000', 'DNG-3000'] 
+ytop_limit = .025
 
-flame_names = ['react_h100_s16000_ls_record1', 'react_h100_c12500_ls_record1']
-labels = [r'H$_{2}$-16000', r'H$_{2}$-12500']
-ytop_limit = .01
+# flame_names = ['react_h100_s16000_ls_record1', 'react_h100_c12500_ls_record1']
+# labels = [r'H$_{2}$-16000', r'H$_{2}$-12500']
+# ytop_limit = .01
 
-colors = ['tab:blue', 'tab:red']
+colors = ['tab:blue', 'tab:orange']
 
 all_contour_slope_values_degrees_list = []
 
@@ -73,7 +73,7 @@ for flame_name, color, label in zip(flame_names, colors, labels):
     
     all_contour_slope_values_degrees_list.append(all_contour_slope_values_degrees)
     
-    # n, bins, _ = ax.hist(all_contour_slope_values_degrees, color=color, alpha=0.5, bins=25, edgecolor='black', density=True, label=label)
+    n, bins, _ = ax.hist(all_contour_slope_values_degrees, color=color, alpha=0.75, bins=25, edgecolor='black', density=True, label=label)
 
 
     # ax.axvline(x=.5, color='red', linestyle='--', linewidth=2)
@@ -90,8 +90,8 @@ for flame_name, color, label in zip(flame_names, colors, labels):
     
     # print("Sum of areas of bins after normalization:", total_area)
 
-bins = 25
-ax.hist(all_contour_slope_values_degrees_list, bins, label=labels, edgecolor='black', density=True,)
+# bins = 25
+# ax.hist(all_contour_slope_values_degrees_list, bins, label=labels, edgecolor='black', density=True,)
 ax.grid(True)
 # ax.set_title(flame.name)
 ax.set_xlabel(r'$\theta$', fontsize=fontsize_fraction)
@@ -115,35 +115,35 @@ fig.tight_layout()
    
 # %%% Save images
 # Get a list of all currently opened figures
-figure_ids = plt.get_fignums()
-figure_ids = [1]
+# figure_ids = plt.get_fignums()
+# figure_ids = [1]
 
-if 'ls' in flame.name:
-    folder = 'ls'
-else:
-    folder = 'hs'
+# if 'ls' in flame.name:
+#     folder = 'ls'
+# else:
+#     folder = 'hs'
 
-figures_subfolder = os.path.join(figures_folder, folder)
-if not os.path.exists(figures_subfolder):
-        os.makedirs(figures_subfolder)
+# figures_subfolder = os.path.join(figures_folder, folder)
+# if not os.path.exists(figures_subfolder):
+#         os.makedirs(figures_subfolder)
 
-# Apply tight_layout to each figure
-for fid in figure_ids:
-    fig = plt.figure(fid)
-    filename = f'H100_fig{fid}_slope_histogram'
+# # Apply tight_layout to each figure
+# for fid in figure_ids:
+#     fig = plt.figure(fid)
+#     filename = f'H0_fig{fid}_slope_histogram2'
     
-    # Get the current width and height of the figure
-    current_width, current_height = fig.get_size_inches()
+#     # Get the current width and height of the figure
+#     current_width, current_height = fig.get_size_inches()
     
   
-    eps_path = os.path.join('figures', f'{folder}', f"{filename}.eps")
+#     eps_path = os.path.join('figures', f'{folder}', f"{filename}.svg")
    
-    # Saving the figure in EPS format
-    fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+#     # Saving the figure in EPS format
+#     fig.savefig(eps_path, format='svg', dpi=300, bbox_inches='tight')
     
-    # Get the current width and height of the figure
-    current_width, current_height = fig.get_size_inches()
+#     # Get the current width and height of the figure
+#     current_width, current_height = fig.get_size_inches()
     
-    print("Current Width:", current_width)
-    print("Current Height:", current_height)
+#     print("Current Width:", current_width)
+    # print("Current Height:", current_height)
     
