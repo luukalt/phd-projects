@@ -31,6 +31,7 @@ sys.path.append(flame_simulations_directory)
 sys.path.append(plot_parameters_directory)
 
 from contour_properties import contour_segmentation
+from plot_params import colormap, fontsize, fontsize_legend
 
 figures_folder = 'figures'
 if not os.path.exists(figures_folder):
@@ -106,7 +107,6 @@ def get_contour_procedure_pixel_density_method(window_size, pre_data_path, post_
 
     #%% Final step: save images with contour drawn into the raw image
     if save_image:
-        sep = os.path.sep
         path = os.path.join(post_data_path, 'pdm', f'w_size_{w_size}')
         save_contour_images(path, image_nr, img_raw, brighten_factor, contour, color)
     
@@ -130,7 +130,7 @@ def get_contour_procedure_bilateral_filter_method(window_size, pre_data_path, po
     img_normalized = cv2.normalize(img_raw, dst=None, alpha=0, beta=1.0, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
     
     #%% [3] Apply bilateral filter on normalized image
-    w_size = int(window_size*.5)
+    w_size = int(window_size*1)
     filter_diameter = w_size
     sigma_color = 0.1
     sigma_space = filter_diameter/2.0
@@ -497,29 +497,30 @@ def plot_images(axs, image1, image2, brighten_factor, contour, color):
     
 def plot_image(title, image, brighten_factor, contour, toggle_contour, color):
     
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(6, 6))
     ax.set_title(title)
     ax.imshow(image, cmap="gray", vmin=np.min(image.flatten())/brighten_factor, vmax=np.max(image.flatten())/brighten_factor)
-    ax.set_xlabel('pixels', fontsize=20)
-    ax.set_ylabel('pixels', fontsize=20)
+    ax.set_xlabel('pixels', fontsize=fontsize)
+    ax.set_ylabel('pixels', fontsize=fontsize)
     
     segmented_contour_x, segmented_contour_y, segmented_contour = contour_segmentation(contour, flame.segment_length_pixels)
     
     if toggle_contour:
         contour_x = contour[:,:,0]
         contour_y = contour[:,:,1]
-        ax.plot(contour_x, contour_y, color)
+        ax.plot(contour_x, contour_y, color, lw=4)
     
     if toggle_contour:
         contour_x = segmented_contour[:,:,0]
         contour_y = segmented_contour[:,:,1]
-        ax.plot(contour_x, contour_y, c='y', marker='o', ms=6, ls='solid')
+        ax.plot(contour_x, contour_y, c='y', marker='o', ms=10, ls='solid', lw=2)
     
-    custom_y_ticks = [0,  800]
-    ax.set_yticks(custom_y_ticks)
+    # custom_y_ticks = [0,  800]
+    # ax.set_yticks(custom_y_ticks)
     
-    ax.set_xlim(left=50, right=200)
-    ax.set_ylim(bottom=600, top=300)
+    shift = 25
+    ax.set_xlim(left=100-shift, right=200-shift)
+    ax.set_ylim(bottom=600, top=500)
     
     # plt.title(title)
     # plt.imshow(image, cmap="gray", vmin=np.min(image.flatten())/brighten_factor, vmax=np.max(image.flatten())/brighten_factor)
@@ -571,7 +572,7 @@ def save_contour_images(path,image_nr, img_raw, brighten_factor, contour, color)
       os.makedirs(path)
     
     filename = os.path.join(path, f"B{image_nr:04d}")
-    dpi = 1200
+    dpi = 300
     
     toggle_contour = False
     plot_image('', img_raw, brighten_factor, contour, toggle_contour, color)
@@ -580,7 +581,7 @@ def save_contour_images(path,image_nr, img_raw, brighten_factor, contour, color)
     
     toggle_contour = True
     plot_image('', img_raw, brighten_factor, contour, toggle_contour, color)
-    # plt.savefig(filename + '.png', dpi=dpi)
+    plt.savefig(filename + '.eps', dpi=dpi,  bbox_inches='tight')
     # plt.clf()
     
     # Using cv2.imwrite() method
@@ -758,7 +759,7 @@ if __name__ == "__main__":
     image_nr = 1699
     
     toggle_plot = True
-    save_image = False
+    save_image = True
     
     procedure_nr = 2
     

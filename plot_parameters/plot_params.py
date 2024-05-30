@@ -13,7 +13,7 @@ fontsize_legend = 16
 
 fontsize_label = 24
 
-# Font size for labels
+# Font size for fraction
 fontsize_fraction = 28
 
 # Marker sizes
