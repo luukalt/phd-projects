@@ -186,7 +186,7 @@ if __name__ == '__main__':
             
             # image_nrs = [3172, 3174]
             # 
-            plot_cartoons(flame, image_nrs, recording, piv_method)
+            plot_cartoons(flame, image_nrs, recording, piv_method, D_in, offset_to_wall_center, offset, u_bulk_measured, cbar_titles)
             
             # fig, axs = plt.subplots(3, 2, figsize=(10, 15))
             

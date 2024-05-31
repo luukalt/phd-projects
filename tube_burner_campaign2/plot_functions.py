@@ -29,9 +29,10 @@ sys.path.append(plot_parameters_directory)
 
 #%% IMPORT USER DEFINED PACKAGES
 from parameters import flame, data_dir, interpolation_method
-from plot_params import fontsize, ms1, ms2, ms3, ms4, ms5, ms6
+from plot_params import colormap, fontsize, ms1, ms2, ms3, ms4, ms5, ms6
+
 from cone_angle import cone_angle
-from functions import intersection
+from functions import process_df, contour_correction, intersection
 
 #%% OBJECTS
 class HandlerDashedLines(HandlerLineCollection):
@@ -986,7 +987,11 @@ def plot_streamlines_nonreacting_flow(r_uniform, x_uniform, u_r_uniform, u_x_uni
     return streamlines, paths, dummy_indices, colors
     
 
-def plot_cartoons(flame, image_nrs, recording, piv_method):
+def plot_cartoons(flame, image_nrs, recording, piv_method, D_in, offset_to_wall_center, offset, u_bulk_measured, cbar_titles):
+    
+    u_r_col_index = 2
+    u_x_col_index = 3
+    V_abs_col_index = 4
     
     # Vector settings for quiver plot
     vector_scale = 20
@@ -1027,9 +1032,11 @@ def plot_cartoons(flame, image_nrs, recording, piv_method):
     x_right_zoom = x_left_zoom + box_size
     y_top_zoom = y_bottom_zoom + box_size
     
-    fig1, ax1 = plt.subplots()
+    fig_w = 9
+    fig_h = 6
+    fig1, ax1 = plt.subplots(figsize=(fig_w, fig_h))
     
-    fig2, ax2 = plt.subplots()
+    fig2, ax2 = plt.subplots(figsize=(fig_w, fig_h))
     
     colors = ['r', 'lime']
     linestyles = ['-', '--']
