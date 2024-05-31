@@ -17,18 +17,9 @@ import pandas as pd
 from scipy.integrate import trapz
 from scipy.interpolate import interp2d
 import progressbar
+
 from wall_detection_day14 import *
-
-import sys
-import os
-
-if sys.version_info[0] >= 3:
-    import tkinter as tk
-    from tkinter import ttk
-else:
-    import Tkinter as tk
-
-from numpy.linalg import multi_dot
+from parameters import *
 
 #%% Start
 plt.close("all")
@@ -511,164 +502,23 @@ def circle_line_segment_intersection(circle_center, circle_radius, pt1, pt2, ful
             return [intersections[0]]
         else:
             return intersections
-
-#%% Objects
-class App(tk.Frame):
-
-    def __init__(self, master):
-        
-        tk.Frame.__init__(self, master)
-        
-        self.main_dir = "Y:/"
-        
-        exclude = ['davis', '.exp', '.im7', '.set', '.xml', '.txt', '.cih', '.attr', '.scales', 'mraw']
-        
-        self.dict = {}
-        self.dict2 = {}
-        
-        projects = os.listdir(self.main_dir)
-        projects = [project for project in projects if not any(e in project for e in exclude)]
-        
-        for project in projects:
-            
-            records = os.listdir(self.main_dir + project + "/")
-            records = [record for record in records if not any(e in record for e in exclude)]
-            
-            self.dict[project] = records
-        
-            for record in records:
-                
-                piv_folders = os.listdir(self.main_dir + project + "/" + record + "/")
-                piv_folders = [piv_folder for piv_folder in piv_folders if not any(e in piv_folder for e in exclude)]
-                
-                self.dict2[record] = piv_folders
-            
-        self.project_variable = tk.StringVar(self)
-        self.record_variable = tk.StringVar(self)
-        self.pre_record_variable = tk.StringVar(self)
-        self.piv_variable = tk.StringVar(self)
-        
-        self.project_variable.trace('w', self.update_options1)
-        self.record_variable.trace('w', self.update_options2)
-
-        self.projects_optionmenu = tk.OptionMenu(self, self.project_variable, *self.dict.keys())
-        self.records_optionmenu = tk.OptionMenu(self, self.record_variable, '')
-        self.pre_records_optionmenu = tk.OptionMenu(self, self.pre_record_variable, '')
-        self.piv_optionmenu = tk.OptionMenu(self, self.piv_variable, *self.dict2.keys())
-        
-        project_nr = 1
-        self.project_variable.set(projects[project_nr])
-        self.record_variable.set(self.dict[projects[project_nr]][0])
-        self.pre_record_variable.set(self.dict[projects[project_nr]][0])    
-        # self.piv_variable.set(self.dict2[self.dict[projects[project_nr]][0]][-1])
-        
-        self.projects_label = tk.Label(self, text="Choose project:").grid(row=0, column=0)
-        self.projects_optionmenu.grid(row=0, column=1)
-        
-        self.projects_label = tk.Label(self, text="Choose recording:").grid(row=1, column=0)
-        self.records_optionmenu.grid(row=1, column=1)
-        
-        self.projects_label = tk.Label(self, text="Choose pre-recording:").grid(row=2, column=0)
-        self.pre_records_optionmenu.grid(row=2, column=1)
-        
-        self.piv_label = tk.Label(self, text="Choose PIV result:").grid(row=3, column=0)
-        self.piv_optionmenu.grid(row=3, column=1)
-        
-        # Button for loading data
-        self.exit_button = ttk.Button(self, text="LOAD DATA", command=self.quit_me)
-        self.exit_button.grid(row=4, column=1)
-        
-        self.pack()
-        
-    def quit_me(self):
-            root.quit()
-            root.destroy()
-        
-    def update_options1(self, *args):
-        records = self.dict[self.project_variable.get()]
-        self.record_variable.set(records[0])
-
-        menu = self.records_optionmenu['menu']
-        menu1 = self.pre_records_optionmenu['menu']
-        
-        menu.delete(0, 'end')
-        menu1.delete(0, 'end')
-
-        for record in records:
-            menu.add_command(label=record, command=lambda recording=record: self.record_variable.set(recording))   
-            menu1.add_command(label=record, command=lambda recording=record: self.pre_record_variable.set(recording))
-    
-    def update_options2(self, *args):
-        piv_folders = self.dict2[self.record_variable.get()]
-        self.piv_variable.set(piv_folders[0])
-
-        menu = self.piv_optionmenu['menu']
-        menu.delete(0, 'end')
-
-        for piv_folder in piv_folders:
-            menu.add_command(label=piv_folder, command=lambda piv=piv_folder: self.piv_variable.set(piv))    
+   
 #%% Main
 
 if __name__ == "__main__":
-    
-    #%%% Case selection gui
-    # Choose project
-    # root = tk.Tk()
-    # root.title("Choose experimental data")
-    # root.geometry('600x300')
-    # app = App(root)
-    # app.mainloop() 
 
-    # main_dir = app.main_dir
-    # project_name = app.project_variable.get()
-    # record_name = app.record_variable.get()
-    # pre_record_name = app.pre_record_variable.get()
-    # piv_result = app.piv_variable.get()
-    
-    main_dir = os.path.join('Y:', 'laaltenburg', 'flamesheet_2d_campaign1')
-    project_name = 'flamesheet_2d_day14'
-    
-    #%%%% Select recording
-    # H2% = 0, phi = 0, Re_H = 7000, image_rate = 0.2 kHz
-    # record_name = "Recording_Date=221118_Time=144758_01"
-    # pre_record_name = "Recording_Date=221118_Time=112139"
-    # piv_result = "PIV_MP(3x32x32_50%ov_ImgCorr)"
-    
-    # H2% = 100, phi = 0.3, Re_H = 7000, image_rate = 0.2 kHz 
-    record_name = 'Recording_Date=221118_Time=115220_01'
-    pre_record_name = 'Recording_Date=221118_Time=112139'
-    piv_result = 'PIV_MP(3x32x32_50%ov_ImgCorr)'
-    
-    # H2% = 100, phi = 0.3, Re_H = 7000, image_rate = 4.5 kHz
-    # record_name = "Recording_Date=221118_Time=125724_01"
-    # pre_record_name = "Recording_Date=221118_Time=112139"
-    # piv_result = "PIV_MP(3x32x32_50%ov_ImgCorr)"
-    
-    #%%%%  Define data directories
-    project_dir = os.path.join(main_dir, project_name)
-    
-    calibration_txt_dir =  os.path.join(project_dir, 'Properties', 'Calibration', 'DewarpedImages1', 'Export', 'B0001.txt')
-    calibration_tif_dir = os.path.join(project_dir, 'Properties', 'Calibration', 'DewarpedImages1', 'Export_01', 'B0001.tif')
-    
-    pre_record_raw_dir = os.path.join(project_dir, pre_record_name, 'Reorganize frames', 'Export', 'B0001.tif')
-    pre_record_correction_dir = os.path.join(project_dir, pre_record_name, 'Correction', 'Reorganize frames', 'Export', 'B0001.tif')
-    
-    piv_avgV_dir = os.path.join(project_dir, record_name, piv_result, 'Avg_Stdev', 'Export')
-    piv_transV_dir = os.path.join(project_dir, record_name, piv_result, 'Export')
-    piv_Rstress_dir =  os.path.join(project_dir, record_name, piv_result, 'AvgVx_AvgVy_AvgV_StdevVx_StdevVy_StdevV_Rxy_Rxx_Ryy_AKE_TKE_TSS', 'Export')
-    
-    #%%% Normalize data?
-    normalized = False
-    
     #%%% Read info of the raw images
     x_info, y_info = read_xy_dimensions(calibration_txt_dir)
     nx, ny = x_info[2], y_info[2]
     x, y = np.linspace(x_info[0], x_info[1], nx), np.linspace(y_info[0], y_info[1], ny)
-    
+     
     # Invert the y-axis
     y = y[::-1]
     xv, yv = np.meshgrid(x, y, indexing='ij')
     coordinate_grid = np.array([xv, yv])
+
+    #%%% Normalize data?
+    normalized = False
     
     #%%% Read and save average velocity data
     image_nr = 1

@@ -186,7 +186,7 @@ if __name__ == '__main__':
             
             # image_nrs = [3172, 3174]
             # 
-            # plot_cartoons(flame, image_nrs, recording, piv_method)
+            plot_cartoons(flame, image_nrs, recording, piv_method)
             
             # fig, axs = plt.subplots(3, 2, figsize=(10, 15))
             
@@ -636,48 +636,48 @@ if __name__ == '__main__':
 #%% Save images
 # Get a list of all currently opened figures
 figure_ids = plt.get_fignums()
-figure_ids = [8]
+# figure_ids = [8]
 
-if 'ls' in flame.name:
-    folder = 'ls'
-else:
-    folder = 'hs'
+# if 'ls' in flame.name:
+#     folder = 'ls'
+# else:
+#     folder = 'hs'
 
-figures_subfolder = os.path.join(figures_folder, folder)
-if not os.path.exists(figures_subfolder):
-        os.makedirs(figures_subfolder)
+# figures_subfolder = os.path.join(figures_folder, folder)
+# if not os.path.exists(figures_subfolder):
+#         os.makedirs(figures_subfolder)
 
-pickles_subfolder = os.path.join(pickles_folder, folder)
-if not os.path.exists(pickles_subfolder):
-        os.makedirs(pickles_subfolder)
+# pickles_subfolder = os.path.join(pickles_folder, folder)
+# if not os.path.exists(pickles_subfolder):
+#         os.makedirs(pickles_subfolder)
 
-# Apply tight_layout to each figure
-for fid in figure_ids:
-    fig = plt.figure(fid)
-    fig.tight_layout()
-    filename = f'H{flame.H2_percentage}_Re{Re_D_list[0]}_fig{fid}'
+# # Apply tight_layout to each figure
+# for fid in figure_ids:
+#     fig = plt.figure(fid)
+#     fig.tight_layout()
+#     filename = f'H{flame.H2_percentage}_Re{Re_D_list[0]}_fig{fid}'
     
-    # Constructing the paths
-    if fid == 1:
+#     # Constructing the paths
+#     if fid == 1:
         
-        png_path = os.path.join('figures', f'{folder}', f'{filename}.png')
-        pkl_path = os.path.join('pickles', f'{folder}', f'{filename}.pkl')
+#         png_path = os.path.join('figures', f'{folder}', f'{filename}.png')
+#         pkl_path = os.path.join('pickles', f'{folder}', f'{filename}.pkl')
         
-        # Saving the figure in EPS format
-        fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
+#         # Saving the figure in EPS format
+#         fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
         
-    else:
+#     else:
         
-        eps_path = os.path.join('figures', f'{folder}', f'{filename}.eps')
-        pkl_path = os.path.join('pickles', f'{folder}', f'{filename}.pkl')
+#         eps_path = os.path.join('figures', f'{folder}', f'{filename}.eps')
+#         pkl_path = os.path.join('pickles', f'{folder}', f'{filename}.pkl')
         
-        # Saving the figure in EPS format
-        fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+#         # Saving the figure in EPS format
+#         fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
     
     
-    # Pickling the figure
-    with open(pkl_path, 'wb') as f:
-        pickle.dump(fig, f)
+#     # Pickling the figure
+#     with open(pkl_path, 'wb') as f:
+#         pickle.dump(fig, f)
         
 
 

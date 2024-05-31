@@ -9,6 +9,7 @@ Created on Tue Mar 19 23:27:52 2024
 import os
 import sys
 import pickle
+import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
