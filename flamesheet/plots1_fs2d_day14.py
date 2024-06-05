@@ -32,24 +32,41 @@ tableau = cm.tab10.colors
 #%% Main functions
 def read_xy_dimensions(data_dir):
     
-    raw_file = open(data_dir, "r")
-    scaling_info = raw_file.readline()
-    raw_file.close()
-    scaling_info_raw = scaling_info.split()
+    df_raw = pd.read_csv(data_dir)
     
-    n_windows_x_raw = int(scaling_info_raw[3])
-    n_windows_y_raw = int(scaling_info_raw[4])
-
-    window_size_x_raw = float(scaling_info_raw[6])
-    x_origin_raw = float(scaling_info_raw[7])
+    # Get the column headers of the file
+    headers = df_raw.columns
     
-    window_size_y_raw = float(scaling_info_raw[10])
-    y_origin_raw = float(scaling_info_raw[11])
+    pivot_intensity = pd.pivot_table(df_raw, values=headers[2], index=headers[1], columns=headers[0])
+    
+    n_windows_x_raw = pivot_intensity.columns.size
+    n_windows_y_raw = pivot_intensity.index.size
+    
+    # Create r,x raw Mie scattering grid
+    x_raw_array = pivot_intensity.columns
+    y_raw_array = pivot_intensity.index
+    x_raw, y_raw = np.meshgrid(x_raw_array, y_raw_array)
+    window_size_x_raw, window_size_y_raw = np.mean(np.diff(x_raw_array)), -np.mean(np.diff(y_raw_array))
+    
+    # Parameters for correcting contours from pixel coordinates to physical coordinates
+    x_left_raw = x_raw_array[0]
+    x_right_raw = x_raw_array[-1]
+    y_bottom_raw = y_raw_array[0]
+    y_top_raw = y_raw_array[-1]
+    
+    # window_size_x_raw = float(scaling_info_raw[6])
+    # x_origin_raw = float(scaling_info_raw[7])
+    
+    # window_size_y_raw = float(scaling_info_raw[10])
+    # y_origin_raw = float(scaling_info_raw[11])
 
-    x_left_raw = x_origin_raw
-    x_right_raw = x_origin_raw + (n_windows_x_raw - 1)*window_size_x_raw
-    y_bottom_raw = y_origin_raw + (n_windows_y_raw - 1)*window_size_y_raw
-    y_top_raw = y_origin_raw
+    # x_left_raw = x_origin_raw
+    # x_right_raw = x_origin_raw + (n_windows_x_raw - 1)*window_size_x_raw
+    # y_bottom_raw = y_origin_raw + (n_windows_y_raw - 1)*window_size_y_raw
+    # y_top_raw = y_origin_raw
+    
+    print(n_windows_x_raw, n_windows_y_raw)
+    print(y_bottom_raw, y_top_raw)
     
     return (x_left_raw, x_right_raw, n_windows_x_raw, window_size_x_raw), (y_bottom_raw, y_top_raw, n_windows_y_raw, window_size_y_raw)
 
@@ -63,7 +80,7 @@ def read_velocity_data(data_dir, image_nr, normalized):
         U_bulk = 1
     
     # File name and scaling parameters from headers of file
-    image_file = f'B{image_nr:04d}.txt'
+    image_file = f'B{image_nr:04d}.csv'
     XYUV_file = os.path.join(data_dir, image_file)
     
     piv_file = open(XYUV_file, "r")
@@ -508,7 +525,7 @@ def circle_line_segment_intersection(circle_center, circle_radius, pt1, pt2, ful
 if __name__ == "__main__":
 
     #%%% Read info of the raw images
-    x_info, y_info = read_xy_dimensions(calibration_txt_dir)
+    x_info, y_info = read_xy_dimensions(calibration_csv_dir)
     nx, ny = x_info[2], y_info[2]
     x, y = np.linspace(x_info[0], x_info[1], nx), np.linspace(y_info[0], y_info[1], ny)
      

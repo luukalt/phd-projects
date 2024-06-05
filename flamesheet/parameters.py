@@ -39,7 +39,7 @@ piv_result = "PIV_MP(3x32x32_50%ov_ImgCorr)"
 #%%%%  Define data directories
 project_dir = os.path.join(main_dir, project_name)
 
-calibration_txt_dir =  os.path.join(project_dir, 'Properties', 'Calibration', 'DewarpedImages1', 'Export', 'B0001.csv')
+calibration_csv_dir =  os.path.join(project_dir, 'Properties', 'Calibration', 'DewarpedImages1', 'Export', 'B0001.csv')
 calibration_tif_dir = os.path.join(project_dir, 'Properties', 'Calibration', 'DewarpedImages1', 'Export_01', 'B0001.tif')
 
 pre_record_raw_dir = os.path.join(project_dir, pre_record_name, 'Reorganize frames', 'Export', 'B0001.tif')
