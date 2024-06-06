@@ -79,7 +79,6 @@ def wall_detection(calibration_dir, pre_record_dir):
     fig, ax = plt.subplots()
     ax.imshow(initial_img_scaled)
     # plt.axis('off')  # Optional: Turn off axis
-    ax.set_title('Sample Image')  # Optional: Add a title
     
     img_thres = copy.deepcopy(initial_img_scaled)
     offset = 2**10-1 #15
@@ -212,7 +211,7 @@ def wall_detection(calibration_dir, pre_record_dir):
     # left
     y_start_dome = 950 #100
     y_stop_dome = 990 #110 #120
-    x_start_dome = 100 #870 #850
+    x_start_dome = 90 #870 #850
     
     wall_found = False
     i = 0
@@ -279,7 +278,7 @@ def wall_detection(calibration_dir, pre_record_dir):
     # cv2.circle(dewarped_img_8bit, (int(cx)+1, int(cy)+1), int(radius), color, 1)
     # cv2.circle(img_scaled_8bit, (int(cx)+1, int(cy)+1), int(radius), color, 1)
     
-    pt2_liner_custom = (101, 763)
+    pt2_liner_custom = (103, 762) 
     pt2_liner = pt2_liner_custom
     
     print(f' pt1_core_left: {pt1_core_left}')
@@ -289,6 +288,11 @@ def wall_detection(calibration_dir, pre_record_dir):
     print(f' pt2_liner (real): {pt2_liner}')
     # print(f' pt2_liner: (761, 412)')
     print(f' pt1_liner: {pt1_liner}')
+    
+    points = [pt1_core_left, p_dome_right, p_dome_mid, p_dome_left, pt2_liner, pt1_liner]
+    
+    for point in points:
+        ax.plot(point[0], point[1], 'rx')
     # print(f' pt2_core_left_mask: {pt2_core_left_mask}')
     
     #%% Plot in images
@@ -297,39 +301,21 @@ def wall_detection(calibration_dir, pre_record_dir):
     # showInMovedWindow('initial image', img_scaled_8bit, x_screen, y_screen)
     # showInMovedWindow('dewarped calibration image', dewarped_img_8bit, x_screen, y_screen)
     # showInMovedWindow('threshold image', img_walls, x_screen, y_screen)
-
+    
+    fig, ax = plt.subplots()
+    ax.imshow(img_walls)
     # return pt1_liner, pt2_liner, pt1_core_left, pt2_core_left, pt1_core_right, pt2_core_right, cx, cy, radius
     return pt1_liner, pt2_liner, pt1_core_left, pt2_core_left, cx, cy, radius
 
 #%% Main
 if __name__ == "__main__":
     
-    # main_dir = "Y:/"
-    
-    # H2% = 0, phi = 0, Re_H = 2500, image_rate = 0.2
-    # project_name = "flamesheet_2d_day5-1"
-    # pre_record_name = "Recording_Date=220915_Time=131136"
-    
-    
-    # H2% = 0, phi = 0.7, Re_H = 2500, image_rate = 0.2
-    
-    # H2% = 40, phi = 0.6, Re_H = 5000, image_rate = 0.2
-
-    # H2% = 60, phi = 0.5, Re_H = 5500, image_rate = 0.2
-
-    # H2% = 80, phi = 0.4, Re_H = 6000, image_rate = 0.2
-
-    # H2% = 100, phi = 0.3, Re_H = 7000, image_rate = 0.2
-    # project_name = "flamesheet_2d_day24-1"
-    # pre_record_name = "Recording_Date=230216_Time=103309"
-    
     main_dir = os.path.join('Y:', 'laaltenburg', 'flamesheet_2d_campaign1')
     
-    day_nr = '24-1'
-    pre_record_name = "Recording_Date=230216_Time=103309"
+    day_nr = "23-2"
+    pre_record_name = "Recording_Date=230215_Time=153306"
     
     project_name = "flamesheet_2d_day" + day_nr
-    
     project_dir = os.path.join(main_dir, project_name)
     
     calibration_csv_file =  os.path.join(project_dir, 'Properties', 'Calibration', 'DewarpedImages1', 'Export', 'B0001.csv')
@@ -338,9 +324,6 @@ if __name__ == "__main__":
     pre_record_raw_file = os.path.join(project_dir, pre_record_name, 'Reorganize frames', 'Export', 'B0001.tif')
     pre_record_correction_file = os.path.join(project_dir, pre_record_name, 'ImageCorrection', 'Reorganize frames', 'Export', 'B0001.tif')
 
-    # calibration_tif_dir = project_dir + "/Properties/Calibration/DewarpedImages1/Export_01/B0001.tif"
-    # pre_record_correction_dir = project_dir + "/" + pre_record_name + "/Correction/Reorganize frames/Export/B0001.tif" 
-    
     wall_detection(calibration_tif_file, pre_record_correction_file)
     
     

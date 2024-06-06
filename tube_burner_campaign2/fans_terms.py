@@ -568,59 +568,59 @@ if __name__ == '__main__':
     
     # %%% Save images
     # Get a list of all currently opened figures
-    figure_ids = plt.get_fignums()
-    figure_ids = [1]
+    # figure_ids = plt.get_fignums()
+    # figure_ids = [1]
     
-    if 'ls' in flame.name:
-        folder = 'ls'
-    else:
-        folder = 'hs'
+    # if 'ls' in flame.name:
+    #     folder = 'ls'
+    # else:
+    #     folder = 'hs'
     
-    figures_subfolder = os.path.join(figures_folder, folder)
-    if not os.path.exists(figures_subfolder):
-            os.makedirs(figures_subfolder)
+    # figures_subfolder = os.path.join(figures_folder, folder)
+    # if not os.path.exists(figures_subfolder):
+    #         os.makedirs(figures_subfolder)
     
-    pickles_subfolder = os.path.join(pickles_folder, folder)
-    if not os.path.exists(pickles_subfolder):
-            os.makedirs(pickles_subfolder)
+    # pickles_subfolder = os.path.join(pickles_folder, folder)
+    # if not os.path.exists(pickles_subfolder):
+    #         os.makedirs(pickles_subfolder)
 
-    # Apply tight_layout to each figure
-    for fid in figure_ids:
-        fig = plt.figure(fid)
-        filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
+    # # Apply tight_layout to each figure
+    # for fid in figure_ids:
+    #     fig = plt.figure(fid)
+    #     filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
         
-        # Get the current width and height of the figure
-        current_width, current_height = fig.get_size_inches()
+    #     # Get the current width and height of the figure
+    #     current_width, current_height = fig.get_size_inches()
         
-        print("Current Width:", current_width)
-        print("Current Height:", current_height)
+    #     print("Current Width:", current_width)
+    #     print("Current Height:", current_height)
 
-        # Constructing the paths
-        if fid == 100:
+    #     # Constructing the paths
+    #     if fid == 100:
             
-            png_path = os.path.join('figures', f'{folder}', f"{filename}.png")
-            pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
+    #         png_path = os.path.join('figures', f'{folder}', f"{filename}.png")
+    #         pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
             
-            # Saving the figure in EPS format
-            fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
+    #         # Saving the figure in EPS format
+    #         fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
             
-        else:
+    #     else:
             
-            eps_path = os.path.join('figures', f'{folder}', f"{filename}.eps")
-            pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
+    #         eps_path = os.path.join('figures', f'{folder}', f"{filename}.eps")
+    #         pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
             
-            # Saving the figure in EPS format
-            fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+    #         # Saving the figure in EPS format
+    #         fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
             
-            # Get the current width and height of the figure
-            current_width, current_height = fig.get_size_inches()
+    #         # Get the current width and height of the figure
+    #         current_width, current_height = fig.get_size_inches()
             
-            print("Current Width:", current_width)
-            print("Current Height:", current_height)
+    #         print("Current Width:", current_width)
+    #         print("Current Height:", current_height)
         
-        # Pickling the figure
-        with open(pkl_path, 'wb') as f:
-            pickle.dump(fig, f)
+    #     # Pickling the figure
+    #     with open(pkl_path, 'wb') as f:
+    #         pickle.dump(fig, f)
             
     
     

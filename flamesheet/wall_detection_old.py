@@ -88,6 +88,7 @@ def wall_detection(calibration_dir, pre_record_dir):
     initial_img_scaled = cv2.normalize(initial_img_16bit, dst=None, alpha=0, beta=2**16-1, norm_type=cv2.NORM_MINMAX)
     img_scaled_8bit = (initial_img_scaled/256).astype(np.uint8)
     
+    
     img_thres = copy.deepcopy(initial_img_scaled)
     offset = 2**15-1 #15
     img_thres[img_thres < 2**16-offset] = 0
@@ -97,13 +98,13 @@ def wall_detection(calibration_dir, pre_record_dir):
     
     #%% Liner wall
     # fig1, ax1 = plt.subplots()
-    x_start_liner = 35
-    x_stop_liner = 55
-    y_start_liner = 600
+    x_start_liner = 225
+    x_stop_liner = 250
+    y_start_liner = 725
     
     wall_coords_liner = []
     
-    for j in range(0, 131, 1): #50
+    for j in range(0, 17, 1): #50
         
         y = y_start_liner + j
         line = img_walls[y, x_start_liner:x_stop_liner]
@@ -130,13 +131,13 @@ def wall_detection(calibration_dir, pre_record_dir):
     cv2.line(img_scaled_8bit, pt1_liner, pt2_liner, color, 1)
     
     #%% Core flow left wall
-    x_start_core_left = 370
-    x_stop_core_left = 410
-    y_start_core_left = 360
+    x_start_core_left = 575
+    x_stop_core_left = 600
+    y_start_core_left = 380
     
     wall_coords_core_left = []
     
-    for j in range(0, 374, 1): #380
+    for j in range(0, 380, 1): #380
         
         y = y_start_core_left + j
         line = img_walls[y, x_start_core_left:x_stop_core_left]
@@ -155,9 +156,6 @@ def wall_detection(calibration_dir, pre_record_dir):
         
     pt1_core_left = (wall_coords_core_left[0][0], wall_coords_core_left[0][1])
     pt2_core_left = (wall_coords_core_left[-1][0], wall_coords_core_left[-1][1])
-    
-    # print(pt2_core_left)
-    
     color = (255, 0, 0)
     
     cv2.line(img_walls, pt1_core_left, pt2_core_left, color, 1)
@@ -165,8 +163,8 @@ def wall_detection(calibration_dir, pre_record_dir):
     cv2.line(img_scaled_8bit, pt1_core_left, pt2_core_left, color, 1)
     
     #%% Core flow right wall
-    x_start_core_right = 540
-    x_stop_core_right = 570
+    x_start_core_right = 725
+    x_stop_core_right = 775
     y_start_core_right = 0
     
     wall_coords_core_right = []
@@ -205,9 +203,9 @@ def wall_detection(calibration_dir, pre_record_dir):
     #%% Dome section
     
     # left
-    y_start_dome = 950 #100
-    y_stop_dome = 990 #110 #120
-    x_start_dome = 40 #870 #850
+    y_start_dome = 870 #100
+    y_stop_dome = 950 #110 #120
+    x_start_dome = 120 #870 #850
     
     wall_found = False
     i = 0
@@ -229,8 +227,8 @@ def wall_detection(calibration_dir, pre_record_dir):
     
     # mid
     y_start_dome = 970 #945 # 1020
-    y_stop_dome = 1000 #955 # 1035
-    x_start_dome = 180 #170 # 320
+    y_stop_dome = 1035 #955 # 1035
+    x_start_dome = 320 #170 # 320
     
     line = img_walls[y_start_dome:y_stop_dome, x_start_dome]
     
@@ -272,10 +270,9 @@ def wall_detection(calibration_dir, pre_record_dir):
     
     #%% Plot in images
     
-    # showInMovedWindow('initial image', img_scaled_8bit, x_screen, y_screen)
-    # showInMovedWindow('initial image', img_scaled_8bit, x_screen, y_screen)
-    # showInMovedWindow('dewarped calibration image', dewarped_img_8bit, x_screen, y_screen)
-    # showInMovedWindow('threshold image', img_walls, x_screen, y_screen)
+    showInMovedWindow('initial image', img_scaled_8bit, x_screen, y_screen)
+    showInMovedWindow('dewarped calibration image', dewarped_img_8bit, x_screen, y_screen)
+    showInMovedWindow('threshold image', img_walls, x_screen, y_screen)
 
     return pt1_liner, pt2_liner, pt1_core_left, pt2_core_left, pt1_core_right, pt2_core_right, cx, cy, radius
 
@@ -285,8 +282,8 @@ if __name__ == "__main__":
     main_dir = "Y:/"
     
     # H2% = 0, phi = 0, Re_H = 2500, image_rate = 0.2
-    # project_name = "flamesheet_2d_day5-1"
-    # pre_record_name = "Recording_Date=220915_Time=131136"
+    project_name = "flamesheet_2d_day5-1"
+    pre_record_name = "Recording_Date=220915_Time=131136"
     
     
     # H2% = 0, phi = 0.7, Re_H = 2500, image_rate = 0.2
@@ -299,8 +296,6 @@ if __name__ == "__main__":
     # H2% = 80, phi = 0.4, Re_H = 6000, image_rate = 0.2
 
     # H2% = 100, phi = 0.3, Re_H = 7000, image_rate = 0.2
-    project_name = "flamesheet_2d_day14"
-    pre_record_name = "Recording_Date=221118_Time=112139"
     
     
     project_dir = main_dir + project_name
