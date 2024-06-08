@@ -360,13 +360,12 @@ if __name__ == "__main__":
     # pre_record_name = "Recording_Date=221118_Time=112139"
     
     # test99: H2% = 100, phi = 0.35, Re_H = 5000, image_rate = 0.2 & test101: H2% = 100, phi = 0.35, Re_H = 7000, image_rate = 0.2
-    # day_nr = "23-2"
-    # pre_record_name = "Recording_Date=230215_Time=153306"
+    day_nr = "23-2"
+    pre_record_name = "Recording_Date=230215_Time=153306"
     
     # # test103: H2% = 0, phi = 0, Re_H = 7000, image_rate = 0.2 & test105: H2% = 0, phi = 0, Re_H = 5000, image_rate = 0.2
-    day_nr = "24-1"
-    pre_record_name = "Recording_Date=230216_Time=103309"
-    
+    # day_nr = "24-1"
+    # pre_record_name = "Recording_Date=230216_Time=103309"
     
     
     project_name = "flamesheet_2d_day" + day_nr

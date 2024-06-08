@@ -65,30 +65,30 @@ def copy_content(fig, old_ax, new_ax):
                         cbar_max = clim[1]
                         custom_cbar_ticks = np.linspace(0, cbar_max, num_ticks) # Replace with your desired tick positions
                         
-                        # print(custom_cbar_ticks)
-                        # # Create a ScalarFormatter with scientific notation and one decimal place
-                        # formatter = ScalarFormatter(useMathText=True)
-                        # formatter.set_scientific(True)
-                        # formatter.set_powerlimits((0, 0))
-                        # formatter.min_n_ticks = 5  # Change 5 to the desired maximum number of ticks
+                        print(custom_cbar_ticks)
+                        # Create a ScalarFormatter with scientific notation and one decimal place
+                        formatter = ScalarFormatter(useMathText=True)
+                        formatter.set_scientific(True)
+                        formatter.set_powerlimits((0, 0))
+                        formatter.min_n_ticks = 5
 
-                        # formatter.set_useOffset(False)  # Prevent adding offset
+                        formatter.set_useOffset(False)  # Prevent adding offset
 
-                        # # # Set the formatter for colorbar ticks
-                        # cbar.formatter = formatter
-                        # # Set the number of desired ticks
-                        # cbar.locator = matplotlib.ticker.MaxNLocator(num_ticks)
+                        # # Set the formatter for colorbar ticks
+                        cbar.formatter = formatter
+                        # Set the number of desired ticks
+                        cbar.locator = matplotlib.ticker.MaxNLocator(num_ticks)
 
-                        # cbar.update_ticks()
+                        cbar.update_ticks()
                         
-                        if cbar_max < 1:
-                            custom_cbar_tick_labels = [f'{tick:.3f}' for tick in custom_cbar_ticks] # Replace with your desired tick labels
-                        else:
-                            custom_cbar_tick_labels = [f'{tick:.1f}' for tick in custom_cbar_ticks] # Replace with your desired tick labels
+                        # if cbar_max < 1:
+                        #     custom_cbar_tick_labels = [f'{tick:.3f}' for tick in custom_cbar_ticks] # Replace with your desired tick labels
+                        # else:
+                        #     custom_cbar_tick_labels = [f'{tick:.1f}' for tick in custom_cbar_ticks] # Replace with your desired tick labels
                         
                         # Set the colorbar ticks and labels
-                        cbar.set_ticks(custom_cbar_ticks)
-                        cbar.set_ticklabels(custom_cbar_tick_labels)
+                        # cbar.set_ticks(custom_cbar_ticks)
+                        # cbar.set_ticklabels(custom_cbar_tick_labels)
                         cbar.set_label(cbar_title, rotation=0, labelpad=25, fontsize=28) 
                         cbar.ax.tick_params(labelsize=fontsize)
                         # cbar.ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{x:.1e}'))
@@ -110,16 +110,18 @@ def copy_content(fig, old_ax, new_ax):
 
 
 # Load pickled figures
+filename1 = 'H100_Re16000_fig8'
 # filename1 = 'H0_Re4000_fig8'
 # filename1 = 'H100_Re16000_fig4'
-filename1 = 'H0_Re4000_fig2_favre'
+# filename1 = 'H0_Re4000_fig2_favre'
 
 file_path1 = os.path.join('pickles', 'ls', f'{filename1}.pkl')
 
+filename2 = 'H100_Re12500_fig8'
 # filename2 = 'H0_Re3000_fig8'
 # filename2 = 'H100_Re12500_fig4'
 # filename2 = 'H0_Re4000_fig21'
-filename2 = 'H0_Re4000_fig4_favre'
+# filename2 = 'H0_Re4000_fig4_favre'
 
 file_path2 = os.path.join('pickles', 'ls', f"{filename2}.pkl")
 
@@ -130,7 +132,7 @@ with open(file_path2, 'rb') as f:
     fig2 = pickle.load(f)
 
 # Create a new figure with subplots
-fig, axs = plt.subplots(1, 2, figsize=(8, 6)) # fig 4 and 8
+fig, axs = plt.subplots(1, 2, figsize=(9, 6)) # fig 4 and 8
 # fig, axs = plt.subplots(1, 2, figsize=(7, 6)) # fig 13 and 21
 
 fontsize = fontsize
@@ -142,7 +144,7 @@ copy_content(fig, fig2.axes[0], axs[1])
 axs[0].set_aspect('equal')
 axs[1].set_aspect('equal')
 
-fig.subplots_adjust(wspace=-.5)
+fig.subplots_adjust(wspace=-.8)
 
 # fig.subplots_adjust(right=3)
 #
@@ -165,13 +167,13 @@ axs[0].tick_params(axis='both', labelsize=fontsize)
 axs[1].tick_params(axis='both', labelsize=fontsize)
 
 # Add textbox
-left, width = .1 , .0
-bottom, height = .225, .7
+left, width = .075 , .0
+bottom, height = .225, .72
 right = left + width
 top = bottom + height
 
-Re_D_check = 4000
-# Re_D_check = 16000
+# Re_D_check = 4000
+Re_D_check = 16000
 
 if Re_D_check in [3000, 4000]:
     fuel_type = 'DNG'
@@ -179,18 +181,18 @@ elif Re_D_check in [12500, 16000]:
     fuel_type = 'H$_{2}$'
 
 text = f'{fuel_type}-{Re_D_check}'
-text = 'a'
+# text = 'a'
 
 axs[0].text(left, top, text, 
         horizontalalignment='left',
         verticalalignment='center',
         transform=axs[0].transAxes,
-        fontsize=24,
+        fontsize=16,
         bbox=dict(facecolor="w", edgecolor='k', boxstyle='round')
         )
 
-Re_D_check = 3000
-# Re_D_check = 12500
+# Re_D_check = 3000
+Re_D_check = 12500
 
 if Re_D_check in [3000, 4000]:
     fuel_type = 'DNG'
@@ -198,13 +200,13 @@ elif Re_D_check in [12500, 16000]:
     fuel_type = 'H$_{2}$'
 
 text = f'{fuel_type}-{Re_D_check}'
-text = 'b'
+# text = 'b'
         
 axs[1].text(left, top, text, 
         horizontalalignment='left',
         verticalalignment='center',
         transform=axs[1].transAxes,
-        fontsize=24,
+        fontsize=16,
         bbox=dict(facecolor='w', edgecolor='k', boxstyle='round')
         )
 
