@@ -7,10 +7,6 @@ Created on Wed Mar 20 00:10:22 2024
 
 #%% IMPORT STANDARD PACKAGES
 import os
-import sys
-import pickle 
-import socket
-import numpy as np
 
 #%% IMPORT USER DEFINED PACKAGES
 # from sys_paths import parent_directory
@@ -18,25 +14,38 @@ import numpy as np
 
 #%% Define cases
 main_dir = os.path.join('Y:', 'laaltenburg', 'flamesheet_2d_campaign1')
-day_nr = '24-1'
-project_name = "flamesheet_2d_day" + day_nr
 
 #%%%% Select recording
 
-# H2% = 0, phi = 0, Re_H = 7000, image_rate = 0.2 kHz
-record_name = "Recording_Date=230216_Time=103453_01"
-pre_record_name = "Recording_Date=230216_Time=103309"
+case = 1
 
-# Without mask
-# piv_result = "PIV_MP(3x32x32_50%ov_ImgCorr)" 
-
-# With mask
-piv_result = "PIV_MP(3x32x32_50%ov_ImgCorr)_01"
-
-# H2% = 0, phi = 0, Re_H = 7000, image_rate = 0.2 kHz
-# record_name = "Recording_Date=221118_Time=144758"
-# pre_record_name = "Recording_Date=221118_Time=112139"
-# piv_result = "PIV_MP(3x32x32_50%ov_ImgCorr)"
+if case == 0:
+    # test99, H2% = 100, phi = 0.35, Re_H = 5000, image_rate = 0.2 kHz
+    day_nr = '23-2'
+    project_name = "flamesheet_2d_day" + day_nr
+    record_name = "Recording_Date=230215_Time=153433_01"
+    pre_record_name = "Recording_Date=230215_Time=153306"
+    u_bulk_measured = 8.57
+elif case == 1:
+    # test101, H2% = 100, phi = 0.35, Re_H = 7000, image_rate = 0.2 kHz
+    day_nr = '23-2'
+    project_name = "flamesheet_2d_day" + day_nr
+    record_name = "Recording_Date=230215_Time=160055_01"
+    pre_record_name = "Recording_Date=230215_Time=153306"
+    u_bulk_measured = 11.88
+elif case == 2:    
+    # test103, H2% = 0, phi = 0, Re_H = 7000, image_rate = 0.2 kHz
+    day_nr = '24-1'
+    project_name = "flamesheet_2d_day" + day_nr
+    record_name = "Recording_Date=230216_Time=103453_01"
+    pre_record_name = "Recording_Date=230216_Time=103309"
+    u_bulk_measured = 10.33
+elif case == 3:    
+    # test105, H2% = 0, phi = 0, Re_H = 5000, image_rate = 0.2 kHz
+    day_nr = '24-1'
+    record_name = "Recording_Date=230216_Time=105230_01"
+    pre_record_name = "Recording_Date=230216_Time=103309"
+    u_bulk_measured = 7.44
 
 # H2% = 100, phi = 0.3, Re_H = 7000, image_rate = 0.2 kHz 
 # record_name = 'Recording_Date=221118_Time=115220_01'
@@ -47,6 +56,13 @@ piv_result = "PIV_MP(3x32x32_50%ov_ImgCorr)_01"
 # record_name = "Recording_Date=221118_Time=125724_01"
 # pre_record_name = "Recording_Date=221118_Time=112139"
 # piv_result = "PIV_MP(3x32x32_50%ov_ImgCorr)"
+
+#%%%% Geometric Mask
+# Without mask
+# piv_result = "PIV_MP(3x32x32_50%ov_ImgCorr)" 
+
+# With mask
+piv_result = "PIV_MP(3x32x32_50%ov_ImgCorr)_01"
 
 #%%%%  Define data directories
 project_dir = os.path.join(main_dir, project_name)

@@ -73,8 +73,8 @@ def read_xy_dimensions(file):
     y_bottom_raw = y_raw_array[0]
     y_top_raw = y_raw_array[-1]
     
-    print(n_windows_x_raw, n_windows_y_raw)
-    print(y_bottom_raw, y_top_raw)
+    # print(n_windows_x_raw, n_windows_y_raw)
+    # print(y_bottom_raw, y_top_raw)
     
     return x_raw, y_raw
 
@@ -83,9 +83,12 @@ def read_velocity_data(file, normalized):
     
     # Set if plot is normalized or non-dimensionalized
     if normalized:
-        U_bulk = 10.67
+        u_bulk = u_bulk_measured
     else:
-        U_bulk = 1
+        u_bulk = 1
+    
+    print(f'Set normalized: {normalized}')
+    print(f'Set u_bulk_measured: {u_bulk_measured}')
     
     # File name and scaling parameters from headers of file
     df_piv = pd.read_csv(file)
@@ -120,10 +123,12 @@ def read_vector_statistics(data_dir, n_windows_x, n_windows_y, normalized):
     
     # Set if plot is normalized or non-dimensionalized
     if normalized:
-        U_bulk = 11.87
+        u_bulk = u_bulk_measured
     else:
-        U_bulk = 1
+        u_bulk = 1
     
+    print(f'Set normalized: {normalized}')
+    print(f'Set u_bulk_measured: {u_bulk_measured}')
     # AvgVx, AvgVy, abs(AvgV), AvgKineticE, StdevVx, StdevVy, abs(StdevV), TurbKineticE, ReynoldsStressXY, ReynoldsStressXX, ReynoldsStressYY, TSSmax2D
     
     vector_stats_file_nrs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] 
@@ -144,10 +149,10 @@ def read_vector_statistics(data_dir, n_windows_x, n_windows_y, normalized):
         
         file_index_shift = vector_stats_file_nrs[0]
         if file_nr in [1, 2, 3, 5, 6, 7]:
-            vector_stats[:,:,file_nr-file_index_shift] = vector_stat/U_bulk
+            vector_stats[:,:,file_nr-file_index_shift] = vector_stat/u_bulk
         
         if file_nr in [4, 8, 9, 10, 11, 12]:
-            vector_stats[:,:,file_nr-file_index_shift] = vector_stat/(U_bulk**2)
+            vector_stats[:,:,file_nr-file_index_shift] = vector_stat/(u_bulk**2)
     
     AvgVx, AvgVy, AvgAbsV, AvgKineticE = vector_stats[:,:,0], vector_stats[:,:,1], vector_stats[:,:,2], vector_stats[:,:,3]
     StdevVx, StdevVy, StdevAbsV, TurbKineticE = vector_stats[:,:,4], vector_stats[:,:,5], vector_stats[:,:,6], vector_stats[:,:,7]
@@ -257,14 +262,22 @@ def plot_profile_in_field(fig, ax, coord0_mm, coord1_mm, color, num):
     
     # x_profile, y_profile = np.linspace(x0, x1, num), np.linspace(y0, y1, num)
     x_profile, y_profile = np.linspace(x0_mm, x1_mm, num), np.linspace(y0_mm, y1_mm, num)
-    x_profile, y_profile = x_profile[1:-1], y_profile[1:-1]
     profile_coords = np.column_stack((x_profile, y_profile))
     
-    # Extract the values along the line, using first, second or third order interpolation
-    profile_line = np.linspace(0, np.sqrt((x1_mm - x0_mm)**2 + (y1_mm - y0_mm)**2), num)
-    profile_line = profile_line[1:-1]
+    # # Extract the values along the line, using first, second or third order interpolation
+    # profile_line = np.linspace(0, np.sqrt((x1_mm - x0_mm)**2 + (y1_mm - y0_mm)**2), num)
+    # profile_line = profile_line[1:-1]
     
-    ax.plot(x_profile, y_profile, c=color, ls='solid')
+    # Calculate cumulative distance along the profile
+    distances = np.sqrt(np.diff(x_profile)**2 + np.diff(y_profile)**2)
+    cumulative_distances = np.cumsum(distances)
+    profile_line = np.insert(cumulative_distances, 0, 0)
+    
+    # Extract the values along the line, using first, second or third order interpolation
+    # profile_line = profile_line[1:-1]
+    # profile_coords = profile_coords[1:-1]
+    
+    ax.plot(profile_coords[:, 0], profile_coords[:, 1], c=color, ls='solid')
     
     return profile_coords, profile_line
 
@@ -277,6 +290,11 @@ def plot_profile_dim(fig, ax, rotation_matrix, profile_coords, profile_line, qua
     
     quantity_x_profile = griddata((X_values, Y_values), quantity_x_values, profile_coords, method='nearest')
     quantity_y_profile = griddata((X_values, Y_values), quantity_y_values, profile_coords, method='nearest')
+    
+    # quantity_x_profile[0] = 0
+    # quantity_y_profile[0] = 0
+    # quantity_x_profile[-1] = 0
+    # quantity_y_profile[-1] = 0
     
     # quantity_tangent_profile, quantity_normal_profile  = np.dot(rotation_matrix, np.array([quantity_x_profile, quantity_y_profile]))
     quantity_tangent_profile, quantity_normal_profile  = np.dot(rotation_matrix, np.array([quantity_x_profile, quantity_y_profile]))
@@ -297,9 +315,9 @@ def plot_profile_dim(fig, ax, rotation_matrix, profile_coords, profile_line, qua
     ax.grid()
     ax.axhline(y=0, color='k')
     
-    U_bulk_2d = trapezoid(quantity_normal_profile, profile_line)/10
+    u_bulk_2d = trapezoid(quantity_normal_profile, profile_line)/10
     print(trapezoid(quantity_normal_profile, profile_line))
-    print("U_bulk= {0:.1f} m/s".format(U_bulk_2d))
+    print("u_bulk_measured_2d= {0:.1f} m/s".format(u_bulk_2d))
     
     return quantity_x_profile, quantity_y_profile, quantity_tangent_profile, quantity_normal_profile
 

@@ -502,7 +502,49 @@ def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lin
     # Set aspect ratio to 'auto' to avoid stretching
     ax1.set_aspect('auto', adjustable='box')
     
-
+def plot_state_along_streamline(state, r_norm_values, x_norm_values, lines, flame_front_indices, colors):
+    
+    width, height = 9, 6
+    fig, ax = plt.subplots(figsize=(width, height))
+    
+    x_label = r'$s/D$'
+    y_label = r'flame intermittency $\gamma$'
+    
+    ax.set_xlabel(x_label, fontsize=24)
+    ax.set_ylabel(y_label, fontsize=24)
+    
+    for line, flame_front_index, color in zip(lines, flame_front_indices, colors):
+        
+        line_r, line_x = line[:,0], line[:,1]
+        
+        # Compute the distances between consecutive points on the line
+        distances = np.sqrt(np.sum(np.diff(line, axis=0)**2, axis=1))
+        
+        # Compute the cumulative distances along the line
+        cumulative_distances = np.concatenate(([0], np.cumsum(distances)))
+          
+        state_values = state.values.flatten()
+        
+        state_along_line = griddata((r_norm_values, x_norm_values), state_values, line, method=interpolation_method)
+    
+        ax.plot(cumulative_distances[:], state_along_line[:], ls='solid', marker='None')
+        
+        ax.plot(cumulative_distances[flame_front_index], state_along_line[flame_front_index], c=color, marker='*', ms=ms1, mec='k')
+        ax.plot(cumulative_distances[0], state_along_line[0], c=color, marker='>', ms=ms4, mec='k')
+        ax.plot(cumulative_distances[-1], state_along_line[-1], c=color, marker='o', ms=ms5, mec='k')
+        
+        ax.set_xlabel(x_label, fontsize=fontsize)
+        ax.set_ylabel(y_label, fontsize=fontsize) 
+        
+    # ax.set_xlim()  # replace with your desired x limits
+    # ax.set_ylim()  # replace with your desired x limits
+    ax.grid(True)
+    
+    ax.tick_params(axis='both', labelsize=fontsize)
+    
+    # Set aspect ratio to 'auto' to avoid stretching
+    ax.set_aspect('auto', adjustable='box')
+    
 #%%  FUNCTIONS [reacting_flow_fields.py]
 
 def plot_pressure_along_streamline_old(ax1, ax2, dpdr, dpdx, r_norm_values, x_norm_values, lines, incomp_indices, colors, p):

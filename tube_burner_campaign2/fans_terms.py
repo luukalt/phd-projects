@@ -43,7 +43,7 @@ import rc_params_settings
 from parameters import data_dir, flame, piv_method, interpolation_method
 from plot_params import colormap, fontsize, fontsize_legend, fontsize_label, fontsize_fraction
 from time_averaging_terms import fans_terms
-from plot_functions import plot_streamlines_reacting_flow, plot_mass_cons, plot_fans_terms, plot_pressure_along_streamline
+from plot_functions import plot_streamlines_reacting_flow, plot_mass_cons, plot_fans_terms, plot_pressure_along_streamline, plot_state_along_streamline
 from functions import process_df, contour_correction
 
 figures_folder = 'figures'
@@ -247,7 +247,6 @@ if __name__ == '__main__':
         fig, ax = plt.subplots(figsize=(width, height))
         # ax.set_title(label)
         
-        
         pivot_var /= u_bulk_measured**2
         # pivot_var /= cbar_max
         
@@ -449,10 +448,10 @@ if __name__ == '__main__':
     x_uniform = np.linspace(x_norm_values.min(), x_norm_values.max(), len(x_norm_array))
     r_uniform, x_uniform = np.meshgrid(r_uniform, x_uniform)
     
-    # pivot_u_r = pd.pivot_table(df_favre_avg, values='Velocity u [m/s]', index=index_name, columns=column_name)
-    # pivot_u_x = pd.pivot_table(df_favre_avg, values='Velocity v [m/s]', index=index_name, columns=column_name)
-    pivot_u_r = pd.pivot_table(df_favre_avg, values='u_favre [m/s]', index=index_name, columns=column_name)
-    pivot_u_x = pd.pivot_table(df_favre_avg, values='v_favre [m/s]', index=index_name, columns=column_name)
+    pivot_u_r = pd.pivot_table(df_favre_avg, values='Velocity u [m/s]', index=index_name, columns=column_name)
+    pivot_u_x = pd.pivot_table(df_favre_avg, values='Velocity v [m/s]', index=index_name, columns=column_name)
+    # pivot_u_r = pd.pivot_table(df_favre_avg, values='u_favre [m/s]', index=index_name, columns=column_name)
+    # pivot_u_x = pd.pivot_table(df_favre_avg, values='v_favre [m/s]', index=index_name, columns=column_name)
     
     pivot_u_r_norm = pivot_u_r/u_bulk_measured
     pivot_u_x_norm = pivot_u_x/u_bulk_measured
@@ -463,6 +462,12 @@ if __name__ == '__main__':
     # Interpolate the velocity components to the uniform grid
     u_r_uniform = griddata((r_norm_values, x_norm_values), pivot_u_r_norm_values, (r_uniform, x_uniform), method=interpolation_method)
     u_x_uniform = griddata((r_norm_values, x_norm_values), pivot_u_x_norm_values, (r_uniform, x_uniform), method=interpolation_method)
+    
+    pivot_state = pd.pivot_table(df_favre_avg, values='Wmean [states]', index=index_name, columns=column_name)
+    fig, ax = plt.subplots()
+    state_field = ax.pcolor(r_norm, x_norm, pivot_state.values, cmap=colormap)
+    ax.figure.colorbar(state_field)
+    ax.set_aspect('equal')
     
     # # Point where you want to interpolate
     # streamline = streamlines[0]
@@ -482,7 +487,7 @@ if __name__ == '__main__':
     dpdr = mom_r[2]
     
     r_starts = [.1, .2, .3]
-    r_starts = [.2]
+    # r_starts = [.2]
     x_starts = np.linspace(0.2, 0.2, len(r_starts))
     start_points = [(r_starts[i], x_starts[i]) for i in range(len(r_starts))]
     
@@ -494,6 +499,7 @@ if __name__ == '__main__':
     # plot_mass_cons(mass_cons, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
     # plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
     # plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
+    plot_state_along_streamline(pivot_state, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
     
     #%%% Test
     # plot_slopes(200)
@@ -620,59 +626,59 @@ if __name__ == '__main__':
     
     # %%% Save images
     # Get a list of all currently opened figures
-    figure_ids = plt.get_fignums()
-    figure_ids = [2]
+    # figure_ids = plt.get_fignums()
+    # figure_ids = [2]
     
-    if 'ls' in flame.name:
-        folder = 'ls'
-    else:
-        folder = 'hs'
+    # if 'ls' in flame.name:
+    #     folder = 'ls'
+    # else:
+    #     folder = 'hs'
     
-    figures_subfolder = os.path.join(figures_folder, folder)
-    if not os.path.exists(figures_subfolder):
-            os.makedirs(figures_subfolder)
+    # figures_subfolder = os.path.join(figures_folder, folder)
+    # if not os.path.exists(figures_subfolder):
+    #         os.makedirs(figures_subfolder)
     
-    pickles_subfolder = os.path.join(pickles_folder, folder)
-    if not os.path.exists(pickles_subfolder):
-            os.makedirs(pickles_subfolder)
+    # pickles_subfolder = os.path.join(pickles_folder, folder)
+    # if not os.path.exists(pickles_subfolder):
+    #         os.makedirs(pickles_subfolder)
 
-    # Apply tight_layout to each figure
-    for fid in figure_ids:
-        fig = plt.figure(fid)
-        filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre_tke'
+    # # Apply tight_layout to each figure
+    # for fid in figure_ids:
+    #     fig = plt.figure(fid)
+    #     filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre_tke'
         
-        # Get the current width and height of the figure
-        current_width, current_height = fig.get_size_inches()
+    #     # Get the current width and height of the figure
+    #     current_width, current_height = fig.get_size_inches()
         
-        print("Current Width:", current_width)
-        print("Current Height:", current_height)
+    #     print("Current Width:", current_width)
+    #     print("Current Height:", current_height)
 
-        # Constructing the paths
-        if fid == 100:
+    #     # Constructing the paths
+    #     if fid == 100:
             
-            png_path = os.path.join('figures', f'{folder}', f"{filename}.png")
-            pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
+    #         png_path = os.path.join('figures', f'{folder}', f"{filename}.png")
+    #         pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
             
-            # Saving the figure in EPS format
-            fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
+    #         # Saving the figure in EPS format
+    #         fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
             
-        else:
+    #     else:
             
-            eps_path = os.path.join('figures', f'{folder}', f"{filename}.eps")
-            pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
+    #         eps_path = os.path.join('figures', f'{folder}', f"{filename}.eps")
+    #         pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
             
-            # Saving the figure in EPS format
-            fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+    #         # Saving the figure in EPS format
+    #         fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
             
-            # Get the current width and height of the figure
-            current_width, current_height = fig.get_size_inches()
+    #         # Get the current width and height of the figure
+    #         current_width, current_height = fig.get_size_inches()
             
-            print("Current Width:", current_width)
-            print("Current Height:", current_height)
+    #         print("Current Width:", current_width)
+    #         print("Current Height:", current_height)
         
-        # Pickling the figure
-        with open(pkl_path, 'wb') as f:
-            pickle.dump(fig, f)
+    #     # Pickling the figure
+    #     with open(pkl_path, 'wb') as f:
+    #         pickle.dump(fig, f)
             
     
     
