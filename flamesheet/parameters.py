@@ -26,7 +26,12 @@ project_name = "flamesheet_2d_day" + day_nr
 # H2% = 0, phi = 0, Re_H = 7000, image_rate = 0.2 kHz
 record_name = "Recording_Date=230216_Time=103453_01"
 pre_record_name = "Recording_Date=230216_Time=103309"
-piv_result = "PIV_MP(3x32x32_50%ov_ImgCorr)"
+
+# Without mask
+# piv_result = "PIV_MP(3x32x32_50%ov_ImgCorr)" 
+
+# With mask
+piv_result = "PIV_MP(3x32x32_50%ov_ImgCorr)_01"
 
 # H2% = 0, phi = 0, Re_H = 7000, image_rate = 0.2 kHz
 # record_name = "Recording_Date=221118_Time=144758"

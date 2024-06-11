@@ -18,7 +18,21 @@ from scipy.integrate import trapezoid
 from scipy.interpolate import griddata
 import progressbar
 
+#%% IMPORT USER DEFINED PACKAGES
+from sys_paths import parent_directory
+import sys_paths
+import rc_params_settings
 from parameters import *
+from plot_params import colormap, fontsize, fontsize_legend, fontsize_label, fontsize_fraction
+
+figures_folder = 'figures'
+if not os.path.exists(figures_folder):
+        os.makedirs(figures_folder)
+        
+pickles_folder = 'pickles'
+if not os.path.exists(pickles_folder):
+        os.makedirs(pickles_folder)
+        
 
 if day_nr == '24-1':
     from wall_detection_day24_1 import *
@@ -148,8 +162,8 @@ def plot_field(fig, ax, X, Y, quantity, label, cmin, cmax):
     quantity_plot.set_clim(cmin, cmax)
     
     # Set x- and y-label
-    ax.set_xlabel('$x\ [mm]$')
-    ax.set_ylabel('$y\ [mm]$')
+    ax.set_xlabel('$x$ [mm]', fontsize=fontsize)
+    ax.set_ylabel('$y$ [mm]', fontsize=fontsize)
     
     # Set aspect ratio of plot
     ax.set_aspect('equal')
@@ -157,6 +171,9 @@ def plot_field(fig, ax, X, Y, quantity, label, cmin, cmax):
     # Set contour bar
     bar = fig.colorbar(quantity_plot, ax=ax)
     bar.set_label(label)
+    
+    # ax.set_xlim(left=-.55, right=.55)
+    ax.set_ylim(bottom=-23)
     
 def plot_vector_field(fig, ax, X, Y, Vx, Vy):
     scale = 2
@@ -208,7 +225,6 @@ def plot_streamlines(fig, ax, X, Y, Vx, Vy):
     Vxi = griddata((X_values, Y_values), Vx.flatten(), (Xi, Yi), method='linear')
     Vyi = griddata((X_values, Y_values), Vy.flatten(), (Xi, Yi), method='linear')
     
-    
     # fig, ax = plt.subplots()
     
     # ax.pcolor(Xi, Yi, Vyi)
@@ -232,45 +248,60 @@ def plot_streamlines(fig, ax, X, Y, Vx, Vy):
     return streamlines
 
     
-def plot_profile_dim(fig, ax, rotation_matrix, coord0_mm, coord1_mm, quantity_x, quantity_y, label, cmin, cmax, color, num, order):
+def plot_profile_in_field(fig, ax, coord0_mm, coord1_mm, color, num):
     
     x0_mm, y0_mm = coord0_mm
     x1_mm, y1_mm = coord1_mm
-    x0, y0 = (coord0_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
-    x1, y1 = (coord1_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
+    # x0, y0 = (coord0_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
+    # x1, y1 = (coord1_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
     
-    x_profile, y_profile = np.linspace(x0, x1, num), np.linspace(y0, y1, num)
-    ax[0].plot(np.linspace(x0_mm, x1_mm, num), np.linspace(y0_mm, y1_mm, num), c=color, ls="--")
+    # x_profile, y_profile = np.linspace(x0, x1, num), np.linspace(y0, y1, num)
+    x_profile, y_profile = np.linspace(x0_mm, x1_mm, num), np.linspace(y0_mm, y1_mm, num)
+    x_profile, y_profile = x_profile[1:-1], y_profile[1:-1]
+    profile_coords = np.column_stack((x_profile, y_profile))
     
     # Extract the values along the line, using first, second or third order interpolation
-    arbitrary_line = np.linspace(0, np.sqrt((x1_mm - x0_mm)**2 + (y1_mm - y0_mm)**2), num)
+    profile_line = np.linspace(0, np.sqrt((x1_mm - x0_mm)**2 + (y1_mm - y0_mm)**2), num)
+    profile_line = profile_line[1:-1]
     
-    quantity_x_profile = scipy.ndimage.map_coordinates(quantity_x, np.vstack((y_profile, x_profile)), order=order)
-    quantity_y_profile = scipy.ndimage.map_coordinates(quantity_y, np.vstack((y_profile, x_profile)), order=order)
+    ax.plot(x_profile, y_profile, c=color, ls='solid')
     
+    return profile_coords, profile_line
+
+def plot_profile_dim(fig, ax, rotation_matrix, profile_coords, profile_line, quantity_x, quantity_y, label, cmin, cmax, color, num):
+
+    X_values = X.flatten()
+    Y_values = Y.flatten()
+    quantity_x_values = quantity_x.flatten()
+    quantity_y_values = quantity_y.flatten()
+    
+    quantity_x_profile = griddata((X_values, Y_values), quantity_x_values, profile_coords, method='nearest')
+    quantity_y_profile = griddata((X_values, Y_values), quantity_y_values, profile_coords, method='nearest')
+    
+    # quantity_tangent_profile, quantity_normal_profile  = np.dot(rotation_matrix, np.array([quantity_x_profile, quantity_y_profile]))
     quantity_tangent_profile, quantity_normal_profile  = np.dot(rotation_matrix, np.array([quantity_x_profile, quantity_y_profile]))
     
     quantity_tangent_profile = quantity_x_profile*np.cos(theta) - quantity_y_profile*np.sin(theta)
     quantity_normal_profile = quantity_x_profile*np.sin(theta) + quantity_y_profile*np.cos(theta)
     
-    ax[1].plot(arbitrary_line, quantity_normal_profile, c=color, ls="-", marker="o")
+    ax.plot(profile_line, quantity_normal_profile, c=color, ls='solid', marker='o')
     
-    ax[1].set_xlabel("distance along line [mm]")
-    ax[1].set_ylabel("$V_{n}$ [ms$^-1$]")
+    ax.set_xlabel("distance along line [mm]", fontsize=fontsize)
+    ax.set_ylabel("$V_{n}$ [ms$^-1$]", fontsize=fontsize)
+    ax.tick_params(axis='both', labelsize=fontsize)
     # ax[1].set_ylabel("$R_{NN}$ [ms$^-1$]")
     
     
-    # ax[1].set_xlim(np.array([arbitrary_line[0], arbitrary_line[-1]]))
-    ax[1].set_xlim(np.array([0, 30]))
+    ax.set_xlim(np.array([0, 30]))
     # ax[1].set_ylim(np.array([cmin, cmax]))
-    ax[1].grid()
-    ax[1].axhline(y=0, color='k')
+    ax.grid()
+    ax.axhline(y=0, color='k')
     
-    U_bulk_2d = trapezoid(quantity_normal_profile, arbitrary_line)/10
-    print(trapezoid(quantity_normal_profile, arbitrary_line))
+    U_bulk_2d = trapezoid(quantity_normal_profile, profile_line)/10
+    print(trapezoid(quantity_normal_profile, profile_line))
     print("U_bulk= {0:.1f} m/s".format(U_bulk_2d))
     
-    return arbitrary_line, quantity_x_profile, quantity_y_profile, quantity_tangent_profile, quantity_normal_profile
+    return quantity_x_profile, quantity_y_profile, quantity_tangent_profile, quantity_normal_profile
 
 
 def plot_profile_nondim(fig, ax, rotation_matrix, coord0_mm, coord1_mm, quantity_x, quantity_y, label, cmin, cmax, color, num, order):
@@ -293,7 +324,7 @@ def plot_profile_nondim(fig, ax, rotation_matrix, coord0_mm, coord1_mm, quantity
     quantity_tangent_profile = quantity_x_profile*np.cos(theta) - quantity_y_profile*np.sin(theta)
     quantity_normal_profile = quantity_x_profile*np.sin(theta) + quantity_y_profile*np.cos(theta)
     
-    ax[1].plot(quantity_normal_profile, c=color, ls="-", marker="o")
+    ax[1].plot(quantity_normal_profile, c=color, ls='solid', marker='o')
     
     ax[1].set_xlabel('-')
     ax[1].set_ylabel("$V_{n}$ [ms$^-1$]")
@@ -304,26 +335,39 @@ def plot_profile_nondim(fig, ax, rotation_matrix, coord0_mm, coord1_mm, quantity
     ax[1].axhline(y=0, color='k')
     
     
-def plot_reynolds_stress1_dim(fig, ax, theta, coord0_mm, coord1_mm, label, cmin, cmax, color, num, order):
+def plot_reynolds_stress1_dim(fig, ax, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num):
     
-    c, s = np.cos(theta), np.sin(theta)
-    rotation_matrix = np.array(((c, -s), (s, c)))
-    rotation_matrix_T = np.transpose(rotation_matrix)
+    # c, s = np.cos(theta), np.sin(theta)
+    # rotation_matrix = np.array(((c, -s), (s, c)))
+    # rotation_matrix_T = np.transpose(rotation_matrix)
     
-    x0_mm, y0_mm = coord0_mm
-    x1_mm, y1_mm = coord1_mm
-    x0, y0 = (coord0_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
-    x1, y1 = (coord1_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
+    # x0_mm, y0_mm = coord0_mm
+    # x1_mm, y1_mm = coord1_mm
+    # x0, y0 = (coord0_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
+    # x1, y1 = (coord1_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
     
-    x_profile, y_profile = np.linspace(x0, x1, num), np.linspace(y0, y1, num)
+    # x_profile, y_profile = np.linspace(x0, x1, num), np.linspace(y0, y1, num)
+    # x_profile, y_profile = np.linspace(x0_mm, x1_mm, num), np.linspace(y0_mm, y1_mm, num)
+    # profile_coords = np.column_stack((x_profile, y_profile))
     
     # Extract the values along the line, using first, second or third order interpolation
-    arbitrary_line_length = np.sqrt((x1_mm - x0_mm)**2 + (y1_mm - y0_mm)**2)
-    arbitrary_line = np.linspace(0, np.sqrt((x1_mm - x0_mm)**2 + (y1_mm - y0_mm)**2), int(arbitrary_line_length/dx_piv))
+    # profile_line_length = np.sqrt((x1_mm - x0_mm)**2 + (y1_mm - y0_mm)**2)
+    # profile_line = np.linspace(0, np.sqrt((x1_mm - x0_mm)**2 + (y1_mm - y0_mm)**2), int(profile_line_length/dx_piv))
     
-    RXX_profile = scipy.ndimage.map_coordinates(RXX, np.vstack((y_profile, x_profile)), order=order)
-    RYY_profile = scipy.ndimage.map_coordinates(RYY, np.vstack((y_profile, x_profile)), order=order)
-    RXY_profile = scipy.ndimage.map_coordinates(RXY, np.vstack((y_profile, x_profile)), order=order)
+    X_values = X.flatten()
+    Y_values = Y.flatten()
+    
+    RXX_values = RXX.flatten()
+    RYY_values = RYY.flatten()
+    RXY_values = RXY.flatten()
+    
+    RXX_profile = griddata((X_values, Y_values), RXX_values, profile_coords, method='nearest')
+    RYY_profile = griddata((X_values, Y_values), RYY_values, profile_coords, method='nearest')
+    RXY_profile = griddata((X_values, Y_values), RXY_values, profile_coords, method='nearest')
+    
+    # RXX_profile = scipy.ndimage.map_coordinates(RXX, np.vstack((y_profile, x_profile)), order=order)
+    # RYY_profile = scipy.ndimage.map_coordinates(RYY, np.vstack((y_profile, x_profile)), order=order)
+    # RXY_profile = scipy.ndimage.map_coordinates(RXY, np.vstack((y_profile, x_profile)), order=order)
     
     ### Approach 1: Calculate Reynolds stresses on arbirtary line "manually"
     RTT = RXX_profile*(np.cos(theta))**2 - 2*RXY_profile*np.cos(theta)*np.sin(theta) + RYY_profile*(np.sin(theta))**2
@@ -350,19 +394,19 @@ def plot_reynolds_stress1_dim(fig, ax, theta, coord0_mm, coord1_mm, label, cmin,
     # Rnn = R_stress_tensor_rotated[1,1,:]
     # Rtn = R_stress_tensor_rotated[0,1,:]
     
-    ax.plot(arbitrary_line, RNN, c=color, ls="-")
+    ax.plot(profile_line, RNN, c=color, ls="-", marker="o")
     # ax.set_xlim(np.array([arbitrary_line[0], arbitrary_line[-1]]))
-    ax.set_xlim(np.array([0, 30]))
+    # ax.set_xlim(left=0, right=30]))
     
-    ax.set_xlabel("distance along line [mm]")
-    ax.set_ylabel("$R_{nn}$ [m$^2$s$^{-2}$]")
+    ax.set_xlabel("distance along line [mm]", fontsize=fontsize)
+    ax.set_ylabel("$R_{nn}$ [m$^2$s$^{-2}$]", fontsize=fontsize)
+    ax.tick_params(axis='both', labelsize=fontsize)
     ax.grid()
     
     
     # ax.set_ylim(np.array([cmin, cmax]))
     
     return RXX_profile, RYY_profile, RXY_profile
-
 
 
 def plot_reynolds_stress2_dim(fig, ax, rotation_matrix, coord0_mm, coord1_mm, n_images, U_transient, V_transient, Vt_avg_profile, Vn_avg_profile, label, cmin, cmax, color, num, order): 
@@ -581,10 +625,10 @@ if __name__ == "__main__":
                                "$\sigma_{|V|}/U_{b}$", "$TKE/U^{2}_{b}$", "$R_{XY}/U^{2}_{b}$",
                                "$R_{XX}/U^{2}_{b}$", "$R_{YY}/U^{2}_{b}$", "$TSS_{max}/U^{2}_{b}$"]
     else:
-        vector_stats_labels = ["$V_{x}$ $[ms^{-1}$]", "$V_{y}$ $[ms^{-1}$]", "|$V|$ $[ms^{-1}$]",
-                           "$AKE$ $[m^{2}s^{-2}$]", "$\sigma_{V_{x}}$ $[ms^{-1}$]", "$\sigma_{V_{y}}$ $[ms^{-1}$]",
-                           "$\sigma_{|V|}$ $[ms^{-1}$]", "$TKE$ $[m^{2}s^{-2}$]", "$R_{XY}$ $[m^{2}s^{-2}$]",
-                           "$R_{XX}$ $[m^{2}s^{-2}$]", "$R_{YY}$ $[m^{2}s^{-2}$]", "$TSS_{max}$ $[m^{2}s^{-2}$]"]
+        vector_stats_labels = ["$V_{x}$ [ms$^{-1}$]", "$V_{y}$ [ms$^{-1}$]", "$|V|$ [ms$^{-1}$]",
+                           "$AKE$ [m$^{2}$s$^{-2}$]", "$\sigma_{V_{x}}$ [ms$^{-1}$]", "$\sigma_{V_{y}}$ [ms$^{-1}$]",
+                           "$\sigma_{|V|}$ [ms$^{-1}$]", "$TKE$ [m$^{2}$s$^{-2}$]", "$R_{XY}$ [m$^{2}$s$^{-2}$]",
+                           "$R_{XX}$ [m$^{2}$s$^{-2}$]", "$R_{YY}$ [m$^{2}$s$^{-2}$]", "$TSS_{max}$ [m$^{2}$s$^{-2}$]"]
     
     vector_stats_titles = ["Average velocity in horizontal direction", "$Average velocity in vertical direction", "Average absolute velocity",
                        "Average Kinetic Energy", "Standard deviation of $V_{x}$", "Standard deviation of $V_{y}$",
@@ -628,10 +672,10 @@ if __name__ == "__main__":
     ax_y_lim = ax1.get_ylim()
     
     #%%%%% Plot vector field
-    # plot_vector_field(fig1, ax1, X, Y, AvgVx, AvgVy)
+    plot_vector_field(fig1, ax1, X, Y, AvgVx, AvgVy)
     
     #%%%%% Plot streamlines
-    streamlines = plot_streamlines(fig1, ax1, X, Y, AvgVx1, AvgVy1)
+    # streamlines = plot_streamlines(fig1, ax1, X, Y, AvgVx1, AvgVy1)
     
     #%%%%% Detect walls from precording image
     pt1_liner, pt2_liner, pt1_core_left, pt2_core_left, cx, cy, radius = wall_detection(calibration_tif_file, pre_record_correction_file)
@@ -659,14 +703,14 @@ if __name__ == "__main__":
     plot_field(fig2, ax2, X, Y, scalar, label, cmin, cmax)
     
     #%%%% [Figure 3]
-    fig3, ax3 = plt.subplots()
+    # fig3, ax3 = plt.subplots()
     # X_check, Y_check, I_check, XYI = plot_image(fig3, ax3, nx, ny)
     
     #%%%% [Figure 4, Figure 5, Figure 6]
     
     # Initialize figures
-    fig4, ax4 = plt.subplots(figsize=(fig_scale*default_fig_dim[0], fig_scale*default_fig_dim[1]), ncols=2, dpi=100)
-    fig5, ax5 = plt.subplots(figsize=(fig_scale*default_fig_dim[0], fig_scale*default_fig_dim[1]), ncols=2, dpi=100)
+    fig4, ax4 = plt.subplots(figsize=(fig_scale*default_fig_dim[0], fig_scale*default_fig_dim[1]), ncols=1, dpi=100)
+    fig5, ax5 = plt.subplots(figsize=(fig_scale*default_fig_dim[0], fig_scale*default_fig_dim[1]), ncols=1, dpi=100)
     fig6, ax6 = plt.subplots(figsize=(fig_scale*default_fig_dim[0], fig_scale*default_fig_dim[1]), ncols=1, dpi=100)
     
     #%%%%% Important coordinates for Figure 4, 5, 6
@@ -680,39 +724,41 @@ if __name__ == "__main__":
     # Coordinates of the liner tip in PIV "pixels". This is needed for extracting the profiles
     coord0_mm = pt2_liner_mm
     
-    
     #%%%%% Plot scalar field [Figure 4]
-    plot_field(fig4, ax4[0], X, Y, scalar, label, cmin, cmax)
+    plot_field(fig4, ax4, X, Y, scalar, label, cmin, cmax)
     # ax4[1].set_title()
-    fig4.suptitle("Velocity profiles", fontsize=30)
+    # fig4.suptitle("Velocity profiles", fontsize=30)
     
     # Draw walls in figure
-    draw_walls(ax4[0])
-    ax4[0].set_xlim(ax2.get_xlim())
-    ax4[0].set_ylim(ax2.get_ylim())
+    draw_walls(ax4)
+    ax4.set_xlim(ax2.get_xlim())
+    ax4.set_ylim(ax2.get_ylim())
     
     #%%%%% Plot scalar field [Figure 5]
-    ax5[0].imshow(scalar)
+    # ax5[0].imshow(scalar)
+    # quantity_plot = ax5[0].pcolor(X, Y, scalar, cmap="viridis", rasterized=True)
+    # quantity_plot.set_clim(cmin, cmax)
     
     #%%%%% Define cross-sections for extraction of profiles
     
     # Initiate profile lists
-    arbitrary_lines = []
+    profile_lines = []
     Vn_avg_profiles = []
     
     # Profile colors
     colors = tableau
     
     # Angle with respect to the horizon of cross-section for profile in degrees
-    thetas_deg = [80, 60, 30, 0, 0, 0, 0] 
+    # thetas_deg = [80, 60, 30, 0, 0, 0, 0] 
+    thetas_deg = [60, 30, 0, 0, 0] 
+    
     thetas = np.radians(thetas_deg) # Conversion to radians
     
-    vertical_locs = [0, 0, 0, 0, 9, 18, 27] # in mm
+    vertical_locs = [0, 0, 0, 15, 30] # in mm
+    
+    # vertical_locs = [vertical_coord, vertical_coord, vertical_coord, 9, 18, 27] # in mm
     
     profile_ids = list(range(len(thetas_deg)))
-    
-    # Number of points for arbitrary line AND Order of profile fit for arbitrary line
-    order = 0
     
     colors_iter = iter(colors)
     
@@ -755,17 +801,21 @@ if __name__ == "__main__":
         num = int(arbitrary_line_length/dx_piv)
         
         #%%%%% Plot normal velocity profiles with dimensions for cross-sections depending on theta [Figure 4]
-        arbitrary_line, Vx_avg_profile, Vy_avg_profile, Vt_avg_profile, Vn_avg_profile = plot_profile_dim(fig4, ax4, rotation_matrix, coord0_mm, coord1_mm, AvgVx, AvgVy, label, cmin, cmax, color, num, order)
+        # arbitrary_line, Vx_avg_profile, Vy_avg_profile, Vt_avg_profile, Vn_avg_profile = plot_profile_dim(fig4, ax4, rotation_matrix, coord0_mm, coord1_mm, AvgVx, AvgVy, label, cmin, cmax, color, num)
+        profile_coords, profile_line = plot_profile_in_field(fig4, ax4, coord0_mm, coord1_mm, color, num)
+        Vx_avg_profile, Vy_avg_profile, Vt_avg_profile, Vn_avg_profile = plot_profile_dim(fig5, ax5, rotation_matrix, profile_coords, profile_line, AvgVx, AvgVy, label, cmin, cmax, color, num)
         
         #%%%%% Plot velocity profiles without dimensions [Figure 5]
-        plot_profile_nondim(fig5, ax5, rotation_matrix, coord0_mm, coord1_mm, AvgVx, AvgVy, label, cmin, cmax, color, num, order)
+        # plot_profile_nondim(fig5, ax5, rotation_matrix, coord0_mm, coord1_mm, AvgVx, AvgVy, label, cmin, cmax, color, num, order)
         
         #%%%%% Plot Reynolds normal stresses of selected cross-sections [Figure 6]
-        Rxx_profile, Ryy_profile, Rxy_profile = plot_reynolds_stress1_dim(fig6, ax6, theta, coord0_mm, coord1_mm, label, cmin, cmax, color, num, order)
+        # Rxx_profile, Ryy_profile, Rxy_profile = plot_reynolds_stress1_dim(fig6, ax6, rotation_matrix, theta, coord0_mm, coord1_mm, label, cmin, cmax, color, num)
+        Rxx_profile, Ryy_profile, Rxy_profile = plot_reynolds_stress1_dim(fig6, ax6, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num)
+        
         # Rtt, Rnn, Rtn = plot_reynolds_stress2_dim(fig6, ax6, rotation_matrix, coord0_mm, coord1_mm, n_images, U_transient, V_transient, Vt_avg_profile, Vn_avg_profile, label, 0, 1.5, color, num, order)
         
         #%%%%% Write data to lists
-        arbitrary_lines.append(arbitrary_line)
+        profile_lines.append(profile_line)
         Vn_avg_profiles.append(Vn_avg_profile)
 
     # for profile_id in profile_ids:
@@ -810,7 +860,7 @@ if __name__ == "__main__":
     fig2.tight_layout()
     # fig3.tight_layout()
     fig4.tight_layout()
-    fig5.tight_layout()
+    # fig5.tight_layout()
     fig6.tight_layout()
     figX.tight_layout()
     
