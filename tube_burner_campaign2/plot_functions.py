@@ -29,7 +29,7 @@ sys.path.append(plot_parameters_directory)
 
 #%% IMPORT USER DEFINED PACKAGES
 from parameters import flame, data_dir, interpolation_method
-from plot_params import colormap, fontsize, ms1, ms2, ms3, ms4, ms5, ms6
+from plot_params import colormap, fontsize, ms1, ms2, ms3, ms4, ms5, ms6, fontsize_legend
 
 from cone_angle import cone_angle
 from functions import process_df, contour_correction, intersection
@@ -305,21 +305,21 @@ def plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, lines
     
     # Second momentum equations
     mom_x_labels = [
-                    '[1] Axial advection',
-                    '[2] Radial advection',
-                    '[3] Pressure gradient',
+                    'Axial advection',
+                    'Radial advection',
+                    'Pressure gradient',
                     # '[4] Viscous diffusion',
-                    '[4] Change in Favre normal stress',
-                    '[5] Change in Favre shear stress'
+                    'Change in Favre normal stress',
+                    'Change in Favre shear stress'
                     ]
     
     mom_r_labels = [
-                    '[1] Axial advection',
-                    '[2] Radial advection',
-                    '[3] Pressure gradient',
+                    'Axial advection',
+                    'Radial advection',
+                    'Pressure gradient',
                     # '[4] Viscous diffusion',
-                    '[4] Change in Favre shear stress',
-                    '[5] Change in Favre normal stress'
+                    'Change in Favre shear stress',
+                    'Change in Favre normal stress'
                     ]
     
     mom_markers = ['v', '^', 'o', 's', 'p', 'd']
@@ -414,7 +414,7 @@ def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lin
     ax1_x1, ax1_x2, ax1_y1, ax1_y2 = -.1, .5, -.01, .06  # for example, zoom in on this region
 
     # Draw a rectangle or any other shape to indicate the zoom area
-    ax1.add_patch(plt.Rectangle((ax1_x1, ax1_y1), ax1_x2 - ax1_x1, ax1_y2 - ax1_y1, fill=False, color='k', linestyle='solid', lw=2))
+    # ax1.add_patch(plt.Rectangle((ax1_x1, ax1_y1), ax1_x2 - ax1_x1, ax1_y2 - ax1_y1, fill=False, color='k', linestyle='solid', lw=2))
     
     if flame.Re_D == 3000:
         y_lims = [-.35, .125]
@@ -437,23 +437,28 @@ def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lin
         width="175%"
         height="175%"
         
-    ax1_inset = inset_axes(ax1, width=width, height=height, loc='upper left',
-                       # bbox_to_anchor=(x1, y1, x2 - x1, y2 - y1),
-                       bbox_to_anchor=bbox_to_anchor,
-                      bbox_transform=ax1.transData,
-                      borderpad=0)
+    # ax1_inset = inset_axes(ax1, width=width, height=height, loc='upper left',
+    #                    # bbox_to_anchor=(x1, y1, x2 - x1, y2 - y1),
+    #                    bbox_to_anchor=bbox_to_anchor,
+    #                   bbox_transform=ax1.transData,
+    #                   borderpad=0)
     
-    # Set the limits for the inset axes
-    ax1_inset.set_xlim(ax1_x1, ax1_x2)
-    ax1_inset.set_ylim(ax1_y1, ax1_y2)
+    # # Set the limits for the inset axes
+    # ax1_inset.set_xlim(ax1_x1, ax1_x2)
+    # ax1_inset.set_ylim(ax1_y1, ax1_y2)
     
-    ax1_inset.set_xticks([.0, .2, .4])
-    ax1_inset.set_yticks([.0, .02, .04, .06])
+    # ax1_inset.set_xticks([.0, .2, .4])
+    # ax1_inset.set_yticks([.0, .02, .04, .06])
     
     # ax_inset = fig1.add_axes([.575, .55, .3, .3]) # x, y, width, height (in figure coordinate)
     
     styles_react = ['solid', 'solid', 'solid']
     styles_nonreact = ['dashed', 'dashed', 'dashed']
+    
+    export_data = {
+        'cumulative_distances': [],
+        'p_along_line': [],
+    }
     
     for line, flame_front_index, color in zip(lines, flame_front_indices, colors):
         
@@ -485,13 +490,16 @@ def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lin
             p_along_line[i] = p_along_line[i-1] + 0.5 * (dpdr_along_line[i] + dpdr_along_line[i-1]) * dr + 0.5 * (dpdx_along_line[i] + dpdx_along_line[i-1]) * dx
             
         ax1.plot(cumulative_distances, p_along_line, c=color, marker='None', ls='solid')
-        ax1.plot(cumulative_distances[flame_front_index], p_along_line[flame_front_index], c=color, marker='*', ms=ms1, mec='k')
+        # ax1.plot(cumulative_distances[flame_front_index], p_along_line[flame_front_index], c=color, marker='*', ms=ms1, mec='k')
         ax1.plot(cumulative_distances[0], p_along_line[0], color=color, marker='>', ls='None', mec='k', ms=ms4)
         ax1.plot(cumulative_distances[-1], p_along_line[-1], color=color, marker='o', ls='None', mec='k', ms=ms5)
         
+        export_data['cumulative_distances'].append(cumulative_distances.tolist())
+        export_data['p_along_line'].append(p_along_line.tolist())
+        
         # Create an inset with zoomed-in plot
-        ax1_inset.plot(cumulative_distances[0], p_along_line[0], color=color, marker='>', ls='None', mec='k', ms=ms4)
-        ax1_inset.plot(cumulative_distances, p_along_line, c=color, marker='None', ls='solid')
+        # ax1_inset.plot(cumulative_distances[0], p_along_line[0], color=color, marker='>', ls='None', mec='k', ms=ms4)
+        # ax1_inset.plot(cumulative_distances, p_along_line, c=color, marker='None', ls='solid')
         
     ax1.set_xlim(right=3)  # replace with your desired x limits
     ax1.set_ylim(y_lims)  # replace with your desired x limits
@@ -502,7 +510,126 @@ def plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lin
     # Set aspect ratio to 'auto' to avoid stretching
     ax1.set_aspect('auto', adjustable='box')
     
-def plot_state_along_streamline(state, r_norm_values, x_norm_values, lines, flame_front_indices, colors):
+    with open('p_along_line_nonreact.pkl', 'wb') as file:
+        pickle.dump(export_data, file)
+    
+def plot_pressure_gradient_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, lines, flame_front_indices, colors):
+    
+    width, height = 9, 6
+    fig1, ax1 = plt.subplots(figsize=(width, height))
+    
+    x_label = r'$s/D$'
+    y_label = r'$\frac{dp^*}{ds^*}$'
+    
+    ax1.set_xlabel(x_label, fontsize=24)
+    ax1.set_ylabel(y_label, fontsize=24)
+    
+    # Define the region of interest for zooming
+    ax1_x1, ax1_x2, ax1_y1, ax1_y2 = -.1, .5, -.01, .06  # for example, zoom in on this region
+
+    # Draw a rectangle or any other shape to indicate the zoom area
+    # ax1.add_patch(plt.Rectangle((ax1_x1, ax1_y1), ax1_x2 - ax1_x1, ax1_y2 - ax1_y1, fill=False, color='k', linestyle='solid', lw=2))
+    
+    if flame.Re_D == 3000:
+        y_lims = [-.35, .125]
+        bbox_to_anchor=(ax1_x1 + 1.7 , ax1_y1 + .05, ax1_x2 - ax1_x1, ax1_y2 - ax1_y1)
+        width="225%"
+        height="225%"
+    elif flame.Re_D == 4000:
+        y_lims = [-.35, .125]
+        bbox_to_anchor=(ax1_x1 + 1.7 , ax1_y1 + .05, ax1_x2 - ax1_x1, ax1_y2 - ax1_y1)
+        width="225%"
+        height="225%"
+    elif flame.Re_D == 12500:
+        y_lims = [-.12, .1]
+        bbox_to_anchor=(ax1_x1 + 2., ax1_y1 + .035, ax1_x2 - ax1_x1, ax1_y2 - ax1_y1)
+        width="175%"
+        height="175%"
+    elif flame.Re_D == 16000:
+        y_lims = [-.12, .1]
+        bbox_to_anchor=(ax1_x1 + 2., ax1_y1 + .035, ax1_x2 - ax1_x1, ax1_y2 - ax1_y1)
+        width="175%"
+        height="175%"
+        
+    # ax1_inset = inset_axes(ax1, width=width, height=height, loc='upper left',
+    #                    # bbox_to_anchor=(x1, y1, x2 - x1, y2 - y1),
+    #                    bbox_to_anchor=bbox_to_anchor,
+    #                   bbox_transform=ax1.transData,
+    #                   borderpad=0)
+    
+    # # Set the limits for the inset axes
+    # ax1_inset.set_xlim(ax1_x1, ax1_x2)
+    # ax1_inset.set_ylim(ax1_y1, ax1_y2)
+    
+    # ax1_inset.set_xticks([.0, .2, .4])
+    # ax1_inset.set_yticks([.0, .02, .04, .06])
+    
+    # ax_inset = fig1.add_axes([.575, .55, .3, .3]) # x, y, width, height (in figure coordinate)
+    
+    styles_react = ['solid', 'solid', 'solid']
+    styles_nonreact = ['dashed', 'dashed', 'dashed']
+    
+    export_data = {
+        'cumulative_distances': [],
+        'p_along_line': [],
+    }
+    
+    for line, flame_front_index, color in zip(lines, flame_front_indices, colors):
+        
+        line_r, line_x = line[:,0], line[:,1]
+        
+        # Compute the distances between consecutive points on the line
+        distances = np.sqrt(np.sum(np.diff(line, axis=0)**2, axis=1))
+        
+        # Compute the cumulative distances along the line
+        cumulative_distances = np.concatenate(([0], np.cumsum(distances)))
+          
+        dpdr_values = dpdr.values.flatten()
+        dpdx_values = dpdx.values.flatten()
+        
+        dpdr_along_line = griddata((r_norm_values, x_norm_values), dpdr_values, line, method=interpolation_method)
+        dpdx_along_line = griddata((r_norm_values, x_norm_values), dpdx_values, line, method=interpolation_method)
+        
+        p_along_line = np.zeros(dpdr_along_line.shape[0])
+    
+        for i in range(1, dpdr_along_line.shape[0]):
+            
+            ds = cumulative_distances[i] - cumulative_distances[i-1]
+            dr = line_r[i] - line_r[i-1]
+            dx = line_x[i] - line_x[i-1]
+            
+            drds = dr/ds
+            dxds = dx/ds
+            
+            p_along_line[i] = p_along_line[i-1] + 0.5 * (dpdr_along_line[i] + dpdr_along_line[i-1]) * dr + 0.5 * (dpdx_along_line[i] + dpdx_along_line[i-1]) * dx
+        
+        dpds = np.gradient(p_along_line, cumulative_distances)
+        
+        ax1.plot(cumulative_distances, dpds, c=color, marker='None', ls='solid')
+        # ax1.plot(cumulative_distances[flame_front_index], p_along_line[flame_front_index], c=color, marker='*', ms=ms1, mec='k')
+        ax1.plot(cumulative_distances[0], dpds[0], color=color, marker='>', ls='None', mec='k', ms=ms4)
+        ax1.plot(cumulative_distances[-1], dpds[-1], color=color, marker='o', ls='None', mec='k', ms=ms5)
+        
+        export_data['cumulative_distances'].append(cumulative_distances.tolist())
+        export_data['p_along_line'].append(p_along_line.tolist())
+        
+        # Create an inset with zoomed-in plot
+        # ax1_inset.plot(cumulative_distances[0], p_along_line[0], color=color, marker='>', ls='None', mec='k', ms=ms4)
+        # ax1_inset.plot(cumulative_distances, p_along_line, c=color, marker='None', ls='solid')
+        
+    ax1.set_xlim(right=3)  # replace with your desired x limits
+    # ax1.set_ylim(y_lims)  # replace with your desired x limits
+    ax1.grid(True)
+    
+    ax1.tick_params(axis='both', labelsize=fontsize)
+    
+    # Set aspect ratio to 'auto' to avoid stretching
+    ax1.set_aspect('auto', adjustable='box')
+    
+    with open('dpds_along_line_nonreact.pkl', 'wb') as file:
+        pickle.dump(export_data, file)
+        
+def plot_intermittency_along_streamline(state, r_norm_values, x_norm_values, lines, flame_front_indices, colors):
     
     width, height = 9, 6
     fig, ax = plt.subplots(figsize=(width, height))
@@ -544,6 +671,217 @@ def plot_state_along_streamline(state, r_norm_values, x_norm_values, lines, flam
     
     # Set aspect ratio to 'auto' to avoid stretching
     ax.set_aspect('auto', adjustable='box')
+
+def plot_pressure_and_intermittency_along_streamline(dpdr, dpdx, state, r_norm_values, x_norm_values, lines, flame_front_indices, colors):
+    
+    with open('p_along_line_nonreact.pkl', 'rb') as file:
+        imported_data = pickle.load(file)
+        
+    width, height = 9, 6
+    fig1, ax1 = plt.subplots(figsize=(width, height))
+    
+    x_label = r'$s/D$'
+    y_label = r'$\overline{p^*} - \overline{p_{0}^*}$'
+    
+    styles_streamline = ['solid', 'dashed', 'dotted']
+    # colors = ['tab:red', 'tab:blue']
+    
+    ax1.set_xlabel(x_label, fontsize=24)
+    ax1.set_ylabel(y_label, fontsize=24)
+    
+    # Define the region of interest for zooming
+    ax1_x1, ax1_x2, ax1_y1, ax1_y2 = -.1, .5, -.01, .06  # for example, zoom in on this region
+
+    # Draw a rectangle or any other shape to indicate the zoom area
+    # ax1.add_patch(plt.Rectangle((ax1_x1, ax1_y1), ax1_x2 - ax1_x1, ax1_y2 - ax1_y1, fill=False, color='k', linestyle='solid', lw=2))
+    
+    # Define the ticks
+    num_ticks = 5
+    
+    right_ticks = np.linspace(0, 1, num_ticks)
+    
+    
+    if flame.Re_D == 3000:
+        left_ticks = np.linspace(-0.3, 0.1, num_ticks)
+        y_lims = [-.35, .125]
+        bbox_to_anchor=(ax1_x1 + 1.7 , ax1_y1 + .06, ax1_x2 - ax1_x1, ax1_y2 - ax1_y1)
+        width="225%"
+        height="225%"
+    elif flame.Re_D == 4000:
+        left_ticks = np.linspace(-0.3, 0.1, num_ticks)
+        y_lims = [-.35, .125]
+        bbox_to_anchor=(ax1_x1 + 1.7 , ax1_y1 + .06, ax1_x2 - ax1_x1, ax1_y2 - ax1_y1)
+        width="225%"
+        height="225%"
+    elif flame.Re_D == 12500:
+        left_ticks = np.linspace(-0.1, 0.1, num_ticks)
+        y_lims = [-.12, .1]
+        bbox_to_anchor=(ax1_x1 + 2., ax1_y1 + .05, ax1_x2 - ax1_x1, ax1_y2 - ax1_y1)
+        width="175%"
+        height="175%"
+    elif flame.Re_D == 16000:
+        left_ticks = np.linspace(-0.1, 0.1, num_ticks)
+        y_lims = [-.12, .1]
+        bbox_to_anchor=(ax1_x1 + 2., ax1_y1 + .05, ax1_x2 - ax1_x1, ax1_y2 - ax1_y1)
+        width="175%"
+        height="175%"
+    
+    # ax1_inset = inset_axes(ax1, width=width, height=height, loc='upper left',
+    #                    # bbox_to_anchor=(x1, y1, x2 - x1, y2 - y1),
+    #                    bbox_to_anchor=bbox_to_anchor,
+    #                   bbox_transform=ax1.transData,
+    #                   borderpad=0)
+    
+    # # Set the limits for the inset axes
+    # ax1_inset.set_xlim(ax1_x1, ax1_x2)
+    # ax1_inset.set_ylim(ax1_y1, ax1_y2)
+    
+    # ax1_inset.set_xticks([.0, .2, .4])
+    # ax1_inset.set_yticks([.0, .02, .04, .06])
+    
+    # ax_inset = fig1.add_axes([.575, .55, .3, .3]) # x, y, width, height (in figure coordinate)
+    
+    for j, (line, flame_front_index, style_streamline, color) in enumerate(zip(lines, flame_front_indices, styles_streamline, colors)):
+        
+        # color = colors[0]
+        
+        line_r, line_x = line[:,0], line[:,1]
+        
+        # Compute the distances between consecutive points on the line
+        distances = np.sqrt(np.sum(np.diff(line, axis=0)**2, axis=1))
+        
+        # Compute the cumulative distances along the line
+        cumulative_distances = np.concatenate(([0], np.cumsum(distances)))
+          
+        dpdr_values = dpdr.values.flatten()
+        dpdx_values = dpdx.values.flatten()
+        
+        dpdr_along_line = griddata((r_norm_values, x_norm_values), dpdr_values, line, method=interpolation_method)
+        dpdx_along_line = griddata((r_norm_values, x_norm_values), dpdx_values, line, method=interpolation_method)
+        
+        p_along_line = np.zeros(dpdr_along_line.shape[0])
+    
+        for i in range(1, dpdr_along_line.shape[0]):
+            
+            ds = cumulative_distances[i] - cumulative_distances[i-1]
+            dr = line_r[i] - line_r[i-1]
+            dx = line_x[i] - line_x[i-1]
+            
+            p_along_line[i] = p_along_line[i-1] + 0.5 * (dpdr_along_line[i] + dpdr_along_line[i-1]) * dr + 0.5 * (dpdx_along_line[i] + dpdx_along_line[i-1]) * dx
+            
+        ax1.plot(cumulative_distances, p_along_line, c=color, marker='None', ls='solid')
+        ax1.plot(cumulative_distances[flame_front_index], p_along_line[flame_front_index], c=color, marker='*', ms=ms1, mec='k')
+        ax1.plot(cumulative_distances[0], p_along_line[0], color=color, marker='>', ls='None', mec='k', ms=ms4)
+        ax1.plot(cumulative_distances[-1], p_along_line[-1], color=color, marker='o', ls='None', mec='k', ms=ms5)
+        
+        cumulative_distances = imported_data['cumulative_distances'][j]
+        p_nonreact_along_line = imported_data['p_along_line'][j]
+        
+        # ax1.plot(cumulative_distances[:], p_nonreact_along_line[:], c=color, ls='solid', marker='None')
+        # ax1.plot(cumulative_distances[0], p_nonreact_along_line[0], c=color, marker='>', ls='None', mec='k', ms=ms6)
+        # ax1.plot(cumulative_distances[-1], p_nonreact_along_line[-1], c=color, marker='o', ms=ms6, mec='k')
+        
+        # Create an inset with zoomed-in plot
+        # ax1_inset.plot(cumulative_distances[0], p_along_line[0], color=color, marker='>', ls='None', mec='k', ms=ms4)
+        # ax1_inset.plot(cumulative_distances, p_along_line, c=color, marker='None', ls=style_streamline)
+        # ax1_inset.tick_params('y', colors=color)
+        
+    ax1.set_xlim(right=2.5)  # replace with your desired x limits
+    ax1.set_ylim(y_lims)  # replace with your desired x limits
+    ax1.grid(True)
+    
+    ax1.tick_params(axis='both', labelsize=fontsize)
+    
+    # Set aspect ratio to 'auto' to avoid stretching
+    ax1.set_aspect('auto', adjustable='box')
+    # ax1.tick_params('y', colors=color)
+    
+    ax2 = ax1.twinx()
+    
+    y_label = r'flame intermittency $\gamma$'
+    
+    # ax2.set_xlabel(x_label, fontsize=24)
+    ax2.set_ylabel(y_label, fontsize=24)
+    
+    for line, flame_front_index, style_streamline, color in zip(lines, flame_front_indices, styles_streamline, colors):
+        
+        # color = colors[1]
+        
+        line_r, line_x = line[:,0], line[:,1]
+        
+        # Compute the distances between consecutive points on the line
+        distances = np.sqrt(np.sum(np.diff(line, axis=0)**2, axis=1))
+        
+        # Compute the cumulative distances along the line
+        cumulative_distances = np.concatenate(([0], np.cumsum(distances)))
+          
+        state_values = state.values.flatten()
+        
+        state_values = 1 - state_values
+        
+        state_along_line = griddata((r_norm_values, x_norm_values), state_values, line, method=interpolation_method)
+    
+        ax2.plot(cumulative_distances[:], state_along_line[:], color=color, ls='dashed', marker='None')
+        
+        # ax2.plot(cumulative_distances[flame_front_index], state_along_line[flame_front_index], c=color, marker='*', ms=ms1, mec='k')
+        ax2.plot(cumulative_distances[0], state_along_line[0], c=color, marker='>', ms=ms4, mec='k')
+        ax2.plot(cumulative_distances[-1], state_along_line[-1], c=color, marker='o', ms=ms5, mec='k')
+        
+        ax2.set_xlabel(x_label, fontsize=fontsize)
+        ax2.set_ylabel(y_label, fontsize=fontsize) 
+        
+    # ax.set_xlim()  # replace with your desired x limits
+    # ax.set_ylim()  # replace with your desired x limits
+    # ax2.grid(True)
+    
+    ax2.tick_params(axis='both', labelsize=fontsize)
+    
+    # Set aspect ratio to 'auto' to avoid stretching
+    # ax2.set_aspect('auto', adjustable='box')
+    
+    # ax2.tick_params('y', colors=colors[1])
+    
+    
+    # Set the ticks
+    ax1.set_yticks(left_ticks)
+    ax2.set_yticks(right_ticks)
+    
+    # Adjust the y-limits with some padding
+    left_padding = (left_ticks[-1] - left_ticks[0]) * 0.1  # 10% padding
+    right_padding = (right_ticks[-1] - right_ticks[0]) * 0.1  # 10% padding
+    
+    ax1.set_ylim(left_ticks[0] - left_padding, left_ticks[-1] + left_padding)
+    ax2.set_ylim(right_ticks[0] - right_padding, right_ticks[-1] + right_padding)
+    
+    
+    # # Add the arrow symbol with larger font size
+    # ax1.text(0.8, 0.6, r'$\uparrow$', fontsize=24, color='k',
+    #         transform=ax1.transAxes, ha='center')
+    
+    # # Add the text below the arrow symbol
+    # ax1.text(0.8, 0.6 - 0.055, 'non-reacting flow', fontsize=16, color='k',
+    #     transform=ax1.transAxes, ha='center')
+    
+    # # Add the text below the arrow symbol
+    # ax1.text(0.15, 0.9 , 'reacting flow', fontsize=16, color='k',
+    #     transform=ax1.transAxes, ha='center')
+    
+    # # Add the arrow symbol with larger font size
+    # ax1.text(0.15, 0.9 - 0.06, r'$\searrow$', fontsize=24, color='k',
+    #         transform=ax1.transAxes, ha='center')
+    
+    
+    
+    # Manually create virtual lines for legend
+    # virtual_line1 = plt.Line2D([0], [0], color='k', linestyle=styles_streamline[0], label=r'$r/D = 0.1$')
+    # virtual_line2 = plt.Line2D([0], [0], color='k', linestyle=styles_streamline[1], label=r'$r/D = 0.2$')
+    # virtual_line3 = plt.Line2D([0], [0], color='k', linestyle=styles_streamline[2], label=r'$r/D = 0.3$')
+    
+    # # Manually create the legend with virtual lines
+    # handles = [virtual_line1, virtual_line2, virtual_line3]
+    # labels = [line.get_label() for line in handles]
+    # ax1.legend(handles, labels, loc='lower left', prop={'size': 18})
+    
     
 #%%  FUNCTIONS [reacting_flow_fields.py]
 
@@ -636,10 +974,10 @@ def plot_pressure_along_streamline_old(ax1, ax2, dpdr, dpdx, r_norm_values, x_no
     
     if flame.Re_D == 4000:
         ax1.legend([lc_react, lc_nonreact], ['reacting', 'non reacting'], handler_map={type(lc_react): HandlerDashedLines()},
-                    handlelength=3, handleheight=3, loc='upper left', prop={'size': 16}, bbox_to_anchor=(.45, .65))
+                    handlelength=3, handleheight=3, loc='upper left', prop={'size': fontsize_legend}, bbox_to_anchor=(.45, .65))
     elif flame.Re_D == 16000:
         ax1.legend([lc_react, lc_nonreact], ['reacting', 'non reacting'], handler_map={type(lc_react): HandlerDashedLines()},
-                        handlelength=3, handleheight=3, loc='upper left', prop={'size': 16}, bbox_to_anchor=(.45, 1.))
+                        handlelength=3, handleheight=3, loc='upper left', prop={'size': fontsize_legend}, bbox_to_anchor=(.45, 1.))
         
     ax2.legend([lc_react, lc_nonreact], ['reacting', 'non reacting'], handler_map={type(lc_react): HandlerDashedLines()},
                handlelength=3, handleheight=3)
