@@ -551,20 +551,20 @@ if __name__ == "__main__":
     # S_L0_lib = create_library(filename)    
     
     filename = 'S_L0_lib5'
-    S_L0_lib = plot_phi_vs_S_L0(filename)
-    # # S_L0_lib = plot_phi_vs_T_ad(filename)
+    # S_L0_lib = plot_phi_vs_S_L0(filename)
+    S_L0_lib = plot_phi_vs_T_ad(filename)
     
     # Get a list of all currently opened figures
     figure_ids = plt.get_fignums()
 
-    # Apply tight_layout to each figure
-    for fid in figure_ids:
-        fig = plt.figure(fid)
-        # fig.tight_layout()
-        fig.savefig(f"figures/S_L0_phi_fig{fid}_{filename}.eps", format="eps", dpi=300, bbox_inches="tight")
-        fig.savefig(f"figures/S_L0_phi_fig{fid}_{filename}.svg", format="svg", dpi=300, bbox_inches="tight")
+    # # Apply tight_layout to each figure
+    # for fid in figure_ids:
+    #     fig = plt.figure(fid)
+    #     # fig.tight_layout()
+    #     fig.savefig(f"figures/S_L0_phi_fig{fid}_{filename}.eps", format="eps", dpi=300, bbox_inches="tight")
+    #     fig.savefig(f"figures/S_L0_phi_fig{fid}_{filename}.svg", format="svg", dpi=300, bbox_inches="tight")
         
-    # # Equivalence ratios    
+    # # # Equivalence ratios    
     # phis = [1] # Set equivalence ratios ranging from 0.4 to 0.8
     
     # # Hydrogen percentages by volume of fuel

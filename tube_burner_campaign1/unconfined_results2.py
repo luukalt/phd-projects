@@ -87,6 +87,7 @@ S_L0_lists = [[] for i in range(n)]
 S_u_maxgradT_lists = [[] for i in range(n)]
 u_flux_max_lists = [[] for i in range(n)]
 u_tau_lists = [[] for i in range(n)]
+turbulent_intensity_lists = [[] for i in range(n)]
 
 check_label = ""
 check_key = ""
@@ -128,11 +129,15 @@ for key, values in flashback_quartz_data.items():
         # at y+ = 16.4
         u_fluc_max = 1.5*u_tau
         
+        turbulent_intensity = U_bulk*0.16*Re_D**(-1/8)
+        
         phi_lists[index] = np.append(phi_lists[index], phi)
         U_bulk_lists[index] = np.append(U_bulk_lists[index], U_bulk)
         Re_D_lists[index] = np.append(Re_D_lists[index], Re_D)
         u_flux_max_lists[index] = np.append(u_flux_max_lists[index], u_fluc_max)
         u_tau_lists[index] = np.append(u_tau_lists[index], u_tau)
+        turbulent_intensity_lists[index] = np.append(turbulent_intensity_lists[index], turbulent_intensity)
+        
         
         check_label = index
         check_key = key
@@ -193,9 +198,10 @@ for i in range(n):
         S_L0_test = S_L0_lists[i][j]
         S_u_maxgradT_test = S_u_maxgradT_lists[i][j]
         u_fluc = u_flux_max_lists[i][j]
+        turbulent_intensity = turbulent_intensity_lists[i][j]
         
         ax1.plot(phi_test, U_bulk_test, ls=linestyle,  marker=markers[i], ms=markersize[i], mec='k', mfc=colors[i], label=labels[i] if i != check_label else "")
-        ax2.plot(phi_test, U_bulk_test/S_L0_test, ls=linestyle,  marker=markers[i], ms=markersize[i], mec='k', mfc=colors[i], label=labels[i] if i != check_label else "")
+        ax2.plot(phi_test, U_bulk_test/(S_L0_test*1), ls=linestyle,  marker=markers[i], ms=markersize[i], mec='k', mfc=colors[i], label=labels[i] if i != check_label else "")
         ax3.plot(phi_test, Re_D_test, ls=linestyle,  marker=markers[i], ms=markersize[i], mec='k', mfc=colors[i], label=labels[i] if i != check_label else "")
         ax4.plot(phi_test, S_L0_test, ls=linestyle,  marker=markers[i], ms=markersize[i], mec='k', mfc=colors[i], label=labels[i] if i != check_label else "")
         ax5.plot(phi_test, U_bulk_test/S_u_maxgradT_test, ls=linestyle,  marker=markers[i], ms=markersize[i], mec='k', mfc=colors[i], label=labels[i] if i != check_label else "")
@@ -254,8 +260,8 @@ p_u = 101325
 ax1.set_xlim(0.35, 1.05)
 ax1.set_ylim(0, 25)
 
-ax2.set_xlim(0.35, 1.05)
-ax2.set_ylim(0, 40)
+# ax2.set_xlim(0.35, 1.05)
+# ax2.set_ylim(0, 40)
 
 num_ticks = 6
 custom_y_ticks = np.linspace(0, 40, num_ticks) # Replace with your desired tick positions
@@ -305,15 +311,15 @@ ax4.set_position([0.1, 0.1, 0.8, 0.8])  # Set the position of the axis in the fi
 ax5.set_position([0.1, 0.1, 0.8, 0.8])  # Set the position of the axis in the figure (left, bottom, width, height)
 
 
-# Get a list of all currently opened figures
-figure_ids = plt.get_fignums()
+# # Get a list of all currently opened figures
+# figure_ids = plt.get_fignums()
 
-# Adjust the padding between and around subplots
-for fid in figure_ids:
-    fig = plt.figure(fid)
-    # fig.tight_layout()
-    fig.savefig(f"figures/fb_maps_fig{fid}_{filename}.eps", format="eps", dpi=dpi, bbox_inches="tight")
-    fig.savefig(f"figures/fb_maps_fig{fid}_{filename}.svg", format="svg", dpi=dpi, bbox_inches="tight")
+# # Adjust the padding between and around subplots
+# for fid in figure_ids:
+#     fig = plt.figure(fid)
+#     # fig.tight_layout()
+#     fig.savefig(f"figures/fb_maps_fig{fid}_{filename}.eps", format="eps", dpi=dpi, bbox_inches="tight")
+#     fig.savefig(f"figures/fb_maps_fig{fid}_{filename}.svg", format="svg", dpi=dpi, bbox_inches="tight")
 
 
 
