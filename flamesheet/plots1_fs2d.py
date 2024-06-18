@@ -274,8 +274,8 @@ def plot_profile_in_field(fig, ax, coord0_mm, coord1_mm, color, num):
     profile_line = np.insert(cumulative_distances, 0, 0)
     
     # Extract the values along the line, using first, second or third order interpolation
-    # profile_line = profile_line[1:-1]
-    # profile_coords = profile_coords[1:-1]
+    profile_line = profile_line[1:-1]
+    profile_coords = profile_coords[1:-1]
     
     ax.plot(profile_coords[:, 0], profile_coords[:, 1], c=color, ls='solid')
     

@@ -21,7 +21,7 @@ class frame:
     def __init__(self, flame, frame_nr):
         
         cwd = os.getcwd()
-        pre_data_path = os.path.join(cwd, flame.pre_data_folder, flame.name, f'session_{flame.session_nr:03}' , flame.record_name, 'Correction', 'Resize', f'Frame{frame_nr}_above1u2', 'Export_01')
+        pre_data_path = os.path.join(cwd, flame.pre_data_folder, flame.name, f'session_{flame.session_nr:03}' , flame.record_name, 'Correction', 'Resize', f'Frame{frame_nr}', 'Export_01')
         post_data_path = os.path.join(cwd, flame.post_data_folder, flame.name, f'session_{flame.session_nr:03}', f'{flame.record_name}_Frame{frame_nr}')
 
         # Create a new directory because it does not exist 

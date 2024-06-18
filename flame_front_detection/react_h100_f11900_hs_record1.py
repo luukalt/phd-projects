@@ -20,25 +20,25 @@ plt.close('all')
 print('Batch Job Running!')
 
 #%% FLAME INFO
-name = 'react_h0_s4000_ls_record1'
-T_lab = 273.15 + 24.7                                           # units: K   
-p_lab = 102.19e3                                                # units: Pa
+name = 'react_h100_f11900_hs_record1'
+T_lab = 273.15 + 20.9                                           # units: K   
+p_lab = 101.37e3                                                # units: Pa
 D_in = 25.16                                                    # units: mm
 Q_air_nL = None                                                 # units: nL.min^{-1}
 Q_fuel_nL = None                                                # units: nL.min^{-1}
-phi = 1.0                                                       # units: -
-H2_percentage = 0                                               # units: %
-Re_D = 4000
-u_bulk_measured = 2.49                                          # units: m.s^{-1} 
-run_nr = 17
-session_nr = 2                                                    
-record_name = 'Recording_Date=230621_Time=171323_01'            
-frame_nrs = [0, 1]                                              
-scale = 15.12                                                   # units: pixels.mm^{-1}
-start_image = 1                                                 
-n_images = 2500                                                    
-image_rate = 50                                               # units: Hz
-dt = 250                                                        # units: mu.s
+phi = 0.49                                                      # units: -
+H2_percentage = 100                                             # units: %
+Re_D = 11900
+u_bulk_measured = 8.6                                         # units: m.s^{-1}
+run_nr = 93
+session_nr = 9                                                    
+record_name = 'Recording_Date=231023_Time=161359_01'            
+frame_nrs = [0]                                              
+scale = 15.1273                                                   # units: pixels.mm^{-1}
+start_image = 75                                                 
+n_images = 15                                                    
+image_rate = 6250                                               # units: Hz
+dt = 60                                                         # units: mu.s
 get_contour_procedure_nr = 2                                    
 segment_length_mm = 1                                           # units: mm
 window_size = int(np.ceil(2*scale) // 2 * 2 + 1)                # Get closest odd number units: pixels

@@ -2,6 +2,8 @@ spydata/
 
 flame_front_detection/__pycache__
 flame_front_detection/figures/
+flame_front_detection/pre_data/
+flame_front_detection/post_data/
 
 flame_simulations/__pycache__
 flame_simulations/figures/

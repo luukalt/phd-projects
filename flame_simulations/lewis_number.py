@@ -33,6 +33,7 @@ def plot_quantity_vs_phi(filename, n=6):
 
     phi_lists = [[] for i in range(n)]
     H2_percentage_lists = [[] for i in range(n)]
+    S_L0_lists = [[] for i in range(n)]
     Le_binary_V_lists = [[] for i in range(n)]
     DiN2_DjN2_V_lists = [[] for i in range(n)]
     
@@ -50,15 +51,24 @@ def plot_quantity_vs_phi(filename, n=6):
         index = mixture['index']
         phi = mixture['phi']
         H2_percentage = mixture['H2%']
+        S_L0 = mixture['S_L0']
         Le_binary_V = mixture['Le_binary_V']
         DiN2_DjN2_V = mixture['DiN2_DjN2_V']
         
         phi_lists[index] = np.append(phi_lists[index], phi)
         H2_percentage_lists[index] = np.append(H2_percentage_lists[index], H2_percentage)
+        S_L0_lists[index] = np.append(S_L0_lists[index], S_L0)
         Le_binary_V_lists[index] = np.append(Le_binary_V_lists[index], Le_binary_V)
         DiN2_DjN2_V_lists[index] = np.append(DiN2_DjN2_V_lists[index], DiN2_DjN2_V)
         
-        ax.plot(phi, DiN2_DjN2_V, ls=linestyle, marker=markers[index], ms=markersize, mec="k", mfc=colors[index], label=labels[index] if index != check_label else "", zorder=10)
+        c1 = (5/3)*phi + (5/3)
+        c2 = (5/3)*phi - (2/3)
+        
+        c1 = 1
+        c2 = 1
+        
+        ax.plot(phi, 1/(DiN2_DjN2_V**c2/Le_binary_V**c1), ls=linestyle, marker=markers[index], ms=markersize, mec="k", mfc=colors[index], label=labels[index] if index != check_label else "", zorder=10)
+        # ax.plot(phi, Le_binary_V, ls=linestyle, marker=markers[index], ms=markersize, mec="k", mfc=colors[index], label=labels[index] if index != check_label else "", zorder=10)
         
         check_label = index
 

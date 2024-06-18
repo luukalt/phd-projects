@@ -564,8 +564,8 @@ if __name__ == '__main__':
     dpdx = mom_x[2] 
     dpdr = mom_r[2]
     
-    # r_starts = [.1, .2, .3]
-    r_starts = [.2]
+    r_starts = [.1, .2, .3,]
+    # r_starts = [.2]
     x_starts = np.linspace(0.2, 0.2, len(r_starts))
     start_points = [(r_starts[i], x_starts[i]) for i in range(len(r_starts))]
     
@@ -576,7 +576,7 @@ if __name__ == '__main__':
     #%%% Plots
     # plot_mass_cons(mass_cons, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
     plot_fans_terms(mass_cons, mom_x, mom_r, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
-    # plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
+    plot_pressure_along_streamline(dpdr, dpdx, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
     # plot_intermittency_along_streamline(pivot_state, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
     
     # plot_pressure_and_intermittency_along_streamline(dpdr, dpdx, pivot_state, r_norm_values, x_norm_values, streamlines, flame_front_indices, colors)
@@ -709,59 +709,59 @@ if __name__ == '__main__':
     
     # %%% Save images
     # Get a list of all currently opened figures
-    figure_ids = plt.get_fignums()
-    figure_ids = [12, 13]
+    # figure_ids = plt.get_fignums()
+    # figure_ids = [12, 13]
     
-    if 'ls' in flame.name:
-        folder = 'ls'
-    else:
-        folder = 'hs'
+    # if 'ls' in flame.name:
+    #     folder = 'ls'
+    # else:
+    #     folder = 'hs'
     
-    figures_subfolder = os.path.join(figures_folder, folder)
-    if not os.path.exists(figures_subfolder):
-            os.makedirs(figures_subfolder)
+    # figures_subfolder = os.path.join(figures_folder, folder)
+    # if not os.path.exists(figures_subfolder):
+    #         os.makedirs(figures_subfolder)
     
-    pickles_subfolder = os.path.join(pickles_folder, folder)
-    if not os.path.exists(pickles_subfolder):
-            os.makedirs(pickles_subfolder)
+    # pickles_subfolder = os.path.join(pickles_folder, folder)
+    # if not os.path.exists(pickles_subfolder):
+    #         os.makedirs(pickles_subfolder)
 
-    # Apply tight_layout to each figure
-    for fid in figure_ids:
-        fig = plt.figure(fid)
-        filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
+    # # Apply tight_layout to each figure
+    # for fid in figure_ids:
+    #     fig = plt.figure(fid)
+    #     filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
         
-        # Get the current width and height of the figure
-        current_width, current_height = fig.get_size_inches()
+    #     # Get the current width and height of the figure
+    #     current_width, current_height = fig.get_size_inches()
         
-        print("Current Width:", current_width)
-        print("Current Height:", current_height)
+    #     print("Current Width:", current_width)
+    #     print("Current Height:", current_height)
 
-        # Constructing the paths
-        if fid == 100:
+    #     # Constructing the paths
+    #     if fid == 100:
             
-            png_path = os.path.join('figures', f'{folder}', f"{filename}.png")
-            pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
+    #         png_path = os.path.join('figures', f'{folder}', f"{filename}.png")
+    #         pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
             
-            # Saving the figure in EPS format
-            fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
+    #         # Saving the figure in EPS format
+    #         fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
             
-        else:
+    #     else:
             
-            eps_path = os.path.join('figures', f'{folder}', f"{filename}.eps")
-            pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
+    #         eps_path = os.path.join('figures', f'{folder}', f"{filename}.eps")
+    #         pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
             
-            # Saving the figure in EPS format
-            fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+    #         # Saving the figure in EPS format
+    #         fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
             
-            # Get the current width and height of the figure
-            current_width, current_height = fig.get_size_inches()
+    #         # Get the current width and height of the figure
+    #         current_width, current_height = fig.get_size_inches()
             
-            print("Current Width:", current_width)
-            print("Current Height:", current_height)
+    #         print("Current Width:", current_width)
+    #         print("Current Height:", current_height)
         
-        # Pickling the figure
-        with open(pkl_path, 'wb') as f:
-            pickle.dump(fig, f)
+    #     # Pickling the figure
+    #     with open(pkl_path, 'wb') as f:
+    #         pickle.dump(fig, f)
             
     
     

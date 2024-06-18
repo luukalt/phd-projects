@@ -1586,51 +1586,101 @@ def plot_cartoons(flame, image_nrs, recording, piv_method, D_in, offset_to_wall_
     #         bbox=dict(facecolor="w", edgecolor='k', boxstyle='round')
     #         )
 
-   
-# def contour_correction(flame, contour_nr, r_left_raw, r_right_raw, x_bottom_raw, x_top_raw, window_size_r_raw, window_size_x_raw, frame_nr=0):
-    
-#     segmented_contour =  flame.frames[frame_nr].contour_data.segmented_contours[contour_nr]
-    
-#     segmented_contour_r = segmented_contour[:, 0, 0]
-#     segmented_contour_x = segmented_contour[:, 0, 1]
-    
-#     # x and y coordinates of the discretized (segmented) flame front 
-#     contour_r_corrected = segmented_contour_r*window_size_r_raw + r_left_raw
-#     contour_x_corrected = segmented_contour_x*window_size_x_raw + x_top_raw
-    
-#     # Non-dimensionalize coordinates by pipe diameter
-#     contour_r_corrected /= 1 #D_in
-#     contour_x_corrected /= 1 #D_in
-    
-#     contour_r_corrected_array = np.array(contour_r_corrected)
-#     contour_x_corrected_array = np.array(contour_x_corrected)
-    
-#     # Combine the x and y coordinates into a single array of shape (n_coords, 2)
-#     contour_corrected_coords = np.array([contour_r_corrected_array, contour_x_corrected_array]).T
 
-#     # Create a new array of shape (n_coords, 1, 2) and assign the coordinates to it
-#     contour_corrected = np.zeros((len(contour_r_corrected_array), 1, 2))
-#     contour_corrected[:, 0, :] = contour_corrected_coords
+def plot_cartoons_flashback(flame, ax, image_nrs, image_nr, recording, D_in, offset_to_wall_center, offset):
     
-#     return contour_corrected    
+    # Non-dimensional limits in r- (left, right) and x-direction (bottom, top)
+    bottom_limit = -100
+    top_limit = 100
+    left_limit = -100
+    right_limit = 100
+    index_name = 'y_shift_norm'
+    column_name = 'x_shift_norm'
+    
+    brighten_factor = 16
+    
+    # Raw Mie-scattering directory
+    raw_dir = os.path.join(data_dir,  f'session_{flame.session_nr:03d}', flame.record_name, 'Correction', 'Frame0', 'Export')
+    raw_file = os.path.join(raw_dir, f'B{image_nr:04d}.csv')
+    
+    # Read the raw Mie-scattering image and add coordinate system translation
+    df_raw = pd.read_csv(raw_file)
+    df_raw = process_df(df_raw, D_in, offset_to_wall_center, offset)
+    
+    # Get the column headers of the raw Mie-scattering image file
+    headers_raw = df_raw.columns
+    
+    # Cropped raw Mie-scattering image based on Non-dimensional limits in r- (left, right) and x-direction (bottom, top)
+    df_raw_filtered = df_raw[(df_raw[index_name] > bottom_limit) & (df_raw[index_name] < top_limit) & (df_raw[column_name] > left_limit) & (df_raw[column_name] < right_limit)]
+    
+    # Obtain intensity field
+    pivot_intensity = pd.pivot_table(df_raw_filtered, values=headers_raw[2], index=index_name, columns=column_name)
+    
+    # Create r,x raw Mie scattering grid
+    r_raw_array = pivot_intensity.columns
+    x_raw_array = pivot_intensity.index
+    r_raw, x_raw = np.meshgrid(r_raw_array, x_raw_array)
+    n_windows_r_raw, n_windows_x_raw = len(r_raw_array), len(x_raw_array)
+    window_size_r_raw, window_size_x_raw = np.mean(np.diff(r_raw_array)), -np.mean(np.diff(x_raw_array))
+    
+    # Parameters for correcting contours from pixel coordinates to physical coordinates
+    r_left_raw = r_raw_array[0]
+    r_right_raw = r_raw_array[-1]
+    x_bottom_raw = x_raw_array[0]
+    x_top_raw = x_raw_array[-1]
+    
+    # Contour correction (raw -> world)
+    # contour_nr = image_nr - 1
+    contour_nr = image_nr - flame.start_image
+    
+    contour_corrected = contour_correction(flame, contour_nr, r_left_raw, r_right_raw, x_bottom_raw, x_top_raw, window_size_r_raw, window_size_x_raw, frame_nr=0)
+    contour_x, contour_y =  contour_corrected[:,0,0], contour_corrected[:,0,1]
 
-# def process_df(df, D_in, offset_to_wall_center, offset):
-#     """
-#     Process the DataFrame by shifting and normalizing coordinates.
+    
+    pivot_intensity_values = pivot_intensity.values
+    raw_field = ax.pcolor(r_raw, x_raw, pivot_intensity_values, cmap='gray', 
+                           vmin=np.min(pivot_intensity_values.flatten())/brighten_factor, 
+                           vmax=np.max(pivot_intensity_values.flatten())/brighten_factor
+                           )
+    
+    # raw_field.set_clim(1.25, 3)
+    
+    # cbar = ax2.figure.colorbar(raw_field)
+    # cbar.set_label(r'$I_p$', rotation=0, labelpad=15, fontsize=fontsize)
+        
+    # Figure 2: Plot flame front contour
+    ax.plot(contour_x, contour_y, color='r', ls='solid', lw=2)
+        
+    # Set labels for both figures
+    ax.set_xlabel(r'$r/D$', fontsize=fontsize)
+    ax.set_ylabel(r'$x/D$', fontsize=fontsize)
+    ax.tick_params(axis='both', labelsize=fontsize)
+    ax.set_aspect('equal')
+    
+    # custom_x_tick_labels =  [f'{tick:.1f}' for tick in custom_x_ticks] # Replace with your desired tick labels
+    
+    # y_tick_step = .1
+    # custom_y_ticks = np.linspace(y_bottom_zoom, y_top_zoom, 1 + int((y_top_zoom - y_bottom_zoom)/y_tick_step)) # Replace with your desired tick positions
+    # custom_y_tick_labels =  [f'{tick:.1f}' for tick in custom_y_ticks] # Replace with your desired tick labels
+    
 
-#     :param df: DataFrame to process.
-#     :param D_in: Diameter for normalization.
-#     :param offset_to_wall_center: Offset for x-coordinate shifting.
-#     :param offset: Offset for y-coordinate shifting.
-#     :return: Processed DataFrame.
-#     """
-#     df['x_shift [mm]'] = df['x [mm]'] - (D_in/2 - offset_to_wall_center)
-#     df['y_shift [mm]'] = df['y [mm]'] + offset
+    # ax.set_xticks(custom_x_ticks)
+    # ax.set_xticklabels(custom_x_tick_labels)  # Use this line to set custom tick labels
+    # ax.set_yticks(custom_y_ticks)
+    # ax.set_yticklabels(custom_y_tick_labels)  # Use this line to set custom tick labels
 
-#     df['x_shift_norm'] = df['x_shift [mm]']/D_in
-#     df['y_shift_norm'] = df['y_shift [mm]']/D_in
+    # Add textbox with timestamp
+    left, width = .2, .7
+    bottom, height = .25, .7
+    right = left + width
+    top = bottom + height
+    
+    timestamp = (image_nr - image_nrs[0])*(1e3/flame.image_rate)
+    ax.text(right, top,  r'$t = {:.2f}$ ms'.format(timestamp), 
+            horizontalalignment='right',
+            verticalalignment='top',
+            transform=ax.transAxes,
+            fontsize=fontsize,
+            bbox=dict(facecolor="w", edgecolor='k', boxstyle='round')
+            )
 
-#     df['x_shift [m]'] = df['x_shift [mm]']*1e-3
-#     df['y_shift [m]'] = df['y_shift [mm]']*1e-3
-
-#     return df

@@ -154,29 +154,29 @@ def get_contour_procedure_bilateral_filter_method(window_size, pre_data_path, po
     
     if toggle_plot:
         
-        fig, axs = plt.subplots(1, 3, figsize=(10, 6))
-        plt.subplots_adjust(wspace=-.3)
-        plot_images(axs, img_raw, img_bilateral, brighten_factor, contour, color)
+        # fig, axs = plt.subplots(1, 3, figsize=(10, 6))
+        # plt.subplots_adjust(wspace=-.3)
+        # plot_images(axs, img_raw, img_bilateral, brighten_factor, contour, color)
         
-        fig.tight_layout()
-        filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_detection_B{image_nr}'
-        eps_path = os.path.join('figures', f"{filename}.eps")
-        fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+        # fig.tight_layout()
+        # filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_detection_B{image_nr}'
+        # eps_path = os.path.join('figures', f"{filename}.eps")
+        # fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
         
-        toggle_contour = False
+        # toggle_contour = False
         # title = 'raw image (\#' + str(image_nr) + ')'
-        title = ''
-        plot_image(title, img_raw, brighten_factor, contour, toggle_contour, color)
+        # title = ''
+        # plot_image(title, img_raw, brighten_factor, contour, toggle_contour, color)
         
         # title = 'Bilateral filtered image (\#' + str(image_nr) + ')'
-        toggle_contour = False
-        title = ''
-        plot_image(title, img_bilateral, brighten_factor, contour, toggle_contour, color)
+        # toggle_contour = False
+        # title = ''
+        # plot_image(title, img_bilateral, brighten_factor, contour, toggle_contour, color)
         
-        toggle_contour = True
+        # toggle_contour = True
         # title = 'raw image (\#' + str(image_nr) + ')' + ' with contour'
         title = ''
-        plot_image(title , img_raw, brighten_factor, contour, toggle_contour, color)
+        # plot_image(title , img_raw, brighten_factor, contour, toggle_contour, color)
         
     #%% [8] Save images with contour drawn into the raw image
     if save_image:
@@ -226,13 +226,13 @@ def get_contour_procedure_bilateral_filter_method2(window_size, pre_data_path, p
     
     if toggle_plot:
         
-        fig, axs = plt.subplots(1, 3, figsize=(10, 6))
+        # fig, axs = plt.subplots(1, 3, figsize=(10, 6))
         
-        plot_images(axs, img_raw, img_bilateral, brighten_factor, contour, color)
+        # plot_images(axs, img_raw, img_bilateral, brighten_factor, contour, color)
         
-        fig.tight_layout()
-        filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_detection_B{image_nr}'
-        eps_path = os.path.join('figures', f"{filename}.eps")
+        # fig.tight_layout()
+        # filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_detection_B{image_nr}'
+        # eps_path = os.path.join('figures', f"{filename}.eps")
         # fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
         
         toggle_contour = False
@@ -307,7 +307,7 @@ def get_thresholding_value(image, toggle_plot):
     
     min_probability_index = np.argmin(probability_range)
     
-    toggle_plot = True
+    toggle_plot = False
     
     if toggle_plot:
         
@@ -340,9 +340,9 @@ def get_thresholding_value(image, toggle_plot):
         ax.legend(loc='best', prop={'size': 16})
         
         fig.tight_layout()
-        filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_histogram_B{image_nr}'
-        eps_path = os.path.join('figures', f"{filename}.eps")
-        fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+        # filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_histogram_B{image_nr}'
+        # eps_path = os.path.join('figures', f"{filename}.eps")
+        # fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
         
     # Determine threshold pixel density (separating unburnt and burnt side) [value corresponding to minimum probability]
     threshold = quantity_range[min_probability_index]
@@ -512,102 +512,102 @@ def plot_image(title, image, brighten_factor, contour, toggle_contour, color):
     ax.set_xlabel('pixels', fontsize=fontsize)
     ax.set_ylabel('pixels', fontsize=fontsize)
     
-    segmented_contour_x, segmented_contour_y, segmented_contour = contour_segmentation(contour, flame.segment_length_pixels)
+    # segmented_contour_x, segmented_contour_y, segmented_contour = contour_segmentation(contour, flame.segment_length_pixels)
     
     if toggle_contour:
         contour_x = contour[:,:,0]
         contour_y = contour[:,:,1]
         ax.plot(contour_x, contour_y, color, lw=4)
     
-    if toggle_contour:
+    # if toggle_contour:
         
-        contour_x = segmented_contour[:,:,0]
-        contour_y = segmented_contour[:,:,1]
+    #     # contour_x = segmented_contour[:,:,0]
+    #     # contour_y = segmented_contour[:,:,1]
         
-        ax.plot(contour_x, contour_y, c='y', marker='o', ms=10, ls='solid', lw=2)
+    #     ax.plot(contour_x, contour_y, c='y', marker='o', ms=10, ls='solid', lw=2)
         
-        lw = 3
-        segment_nr = 95
-        color = 'magenta'
-        ax.plot(contour_x[segment_nr:segment_nr + 2], contour_y[segment_nr:segment_nr + 2], c=color, marker='o', ms=10, ls='solid', lw=2)
+    #     lw = 3
+    #     segment_nr = 95
+    #     color = 'magenta'
+    #     ax.plot(contour_x[segment_nr:segment_nr + 2], contour_y[segment_nr:segment_nr + 2], c=color, marker='o', ms=10, ls='solid', lw=2)
         
-        # Calculate the direction vector of the line segment
-        start_x, start_y = contour_x[segment_nr], contour_y[segment_nr]
-        dx = contour_x[segment_nr + 1] - start_x
-        dy = contour_y[segment_nr + 1] - start_y
+    #     # Calculate the direction vector of the line segment
+    #     start_x, start_y = contour_x[segment_nr], contour_y[segment_nr]
+    #     dx = contour_x[segment_nr + 1] - start_x
+    #     dy = contour_y[segment_nr + 1] - start_y
         
-        # Define the length of the line to draw
-        length = 40
+    #     # Define the length of the line to draw
+    #     length = 40
         
-        # Calculate the coordinates of the new point
-        end_x1 = start_x + (dx / np.sqrt(dx**2 + dy**2)) * length
-        end_y1 = start_y + (dy / np.sqrt(dx**2 + dy**2)) * length
+    #     # Calculate the coordinates of the new point
+    #     end_x1 = start_x + (dx / np.sqrt(dx**2 + dy**2)) * length
+    #     end_y1 = start_y + (dy / np.sqrt(dx**2 + dy**2)) * length
         
-        end_x2 = start_x - (dx / np.sqrt(dx**2 + dy**2)) * length
-        end_y2 = start_y - (dy / np.sqrt(dx**2 + dy**2)) * length
+    #     end_x2 = start_x - (dx / np.sqrt(dx**2 + dy**2)) * length
+    #     end_y2 = start_y - (dy / np.sqrt(dx**2 + dy**2)) * length
         
-        copy_length1 = np.abs(end_y1 - contour_y[segment_nr + 1])
-        copy_length2 = np.abs(end_y2 - contour_y[segment_nr + 1])
+    #     copy_length1 = np.abs(end_y1 - contour_y[segment_nr + 1])
+    #     copy_length2 = np.abs(end_y2 - contour_y[segment_nr + 1])
         
-        # Plot the new point
-        ax.plot([start_x, end_x1], [start_y, end_y1], ls='dashed', color=color, lw=lw)  # Adjust marker and color as needed
-        ax.plot([start_x, end_x2], [start_y, end_y2], ls='solid', color=color, lw=lw)  # Adjust marker and color as needed
+    #     # Plot the new point
+    #     ax.plot([start_x, end_x1], [start_y, end_y1], ls='dashed', color=color, lw=lw)  # Adjust marker and color as needed
+    #     ax.plot([start_x, end_x2], [start_y, end_y2], ls='solid', color=color, lw=lw)  # Adjust marker and color as needed
         
-        ax.vlines(x=contour_x[segment_nr + 1], ymin=contour_y[segment_nr + 1], ymax=end_y1, colors=color, linestyles='dashed', lw=lw)
-        ax.vlines(x=contour_x[segment_nr + 1], ymin=contour_y[segment_nr + 1] - copy_length2, ymax=contour_y[segment_nr + 1], colors=color, linestyles='solid', lw=lw)
+    #     ax.vlines(x=contour_x[segment_nr + 1], ymin=contour_y[segment_nr + 1], ymax=end_y1, colors=color, linestyles='dashed', lw=lw)
+    #     ax.vlines(x=contour_x[segment_nr + 1], ymin=contour_y[segment_nr + 1] - copy_length2, ymax=contour_y[segment_nr + 1], colors=color, linestyles='solid', lw=lw)
         
-        # Add text relative to the axes
-        ax.text(.52, .9, r'$\theta < 0$', fontsize=16, ha='center', color=color, transform=ax.transAxes, bbox=dict(facecolor="w", edgecolor='k', boxstyle='round'))
+    #     # Add text relative to the axes
+    #     ax.text(.52, .9, r'$\theta < 0$', fontsize=16, ha='center', color=color, transform=ax.transAxes, bbox=dict(facecolor="w", edgecolor='k', boxstyle='round'))
 
         
-        segment_nr = 101
-        color = 'magenta'
-        ax.plot(contour_x[segment_nr:segment_nr + 2], contour_y[segment_nr:segment_nr + 2], c=color, marker='o', ms=10, ls='solid', lw=2)
+    #     segment_nr = 101
+    #     color = 'magenta'
+    #     ax.plot(contour_x[segment_nr:segment_nr + 2], contour_y[segment_nr:segment_nr + 2], c=color, marker='o', ms=10, ls='solid', lw=2)
         
-        # Calculate the direction vector of the line segment
-        start_x, start_y = contour_x[segment_nr + 1], contour_y[segment_nr + 1]
-        dx = start_x - contour_x[segment_nr]
-        dy = start_y - contour_y[segment_nr]
+    #     # Calculate the direction vector of the line segment
+    #     start_x, start_y = contour_x[segment_nr + 1], contour_y[segment_nr + 1]
+    #     dx = start_x - contour_x[segment_nr]
+    #     dy = start_y - contour_y[segment_nr]
         
-        # Define the length of the line to draw
-        length = 40
+    #     # Define the length of the line to draw
+    #     length = 40
         
-        # Calculate the coordinates of the new point
-        end_x1 = start_x + (dx / np.sqrt(dx**2 + dy**2)) * length
-        end_y1 = start_y + (dy / np.sqrt(dx**2 + dy**2)) * length
+    #     # Calculate the coordinates of the new point
+    #     end_x1 = start_x + (dx / np.sqrt(dx**2 + dy**2)) * length
+    #     end_y1 = start_y + (dy / np.sqrt(dx**2 + dy**2)) * length
         
-        end_x2 = start_x - (dx / np.sqrt(dx**2 + dy**2)) * length
-        end_y2 = start_y - (dy / np.sqrt(dx**2 + dy**2)) * length
+    #     end_x2 = start_x - (dx / np.sqrt(dx**2 + dy**2)) * length
+    #     end_y2 = start_y - (dy / np.sqrt(dx**2 + dy**2)) * length
         
-        copy_length1 = np.abs(end_y1 - contour_y[segment_nr + 1])
-        copy_length2 = np.abs(end_y2 - contour_y[segment_nr + 1])
+    #     copy_length1 = np.abs(end_y1 - contour_y[segment_nr + 1])
+    #     copy_length2 = np.abs(end_y2 - contour_y[segment_nr + 1])
         
-        # Plot the new point
-        ax.plot([start_x, end_x1], [start_y, end_y1], ls='solid', color=color, lw=lw)  # Adjust marker and color as needed
-        ax.plot([start_x, end_x2], [start_y, end_y2], ls='dashed', color=color, lw=lw)  # Adjust marker and color as needed
+    #     # Plot the new point
+    #     ax.plot([start_x, end_x1], [start_y, end_y1], ls='solid', color=color, lw=lw)  # Adjust marker and color as needed
+    #     ax.plot([start_x, end_x2], [start_y, end_y2], ls='dashed', color=color, lw=lw)  # Adjust marker and color as needed
         
-        ax.vlines(x=contour_x[segment_nr + 1], ymin=start_y, ymax=end_y1 + copy_length1/2, colors=color, linestyles='solid', lw=lw)
-        ax.vlines(x=contour_x[segment_nr + 1], ymin=start_y - copy_length1, ymax=start_y, colors=color, linestyles='dashed', lw=lw)
+    #     ax.vlines(x=contour_x[segment_nr + 1], ymin=start_y, ymax=end_y1 + copy_length1/2, colors=color, linestyles='solid', lw=lw)
+    #     ax.vlines(x=contour_x[segment_nr + 1], ymin=start_y - copy_length1, ymax=start_y, colors=color, linestyles='dashed', lw=lw)
         
-        # Add text relative to the axes
-        ax.text(.35, .1, r'$\theta > 0$', fontsize=16, ha='center', color=color, transform=ax.transAxes, bbox=dict(facecolor="w", edgecolor='k', boxstyle='round'))
+    #     # Add text relative to the axes
+    #     ax.text(.35, .1, r'$\theta > 0$', fontsize=16, ha='center', color=color, transform=ax.transAxes, bbox=dict(facecolor="w", edgecolor='k', boxstyle='round'))
     
-    # custom_y_ticks = [0,  800]
-    # ax.set_yticks(custom_y_ticks)
+    # # custom_y_ticks = [0,  800]
+    # # ax.set_yticks(custom_y_ticks)
     
-    ax.set_xlim(left=75, right=225)
-    ax.set_ylim(bottom=575, top=400)
-    ax.set_aspect('equal')
+    # ax.set_xlim(left=75, right=225)
+    # ax.set_ylim(bottom=575, top=400)
+    # ax.set_aspect('equal')
     
-    # Set the number of ticks you want
-    num_ticks = 5
-    ax.locator_params(axis='x', nbins=num_ticks)
-    ax.locator_params(axis='y', nbins=num_ticks)
+    # # Set the number of ticks you want
+    # num_ticks = 5
+    # ax.locator_params(axis='x', nbins=num_ticks)
+    # ax.locator_params(axis='y', nbins=num_ticks)
     
-    fig.tight_layout()
-    filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_detection_B{image_nr}_zoom'
-    eps_path = os.path.join('figures', f"{filename}.eps")
-    fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+    # fig.tight_layout()
+    # filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_detection_B{image_nr}_zoom'
+    # eps_path = os.path.join('figures', f"{filename}.eps")
+    # fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
     
     # plt.title(title)
     # plt.imshow(image, cmap="gray", vmin=np.min(image.flatten())/brighten_factor, vmax=np.max(image.flatten())/brighten_factor)
@@ -661,14 +661,14 @@ def save_contour_images(path,image_nr, img_raw, brighten_factor, contour, color)
     filename = os.path.join(path, f"B{image_nr:04d}")
     dpi = 300
     
-    toggle_contour = False
-    plot_image('', img_raw, brighten_factor, contour, toggle_contour, color)
+    # toggle_contour = False
+    # plot_image('', img_raw, brighten_factor, contour, toggle_contour, color)
     # plt.savefig(filename + '_raw.png', dpi=dpi)
     # plt.clf()
     
     toggle_contour = True
     plot_image('', img_raw, brighten_factor, contour, toggle_contour, color)
-    plt.savefig(filename + '.eps', dpi=dpi,  bbox_inches='tight')
+    plt.savefig(filename + '.png', dpi=dpi,  bbox_inches='tight')
     # plt.clf()
     
     # Using cv2.imwrite() method
@@ -708,7 +708,7 @@ if __name__ == "__main__":
     react_names_hs =    [
                         # ('react_h0_f2700_hs_record1', 57),
                         # ('react_h0_c3000_hs_record1', 57),
-                        ('react_h0_s4000_hs_record1', 58),
+                        # ('react_h0_s4000_hs_record1', 58),
                         # ('react_h100_c12500_hs_record1', 61),
                         # ('react_h100_s16000_hs_record1', 62)
                         ]
@@ -764,21 +764,21 @@ if __name__ == "__main__":
     segment_length_mm = 1 # units: mm
     window_size = 31 # units: pixels
     
-    react_names_ls =    [
-                        # ('react_h0_c3000_ls_record1', 57),
-                        # ('react_h0_s4000_ls_record1', 58),
-                        # ('react_h100_c12000_ls_record1', 61),
-                        # ('react_h100_c12500_ls_record1', 61),
-                        # ('react_h100_s16000_ls_record1', 62)
-                        ]
+    # react_names_ls =    [
+    #                     # ('react_h0_c3000_ls_record1', 57),
+    #                     # ('react_h0_s4000_ls_record1', 58),
+    #                     # ('react_h100_c12000_ls_record1', 61),
+    #                     # ('react_h100_c12500_ls_record1', 61),
+    #                     # ('react_h100_s16000_ls_record1', 62)
+    #                     ]
     
-    react_names_hs =    [
-                        # ('react_h0_f2700_hs_record1', 57),
-                        # ('react_h0_c3000_hs_record1', 57),
-                        ('react_h0_s4000_hs_record1', 58),
-                        # ('react_h100_c12500_hs_record1', 61),
-                        # ('react_h100_s16000_hs_record1', 62)
-                        ]
+    # react_names_hs =    [
+    #                     # ('react_h0_f2700_hs_record1', 57),
+    #                     # ('react_h0_c3000_hs_record1', 57),
+    #                     ('react_h0_s4000_hs_record1', 58),
+    #                     # ('react_h100_c12500_hs_record1', 61),
+    #                     # ('react_h100_s16000_hs_record1', 62)
+    #                     ]
     
     react_names = react_names_ls + react_names_hs
     

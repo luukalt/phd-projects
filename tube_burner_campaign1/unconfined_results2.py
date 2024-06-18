@@ -78,7 +78,11 @@ with open(os.path.join(parent_directory, 'flame_simulations', 'unstreched_lamina
 # Read strained laminar flame speed data    
 with open(os.path.join(parent_directory, 'flame_simulations', 'strained_flame_speed_data', 'Tu293_pu101325', 'strained_flame_speed_lib.txt'), 'rb') as f:
     strained_flame_speed_lib = pickle.load(f)
-    
+
+# Read Lewis number and preferential diffusion data
+with open(os.path.join(parent_directory, 'flame_simulations', 'Lewis_lib.txt'), 'rb') as f:
+    Lewis_lib = pickle.load(f)
+
 # Initialize lists
 phi_lists = [[] for i in range(n)]
 U_bulk_lists = [[] for i in range(n)]
@@ -88,6 +92,8 @@ S_u_maxgradT_lists = [[] for i in range(n)]
 u_flux_max_lists = [[] for i in range(n)]
 u_tau_lists = [[] for i in range(n)]
 turbulent_intensity_lists = [[] for i in range(n)]
+Le_binary_V_lists = [[] for i in range(n)]
+DiN2_DjN2_V_lists = [[] for i in range(n)]
 
 check_label = ""
 check_key = ""
@@ -112,15 +118,28 @@ for key, values in flashback_quartz_data.items():
             if phi == flame["phi"] and H2_percentage == flame["H2%"]:
                 S_u_maxgradT = flame["S_u_maxgradT"][-1]
                 
+        for flame in Lewis_lib:
+            if phi == flame["phi"] and H2_percentage == flame["H2%"]:
+                
+                Le_binary_V = flame['Le_binary_V']
+                DiN2_DjN2_V = flame['DiN2_DjN2_V']
+                
         if key != check_key:
             S_L0_lists[index] = np.append(S_L0_lists[index], S_L0)
             S_u_maxgradT_lists[index] = np.append(S_u_maxgradT_lists[index], S_u_maxgradT)
+            
+            Le_binary_V_lists[index] = np.append(Le_binary_V_lists[index], Le_binary_V)
+            DiN2_DjN2_V_lists[index] = np.append(DiN2_DjN2_V_lists[index], DiN2_DjN2_V)
+            
         else:
             S_L0 = S_L0_lists[index][-1] 
             S_L0_lists[index] = np.append(S_L0_lists[index], S_L0)
             
             S_u_maxgradT = S_u_maxgradT_lists[index][-1] 
             S_u_maxgradT_lists[index] = np.append(S_u_maxgradT_lists[index], S_u_maxgradT)
+            
+            Le_binary_V_lists[index] = np.append(Le_binary_V_lists[index], Le_binary_V)
+            DiN2_DjN2_V_lists[index] = np.append(DiN2_DjN2_V_lists[index], DiN2_DjN2_V)
         
         U_bulk = value[1]
         Re_D = D*U_bulk/mixture.nu_u
@@ -183,6 +202,10 @@ fig5, ax5 = plt.subplots(figsize=(fig_size, fig_size), dpi=dpi)
 ax5.set_xlabel(r'$\phi$', fontsize=fontsize_xlabel)
 ax5.set_ylabel(r'$\frac{U_{b}}{S_{L,ext}}$', rotation=0, labelpad=15, fontsize=fontsize_ylabel_fraction)  
 
+fig6, ax6 = plt.subplots(figsize=(fig_size, fig_size), dpi=dpi)
+ax6.set_xlabel(r'$\phi$', fontsize=fontsize_xlabel)
+ax6.set_ylabel(r'Lewis number', fontsize=fontsize_ylabel_fraction)  
+
 check_label = ""
 
 
@@ -199,12 +222,15 @@ for i in range(n):
         S_u_maxgradT_test = S_u_maxgradT_lists[i][j]
         u_fluc = u_flux_max_lists[i][j]
         turbulent_intensity = turbulent_intensity_lists[i][j]
+        Le_binary_V = Le_binary_V_lists[i][j]
+        DiN2_DjN2_V = DiN2_DjN2_V_lists[i][j]
         
         ax1.plot(phi_test, U_bulk_test, ls=linestyle,  marker=markers[i], ms=markersize[i], mec='k', mfc=colors[i], label=labels[i] if i != check_label else "")
         ax2.plot(phi_test, U_bulk_test/(S_L0_test*1), ls=linestyle,  marker=markers[i], ms=markersize[i], mec='k', mfc=colors[i], label=labels[i] if i != check_label else "")
         ax3.plot(phi_test, Re_D_test, ls=linestyle,  marker=markers[i], ms=markersize[i], mec='k', mfc=colors[i], label=labels[i] if i != check_label else "")
         ax4.plot(phi_test, S_L0_test, ls=linestyle,  marker=markers[i], ms=markersize[i], mec='k', mfc=colors[i], label=labels[i] if i != check_label else "")
         ax5.plot(phi_test, U_bulk_test/S_u_maxgradT_test, ls=linestyle,  marker=markers[i], ms=markersize[i], mec='k', mfc=colors[i], label=labels[i] if i != check_label else "")
+        # ax6.plot(phi_test, U_bulk_test/(S_L0_test*Le_binary_V**(-2)), ls=linestyle,  marker=markers[i], ms=markersize[i], mec='k', mfc=colors[i], label=labels[i] if i != check_label else "")
         
         if (phi_test == 0.49 and labels[i] == '$100$') or (phi_test == 1.0 and labels[i] == '$0$'):
             
