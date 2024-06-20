@@ -17,7 +17,7 @@ main_dir = os.path.join('Y:', 'laaltenburg', 'flamesheet_2d_campaign1')
 
 #%%%% Select recording
 
-case = 1
+case = 2
 
 if case == 0:
     # test99, H2% = 100, phi = 0.35, Re_H = 5000, image_rate = 0.2 kHz
@@ -64,6 +64,9 @@ elif case == 3:
 # With mask
 piv_result = "PIV_MP(3x32x32_50%ov_ImgCorr)_01"
 
+# Interpolation method used to interpolate data to grid data
+interpolation_method = 'linear'
+
 #%%%%  Define data directories
 project_dir = os.path.join(main_dir, project_name)
 
@@ -74,8 +77,9 @@ pre_record_raw_file = os.path.join(project_dir, pre_record_name, 'Reorganize fra
 pre_record_correction_file = os.path.join(project_dir, pre_record_name, 'ImageCorrection', 'Reorganize frames', 'Export', 'B0001.tif')
 
 piv_avgV_dir = os.path.join(project_dir, record_name, piv_result, 'Avg_Stdev', 'Export')
+piv_strain_dir = os.path.join(project_dir, record_name, piv_result, 'Avg_Stdev')
 piv_transV_dir = os.path.join(project_dir, record_name, piv_result, 'Export')
-piv_Rstress_dir =  os.path.join(project_dir, record_name, piv_result, 'AvgVx_AvgVy_AvgV_StdevVx_StdevVy_StdevV_Rxy_Rxx_Ryy_AKE_TKE_TSS', 'Export')
+# piv_Rstress_dir =  os.path.join(project_dir, record_name, piv_result, 'AvgVx_AvgVy_AvgV_StdevVx_StdevVy_StdevV_Rxy_Rxx_Ryy_AKE_TKE_TSS', 'Export')
 
 
  

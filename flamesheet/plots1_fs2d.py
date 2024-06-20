@@ -4,7 +4,7 @@ Created on Fri Sep 23 16:11:23 2022
 
 @author: laaltenburg
 """
-#%% Import packages
+#%% IMPORT PACKAGES 
 import os
 import matplotlib as mpl
 from matplotlib import pyplot as plt
@@ -39,16 +39,42 @@ if day_nr == '24-1':
 if day_nr == '23-2':
     from wall_detection_day23_2 import *
     
-    
-#%% Start
+
+#%% HEADERS OF Avg_Stdev (B0001.csv)
+
+# 1. 'x [mm]'
+# 2. 'y [mm]'
+# 3. 'Velocity u [m/s]'
+# 4. 'Velocity v [m/s]'
+# 5. 'Velocity |V| [m/s]'
+# 6. 'du/dx [1/s]'
+# 7. 'du/dy [1/s]'
+# 8. 'dv/dx [1/s]'
+# 9. 'dv/dy [1/s]'
+# 10. 'Vorticity w_z (dv/dx - du/dy) [1/s]'
+# 11. '|Vorticity| [1/s]'
+# 12. 'Divergence 2D (du/dx + dv/dy) [1/s]'
+# 13. 'Swirling strength 2D (L_ci) [1/s^2]'
+# 14. 'Average kinetic energy [(m/s)^2]'
+# 15. 'Number of vectors [n]'
+# 16. 'Reynolds stress Rxx [(m/s)^2]'
+# 17. 'Reynolds stress Rxy [(m/s)^2]'
+# 18. 'Reynolds stress Ryy [(m/s)^2]'
+# 19. 'Standard deviation Vx [m/s]'
+# 20. 'Standard deviation Vy [m/s]'
+# 21. 'Turbulent kinetic energy [(m/s)^2]'
+# 22. 'Turbulent shear stress [(m/s)^2]'
+      
+       
+#%% START
 plt.close("all")
 
-#%% Figure settings
+#%% FIGURE SETTINGS
 
 # Color maps
 tableau = cm.tab10.colors
 
-#%% Main functions
+#%% MAIN FUNCTIONS
 def read_xy_dimensions(file):
     
     df_raw = pd.read_csv(file)
@@ -79,7 +105,7 @@ def read_xy_dimensions(file):
     return x_raw, y_raw
 
 
-def read_velocity_data(file, normalized):
+def read_flow_data(file, normalized):
     
     # Set if plot is normalized or non-dimensionalized
     if normalized:
@@ -96,9 +122,24 @@ def read_velocity_data(file, normalized):
     # Get the column headers of the file
     headers = df_piv.columns
     
+    # print(headers)
+    
     pivot_U = pd.pivot_table(df_piv, values=headers[2], index=headers[1], columns=headers[0])
     pivot_V = pd.pivot_table(df_piv, values=headers[3], index=headers[1], columns=headers[0])
     pivot_absV = pd.pivot_table(df_piv, values=headers[4], index=headers[1], columns=headers[0])
+    
+    pivot_RXX = pd.pivot_table(df_piv, values=headers[16], index=headers[1], columns=headers[0])
+    pivot_RXY = pd.pivot_table(df_piv, values=headers[17], index=headers[1], columns=headers[0])
+    pivot_RYY = pd.pivot_table(df_piv, values=headers[18], index=headers[1], columns=headers[0])
+    pivot_TKE = pd.pivot_table(df_piv, values=headers[21], index=headers[1], columns=headers[0])
+    
+    pivot_U /= u_bulk
+    pivot_V /= u_bulk
+    pivot_absV /= u_bulk
+    pivot_RXX /= u_bulk**2
+    pivot_RXY /= u_bulk**2
+    pivot_RYY /= u_bulk**2
+    pivot_TKE /= u_bulk**2
     
     n_windows_x = pivot_absV.columns.size
     n_windows_y = pivot_absV.index.size
@@ -108,57 +149,34 @@ def read_velocity_data(file, normalized):
     X, Y = np.meshgrid(X_array, Y_array)
     
     
-    # XYUV = np.genfromtxt(XYUV_file, delimiter=",")
-    # df = pd.read_csv(XYUV_file)
-    
-    # X = XYUV[:,0].reshape(n_windows_y, n_windows_x)
-    # Y = XYUV[:,1].reshape(n_windows_y, n_windows_x)
-    # U = XYUV[:,2].reshape(n_windows_y, n_windows_x) # *-1 because -> inverse x-axis
-    # V = XYUV[:,3].reshape(n_windows_y, n_windows_x)
-    # velocity_abs = np.sqrt(U**2 + V**2)
-    
-    return n_windows_x, n_windows_y, X, Y, pivot_U, pivot_V, pivot_absV
+    # Flow strain
+    # List of strain components
+    strain_components = ['Exx', 'Exy', 'Eyx', 'Eyy']
+    df_strain = None
 
-def read_vector_statistics(data_dir, n_windows_x, n_windows_y, normalized):
-    
-    # Set if plot is normalized or non-dimensionalized
-    if normalized:
-        u_bulk = u_bulk_measured
-    else:
-        u_bulk = 1
-    
-    print(f'Set normalized: {normalized}')
-    print(f'Set u_bulk_measured: {u_bulk_measured}')
-    # AvgVx, AvgVy, abs(AvgV), AvgKineticE, StdevVx, StdevVy, abs(StdevV), TurbKineticE, ReynoldsStressXY, ReynoldsStressXX, ReynoldsStressYY, TSSmax2D
-    
-    vector_stats_file_nrs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] 
-    vector_stats = np.zeros([n_windows_y, n_windows_x, len(vector_stats_file_nrs)])
-    
-    for file_nr in vector_stats_file_nrs: 
+    for component in strain_components:
+        strain_file = os.path.join(piv_strain_dir, component, 'Export', csv_file)
+        df = pd.read_csv(strain_file)
         
-        # File name and scaling parameters from headers of file
-        file = f'B{file_nr:04d}.csv'
-        vector_stat_file = os.path.join(data_dir, file)
+        # Rename the component column (e.g., 'Exx' -> 'Exx')
+        df.rename(columns={component: component}, inplace=True)
         
-        df_stat = pd.read_csv(vector_stat_file)
-        
-        # Get the column headers of the file
-        headers = df_stat.columns
-        
-        vector_stat = pd.pivot_table(df_stat, values=headers[2], index=headers[1], columns=headers[0])
-        
-        file_index_shift = vector_stats_file_nrs[0]
-        if file_nr in [1, 2, 3, 5, 6, 7]:
-            vector_stats[:,:,file_nr-file_index_shift] = vector_stat/u_bulk
-        
-        if file_nr in [4, 8, 9, 10, 11, 12]:
-            vector_stats[:,:,file_nr-file_index_shift] = vector_stat/(u_bulk**2)
+        if df_strain is None:
+            df_strain = df
+        else:
+            # Merge based on columns 'x' and 'y'
+            df_strain = pd.merge(df_strain, df, on=['x [mm]', 'y [mm]'], how='outer')
     
-    AvgVx, AvgVy, AvgAbsV, AvgKineticE = vector_stats[:,:,0], vector_stats[:,:,1], vector_stats[:,:,2], vector_stats[:,:,3]
-    StdevVx, StdevVy, StdevAbsV, TurbKineticE = vector_stats[:,:,4], vector_stats[:,:,5], vector_stats[:,:,6], vector_stats[:,:,7]
-    RXY, RXX, RYY, TSSmax2D = vector_stats[:,:,8], vector_stats[:,:,9], vector_stats[:,:,10], vector_stats[:,:,11]
+    headers = df_strain.columns
     
-    return AvgVx, AvgVy, AvgAbsV, AvgKineticE, StdevVx, StdevVy, StdevAbsV, TurbKineticE, RXY, RXX, RYY, TSSmax2D
+    print(headers)
+    
+    pivot_EXX = pd.pivot_table(df_strain, values=headers[2], index=headers[1], columns=headers[0])
+    pivot_EXY = pd.pivot_table(df_strain, values=headers[3], index=headers[1], columns=headers[0])
+    pivot_EYX = pd.pivot_table(df_strain, values=headers[4], index=headers[1], columns=headers[0])
+    pivot_EYY = pd.pivot_table(df_strain, values=headers[5], index=headers[1], columns=headers[0])
+    
+    return n_windows_x, n_windows_y, X, Y, pivot_U.values, pivot_V.values, pivot_absV.values, pivot_RXX.values, pivot_RXY.values, pivot_RYY.values, pivot_TKE.values, pivot_EXX.values, pivot_EXY.values, pivot_EYX.values, pivot_EYY.values
 
 
 def plot_field(fig, ax, X, Y, quantity, label, cmin, cmax):
@@ -198,8 +216,8 @@ def plot_streamlines(fig, ax, X, Y, Vx, Vy):
     # Y = XYUV[:,1].reshape(n_windows_y, n_windows_x)
     # Vx = XYUV[:,2].reshape(n_windows_y, n_windows_x) # *-1 because -> inverse x-axis
     # Vy = XYUV[:,3].reshape(n_windows_y, n_windows_x)
-    Vx = AvgVx1.values
-    Vy = AvgVy1.values
+    Vx = AvgVx
+    Vy = AvgVy
     
     # row_start, row_end = 0, 100
     # col_start, col_end = 6, 25
@@ -227,8 +245,9 @@ def plot_streamlines(fig, ax, X, Y, Vx, Vy):
     # Vxi = interp2d(X, Y, Vx)(Xi, Yi)
     # Vyi = interp2d(X, Y, Vy)(Xi, Yi)
     
-    Vxi = griddata((X_values, Y_values), Vx.flatten(), (Xi, Yi), method='linear')
-    Vyi = griddata((X_values, Y_values), Vy.flatten(), (Xi, Yi), method='linear')
+    streamline_interpolation_method = 'linear'
+    Vxi = griddata((X_values, Y_values), Vx.flatten(), (Xi, Yi), method=streamline_interpolation_method)
+    Vyi = griddata((X_values, Y_values), Vy.flatten(), (Xi, Yi), method=streamline_interpolation_method)
     
     # fig, ax = plt.subplots()
     
@@ -288,8 +307,8 @@ def plot_profile_dim(fig, ax, rotation_matrix, profile_coords, profile_line, qua
     quantity_x_values = quantity_x.flatten()
     quantity_y_values = quantity_y.flatten()
     
-    quantity_x_profile = griddata((X_values, Y_values), quantity_x_values, profile_coords, method='nearest')
-    quantity_y_profile = griddata((X_values, Y_values), quantity_y_values, profile_coords, method='nearest')
+    quantity_x_profile = griddata((X_values, Y_values), quantity_x_values, profile_coords, method=interpolation_method)
+    quantity_y_profile = griddata((X_values, Y_values), quantity_y_values, profile_coords, method=interpolation_method)
     
     # quantity_x_profile[0] = 0
     # quantity_y_profile[0] = 0
@@ -379,9 +398,9 @@ def plot_reynolds_stress1_dim(fig, ax, rotation_matrix, theta, profile_coords, p
     RYY_values = RYY.flatten()
     RXY_values = RXY.flatten()
     
-    RXX_profile = griddata((X_values, Y_values), RXX_values, profile_coords, method='nearest')
-    RYY_profile = griddata((X_values, Y_values), RYY_values, profile_coords, method='nearest')
-    RXY_profile = griddata((X_values, Y_values), RXY_values, profile_coords, method='nearest')
+    RXX_profile = griddata((X_values, Y_values), RXX_values, profile_coords, method=interpolation_method)
+    RYY_profile = griddata((X_values, Y_values), RYY_values, profile_coords, method=interpolation_method)
+    RXY_profile = griddata((X_values, Y_values), RXY_values, profile_coords, method=interpolation_method)
     
     # RXX_profile = scipy.ndimage.map_coordinates(RXX, np.vstack((y_profile, x_profile)), order=order)
     # RYY_profile = scipy.ndimage.map_coordinates(RYY, np.vstack((y_profile, x_profile)), order=order)
@@ -420,7 +439,6 @@ def plot_reynolds_stress1_dim(fig, ax, rotation_matrix, theta, profile_coords, p
     ax.set_ylabel("$R_{nn}$ [m$^2$s$^{-2}$]", fontsize=fontsize)
     ax.tick_params(axis='both', labelsize=fontsize)
     ax.grid()
-    
     
     # ax.set_ylim(np.array([cmin, cmax]))
     
@@ -491,6 +509,77 @@ def plot_reynolds_stress2_dim(fig, ax, rotation_matrix, coord0_mm, coord1_mm, n_
     
 #     return X, Y, I, XYI
 
+def plot_strain_rate_dim(fig, ax, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num):
+    
+    # c, s = np.cos(theta), np.sin(theta)
+    # rotation_matrix = np.array(((c, -s), (s, c)))
+    # rotation_matrix_T = np.transpose(rotation_matrix)
+    
+    # x0_mm, y0_mm = coord0_mm
+    # x1_mm, y1_mm = coord1_mm
+    # x0, y0 = (coord0_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
+    # x1, y1 = (coord1_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
+    
+    # x_profile, y_profile = np.linspace(x0, x1, num), np.linspace(y0, y1, num)
+    # x_profile, y_profile = np.linspace(x0_mm, x1_mm, num), np.linspace(y0_mm, y1_mm, num)
+    # profile_coords = np.column_stack((x_profile, y_profile))
+    
+    # Extract the values along the line, using first, second or third order interpolation
+    # profile_line_length = np.sqrt((x1_mm - x0_mm)**2 + (y1_mm - y0_mm)**2)
+    # profile_line = np.linspace(0, np.sqrt((x1_mm - x0_mm)**2 + (y1_mm - y0_mm)**2), int(profile_line_length/dx_piv))
+    
+    X_values = X.flatten()
+    Y_values = Y.flatten()
+    
+    EXX_values = EXX.flatten()
+    EXY_values = EXY.flatten()
+    EYX_values = EYX.flatten()
+    EYY_values = EYY.flatten()
+    
+    EXX_profile = griddata((X_values, Y_values), EXX_values, profile_coords, method=interpolation_method)
+    EXY_profile = griddata((X_values, Y_values), EXY_values, profile_coords, method=interpolation_method)
+    EYX_profile = griddata((X_values, Y_values), EYX_values, profile_coords, method=interpolation_method)
+    EXY_TOTAL_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
+    EYY_profile = griddata((X_values, Y_values), EYY_values, profile_coords, method=interpolation_method)
+    
+    ### Approach 1: Calculate Reynolds stresses on arbirtary line "manually"
+    ETT = EXX_profile*(np.cos(theta))**2 - 2*EXY_profile*np.cos(theta)*np.sin(theta) + EYY_profile*(np.sin(theta))**2
+    ETN = (EXX_profile - EYY_profile)*np.cos(theta)*np.sin(theta) + EXY_TOTAL_profile*((np.cos(theta))**2 - (np.sin(theta))**2)
+    ENN = EXX_profile*(np.sin(theta))**2 + 2*EXY_TOTAL_profile*np.cos(theta)*np.sin(theta) + EYY_profile*(np.cos(theta))**2
+
+    ### Approach 2: Calculate Reynolds stresses on arbirtary line using rotation matrix [CORRECT RESULT WITH "INCORRECT" CODE]
+    # R_stress_tensor = np.array(((Rxx_profile, Rxy_profile), (Rxy_profile, Ryy_profile)))
+    # R_stress_tensor_rotated = rotation_matrix.dot(rotation_matrix.dot(R_stress_tensor))
+    
+    # Rtt = R_stress_tensor_rotated[0,0,:]
+    # Rnn = R_stress_tensor_rotated[1,1,:]
+    # Rtn = R_stress_tensor_rotated[0,1,:]
+    
+    ### Approach 3: Calculate Reynolds stresses on arbirtary line using rotation matrix [CORRECT RESULT WITH "CORRECT" CODE]
+    # R_stress_tensor_dummy = np.zeros([2, 2, num])
+    # R_stress_tensor_rotated = np.zeros([2, 2, num])
+
+    # for i in range(num):
+    #     R_stress_tensor_dummy = rotation_matrix.dot(R_stress_tensor[:,:,i])
+    #     R_stress_tensor_rotated[:,:,i] = R_stress_tensor_dummy.dot(rotation_matrix_T)
+    
+    # Rtt = R_stress_tensor_rotated[0,0,:]
+    # Rnn = R_stress_tensor_rotated[1,1,:]
+    # Rtn = R_stress_tensor_rotated[0,1,:]
+    
+    ax.plot(profile_line, ENN, c=color, ls="-", marker="o")
+    # ax.set_xlim(np.array([arbitrary_line[0], arbitrary_line[-1]]))
+    # ax.set_xlim(left=0, right=30]))
+    
+    ax.set_xlabel("distance along line [mm]", fontsize=fontsize)
+    ax.set_ylabel("$E_{nn}$ [$1/s$]", fontsize=fontsize)
+    ax.tick_params(axis='both', labelsize=fontsize)
+    ax.grid()
+    
+    # ax.set_ylim(np.array([cmin, cmax]))
+    
+    return EXX_profile, EYY_profile, EXY_TOTAL_profile
+
 
 def draw_walls(ax):
 
@@ -544,7 +633,7 @@ def draw_walls(ax):
     
     return cx_mm, cy_mm, radius_mm
     
-#%% Auxiliary functions
+#%% AUXILIARY FUNCTIONS
 def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
@@ -600,7 +689,7 @@ def circle_line_segment_intersection(circle_center, circle_radius, pt1, pt2, ful
         else:
             return intersections
    
-#%% Main
+#%% MAIN
 
 if __name__ == "__main__":
 
@@ -617,10 +706,10 @@ if __name__ == "__main__":
     
     #%%% Read and save average velocity data
     # File name and scaling parameters from headers of file
-    image_file = 'B0001.csv'
-    piv_avgV_file = os.path.join(piv_avgV_dir, image_file)
+    csv_file = 'B0001.csv'
+    piv_avgV_file = os.path.join(piv_avgV_dir, csv_file)
     
-    n_windows_x, n_windows_y, X, Y, AvgVx1, AvgVy1, AvgAbsV1 = read_velocity_data(piv_avgV_file, normalized) 
+    n_windows_x, n_windows_y, X, Y, AvgVx, AvgVy, AvgAbsV, RXY, RXX, RYY, TKE, EXX, EXY, EYX, EYY = read_flow_data(piv_avgV_file, normalized) 
     
     #%%% Read and save transient velocity data
     # n_images = 2500
@@ -629,50 +718,96 @@ if __name__ == "__main__":
     
     # for image_nr in progressbar.progressbar(range(1, n_images + 1)):
         
-    #     n_windows_x, n_windows_y, X, Y, U, V, velocity_abs = read_velocity_data(piv_transV_dir, image_nr, normalized)
+    #     n_windows_x, n_windows_y, X, Y, U, V, velocity_abs = read_flow_data(piv_transV_dir, image_nr, normalized)
         
     #     U_transient[:,:,image_nr-1] = U
     #     V_transient[:,:,image_nr-1] = V
     
     #%%% Read and save vector statistics    
-    AvgVx, AvgVy, AvgAbsV, AvgKineticE, StdevVx, StdevVy, StdevAbsV, TurbKineticE, RXY, RXX, RYY, TSSmax2D = read_vector_statistics(piv_Rstress_dir, n_windows_x, n_windows_y, normalized)
+    # EXX, EYY, EXY, EYX
+    scalars =  [AvgVx, 
+                AvgVy, 
+                AvgAbsV, 
+                RXY, 
+                RXX, 
+                RYY, 
+                TKE, 
+                EXX, 
+                EXY, 
+                EYX, 
+                EYY]
     
     if normalized:
-        vector_stats_labels = ["$V_{x}/U_{b}$", "$V_{y}/U_{b}$", "$|V|/U_{b}$",
-                               "$AKE/U^{2}_{b}$", "$\sigma_{V_{x}}/U_{b}$", "$\sigma_{V_{y}}/U_{b}$",
-                               "$\sigma_{|V|}/U_{b}$", "$TKE/U^{2}_{b}$", "$R_{XY}/U^{2}_{b}$",
-                               "$R_{XX}/U^{2}_{b}$", "$R_{YY}/U^{2}_{b}$", "$TSS_{max}/U^{2}_{b}$"]
+        scalar_labels = [
+                         "$V_{x}/U_{b}$", 
+                         "$V_{y}/U_{b}$", 
+                         "$|V|/U_{b}$",
+                         # "$AKE/U^{2}_{b}$", "$\sigma_{V_{x}}/U_{b}$", "$\sigma_{V_{y}}/U_{b}$", "$\sigma_{|V|}/U_{b}$", 
+                         "$R_{XY}/U^{2}_{b}$",
+                         "$R_{XX}/U^{2}_{b}$", 
+                         "$R_{YY}/U^{2}_{b}$", 
+                         "$TKE/U^{2}_{b}$",
+                         "$E_{XX}$",
+                         "$E_{XY}$",
+                         "$E_{YX}$",
+                         "$E_{YY}$",
+                         # "$TSS_{max}/U^{2}_{b}$"
+                         ]
     else:
-        vector_stats_labels = ["$V_{x}$ [ms$^{-1}$]", "$V_{y}$ [ms$^{-1}$]", "$|V|$ [ms$^{-1}$]",
-                           "$AKE$ [m$^{2}$s$^{-2}$]", "$\sigma_{V_{x}}$ [ms$^{-1}$]", "$\sigma_{V_{y}}$ [ms$^{-1}$]",
-                           "$\sigma_{|V|}$ [ms$^{-1}$]", "$TKE$ [m$^{2}$s$^{-2}$]", "$R_{XY}$ [m$^{2}$s$^{-2}$]",
-                           "$R_{XX}$ [m$^{2}$s$^{-2}$]", "$R_{YY}$ [m$^{2}$s$^{-2}$]", "$TSS_{max}$ [m$^{2}$s$^{-2}$]"]
+        scalar_labels = [
+                         "$V_{x}$ [ms$^{-1}$]", 
+                         "$V_{y}$ [ms$^{-1}$]", 
+                         "$|V|$ [ms$^{-1}$]",
+                         # "$AKE$ [m$^{2}$s$^{-2}$]", "$\sigma_{V_{x}}$ [ms$^{-1}$]", "$\sigma_{V_{y}}$ [ms$^{-1}$]", "$\sigma_{|V|}$ [ms$^{-1}$]", 
+                         "$R_{XY}$ [m$^{2}$s$^{-2}$]",
+                         "$R_{XY}$ [m$^{2}$s$^{-2}$]", 
+                         "$R_{YY}$ [m$^{2}$s$^{-2}$]", 
+                         "$TKE$ [m$^{2}$s$^{-2}$]", 
+                         "$E_{XX}$ [$1/s$]",
+                         "$E_{XY}$ [$1/s$]", 
+                         "$E_{YX}$ [$1/s$]",
+                         "$E_{YY}$ [$1/s$]", 
+                         # "$TSS_{max}$ [m$^{2}$s$^{-2}$]"
+                         ]
     
-    vector_stats_titles = ["Average velocity in horizontal direction", "$Average velocity in vertical direction", "Average absolute velocity",
-                       "Average Kinetic Energy", "Standard deviation of $V_{x}$", "Standard deviation of $V_{y}$",
-                       "Standard deviation of $|V|$", "Turbulent Kinetic Energy", "Reynolds Shear Stress $R_{XY}$",
-                       "Reynolds Normal Stress $R_{XX}$", "Reynolds Normal Stress $R_{YY}$", "$TSS_{max}$ $[m^{2}s^{-2}$]"]
+    scalar_titles = [
+                     "Average velocity in horizontal direction",
+                     "$Average velocity in vertical direction", 
+                     "Average absolute velocity",
+                     # "Average Kinetic Energy", "Standard deviation of $V_{x}$", "Standard deviation of $V_{y}$", "Standard deviation of $|V|$", 
+                     "Reynolds Normal Stress $R_{XX}$",
+                     "Reynolds Shear Stress $R_{XY}$",
+                     "Reynolds Normal Stress $R_{YY}$", 
+                     "Turbulent Kinetic Energy", 
+                     "Normal Strain $E_{XX}$",
+                     "Shear Strain $E_{XY}$",
+                     "Shear Strain $E_{YX}$",
+                     "Normal Strain $E_{YY}$", 
+                     # "$TSS_{max}$ $[m^{2}s^{-2}$]"
+                     ]
     
     
-    scalars = AvgVx, AvgVy, AvgAbsV, AvgKineticE, StdevVx, StdevVy, StdevAbsV, TurbKineticE, RXY, RXX, RYY, TSSmax2D
+    
     
     #%%% Plots
     plt.close("all")    
     
     #%%%% Plot velocity field [Figure 1]
     
+    # Choose a scalar field
+    scalar_index = 2
+    scalar = scalars[scalar_index]
+    label = scalar_labels[scalar_index]
+    
+    scalar_max = np.max(scalar)
+    
+    
     fig_scale = 1.5
     default_fig_dim = plt.rcParams["figure.figsize"]
 
     fig1, ax1 = plt.subplots(figsize=(fig_scale*default_fig_dim[0], fig_scale*default_fig_dim[1]), ncols=1, dpi=100)
-    ax1.set_title("Average absolute velocity - field")
+    ax1.set_title(scalar_titles[scalar_index])
     
-    # Choose a scalar field
-    scalar_index = 2
-    scalar = scalars[scalar_index]
-    label = vector_stats_labels[scalar_index]
-    
-    scalar_max = np.max(scalar)
     
     cmin = 0
     cmax = 0
@@ -693,7 +828,7 @@ if __name__ == "__main__":
     plot_vector_field(fig1, ax1, X, Y, AvgVx, AvgVy)
     
     #%%%%% Plot streamlines
-    # streamlines = plot_streamlines(fig1, ax1, X, Y, AvgVx1, AvgVy1)
+    # streamlines = plot_streamlines(fig1, ax1, X, Y, AvgVx, AvgVy)
     
     #%%%%% Detect walls from precording image
     pt1_liner, pt2_liner, pt1_core_left, pt2_core_left, cx, cy, radius = wall_detection(calibration_tif_file, pre_record_correction_file)
@@ -828,9 +963,14 @@ if __name__ == "__main__":
         
         #%%%%% Plot Reynolds normal stresses of selected cross-sections [Figure 6]
         # Rxx_profile, Ryy_profile, Rxy_profile = plot_reynolds_stress1_dim(fig6, ax6, rotation_matrix, theta, coord0_mm, coord1_mm, label, cmin, cmax, color, num)
-        Rxx_profile, Ryy_profile, Rxy_profile = plot_reynolds_stress1_dim(fig6, ax6, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num)
+        # Rxx_profile, Ryy_profile, Rxy_profile = plot_reynolds_stress1_dim(fig6, ax6, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num)
         
         # Rtt, Rnn, Rtn = plot_reynolds_stress2_dim(fig6, ax6, rotation_matrix, coord0_mm, coord1_mm, n_images, U_transient, V_transient, Vt_avg_profile, Vn_avg_profile, label, 0, 1.5, color, num, order)
+        
+        #%%%%% Plot strains of selected cross-sections [Figure 6]
+        # Rxx_profile, Ryy_profile, Rxy_profile = plot_reynolds_stress1_dim(fig6, ax6, rotation_matrix, theta, coord0_mm, coord1_mm, label, cmin, cmax, color, num)
+        Exx_profile, Eyy_profile, Exy_profile = plot_strain_rate_dim(fig6, ax6, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num)
+        
         
         #%%%%% Write data to lists
         profile_lines.append(profile_line)
