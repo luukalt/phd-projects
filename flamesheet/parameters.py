@@ -17,7 +17,7 @@ main_dir = os.path.join('Y:', 'laaltenburg', 'flamesheet_2d_campaign1')
 
 #%%%% Select recording
 
-case = 2
+case = 0
 
 if case == 0:
     # test99, H2% = 100, phi = 0.35, Re_H = 5000, image_rate = 0.2 kHz
@@ -46,6 +46,19 @@ elif case == 3:
     record_name = "Recording_Date=230216_Time=105230_01"
     pre_record_name = "Recording_Date=230216_Time=103309"
     u_bulk_measured = 7.44
+elif case == 4:
+    # test96, H2% = 100, phi = 0.35, Re_H = 5000, image_rate = 4.5 kHz
+    day_nr = '23-2'
+    record_name = "Recording_Date=230215_Time=143726_01"
+    pre_record_name = "Recording_Date=230215_Time=153306" #Recording_Date=230215_Time=135049
+    u_bulk_measured = 8.49
+elif case == 5:
+    # test94, H2% = 100, phi = 0.35, Re_H = 7000, image_rate = 4.5 kHz
+    day_nr = '23-2'
+    record_name = "Recording_Date=230215_Time=135234_01"
+    pre_record_name = "Recording_Date=230215_Time=153306" #Recording_Date=230215_Time=135049
+    u_bulk_measured = 11.82
+    
 
 # H2% = 100, phi = 0.3, Re_H = 7000, image_rate = 0.2 kHz 
 # record_name = 'Recording_Date=221118_Time=115220_01'

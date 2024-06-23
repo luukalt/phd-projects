@@ -151,7 +151,7 @@ def read_flow_data(file, normalized):
     
     # Flow strain
     # List of strain components
-    strain_components = ['Exx', 'Exy', 'Eyx', 'Eyy']
+    strain_components = ['Exx', 'Exy', 'Eyx', 'Eyy', '(Exy+Eyx)_DIV_2']
     df_strain = None
 
     for component in strain_components:
@@ -175,8 +175,9 @@ def read_flow_data(file, normalized):
     pivot_EXY = pd.pivot_table(df_strain, values=headers[3], index=headers[1], columns=headers[0])
     pivot_EYX = pd.pivot_table(df_strain, values=headers[4], index=headers[1], columns=headers[0])
     pivot_EYY = pd.pivot_table(df_strain, values=headers[5], index=headers[1], columns=headers[0])
+    pivot_EXY_EYX_div_2 = pd.pivot_table(df_strain, values=headers[6], index=headers[1], columns=headers[0]) 
     
-    return n_windows_x, n_windows_y, X, Y, pivot_U.values, pivot_V.values, pivot_absV.values, pivot_RXX.values, pivot_RXY.values, pivot_RYY.values, pivot_TKE.values, pivot_EXX.values, pivot_EXY.values, pivot_EYX.values, pivot_EYY.values
+    return n_windows_x, n_windows_y, X, Y, pivot_U.values, pivot_V.values, pivot_absV.values, pivot_RXX.values, pivot_RXY.values, pivot_RYY.values, pivot_TKE.values, pivot_EXX.values, pivot_EXY.values, pivot_EYX.values, pivot_EYY.values, pivot_EXY_EYX_div_2.values 
 
 
 def plot_field(fig, ax, X, Y, quantity, label, cmin, cmax):
@@ -199,7 +200,7 @@ def plot_field(fig, ax, X, Y, quantity, label, cmin, cmax):
     ax.set_ylim(bottom=-23)
     
 def plot_vector_field(fig, ax, X, Y, Vx, Vy):
-    scale = 2
+    scale = 1
     headwidth = 6
     color = "r"
     skip = 2
@@ -341,38 +342,38 @@ def plot_profile_dim(fig, ax, rotation_matrix, profile_coords, profile_line, qua
     return quantity_x_profile, quantity_y_profile, quantity_tangent_profile, quantity_normal_profile
 
 
-def plot_profile_nondim(fig, ax, rotation_matrix, coord0_mm, coord1_mm, quantity_x, quantity_y, label, cmin, cmax, color, num, order):
+# def plot_profile_nondim(fig, ax, rotation_matrix, coord0_mm, coord1_mm, quantity_x, quantity_y, label, cmin, cmax, color, num, order):
     
-    x0, y0 = (coord0_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
-    x1, y1 = (coord1_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
+#     x0, y0 = (coord0_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
+#     x1, y1 = (coord1_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
     
-    x_profile, y_profile = np.linspace(x0, x1, num), np.linspace(y0, y1, num)
-    ax[0].plot(x_profile, y_profile, c=color, ls="--", marker="None")
+#     x_profile, y_profile = np.linspace(x0, x1, num), np.linspace(y0, y1, num)
+#     ax[0].plot(x_profile, y_profile, c=color, ls="--", marker="None")
     
-    ax[0].set_xlabel('interrogation windows')
-    ax[0].set_ylabel('interrogation windows')
+#     ax[0].set_xlabel('interrogation windows')
+#     ax[0].set_ylabel('interrogation windows')
     
-    # Extract the values along the line, using first, second or third order interpolation
-    quantity_x_profile = scipy.ndimage.map_coordinates(quantity_x, np.vstack((y_profile, x_profile)), order=order)
-    quantity_y_profile = scipy.ndimage.map_coordinates(quantity_y, np.vstack((y_profile, x_profile)), order=order)
+#     # Extract the values along the line, using first, second or third order interpolation
+#     quantity_x_profile = scipy.ndimage.map_coordinates(quantity_x, np.vstack((y_profile, x_profile)), order=order)
+#     quantity_y_profile = scipy.ndimage.map_coordinates(quantity_y, np.vstack((y_profile, x_profile)), order=order)
     
-    # quantity_tangent_profile, quantity_normal_profile  = np.dot(rotation_matrix, np.array([quantity_x_profile, quantity_y_profile]))
+#     # quantity_tangent_profile, quantity_normal_profile  = np.dot(rotation_matrix, np.array([quantity_x_profile, quantity_y_profile]))
     
-    quantity_tangent_profile = quantity_x_profile*np.cos(theta) - quantity_y_profile*np.sin(theta)
-    quantity_normal_profile = quantity_x_profile*np.sin(theta) + quantity_y_profile*np.cos(theta)
+#     quantity_tangent_profile = quantity_x_profile*np.cos(theta) - quantity_y_profile*np.sin(theta)
+#     quantity_normal_profile = quantity_x_profile*np.sin(theta) + quantity_y_profile*np.cos(theta)
     
-    ax[1].plot(quantity_normal_profile, c=color, ls='solid', marker='o')
+#     ax[1].plot(quantity_normal_profile, c=color, ls='solid', marker='o')
     
-    ax[1].set_xlabel('-')
-    ax[1].set_ylabel("$V_{n}$ [ms$^-1$]")
+#     ax[1].set_xlabel('-')
+#     ax[1].set_ylabel("$V_{n}$ [ms$^-1$]")
     
-    ax[1].set_xlim(np.array([0, len(quantity_x_profile)]))
-    # ax[1].set_ylim(np.array([cmin, cmax]))
-    ax[1].grid()
-    ax[1].axhline(y=0, color='k')
+#     ax[1].set_xlim(np.array([0, len(quantity_x_profile)]))
+#     # ax[1].set_ylim(np.array([cmin, cmax]))
+#     ax[1].grid()
+#     ax[1].axhline(y=0, color='k')
     
     
-def plot_reynolds_stress1_dim(fig, ax, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num):
+def plot_reynolds_stress_dim(fig, ax, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num):
     
     # c, s = np.cos(theta), np.sin(theta)
     # rotation_matrix = np.array(((c, -s), (s, c)))
@@ -406,18 +407,22 @@ def plot_reynolds_stress1_dim(fig, ax, rotation_matrix, theta, profile_coords, p
     # RYY_profile = scipy.ndimage.map_coordinates(RYY, np.vstack((y_profile, x_profile)), order=order)
     # RXY_profile = scipy.ndimage.map_coordinates(RXY, np.vstack((y_profile, x_profile)), order=order)
     
-    ### Approach 1: Calculate Reynolds stresses on arbirtary line "manually"
-    RTT = RXX_profile*(np.cos(theta))**2 - 2*RXY_profile*np.cos(theta)*np.sin(theta) + RYY_profile*(np.sin(theta))**2
-    RTN = (RXX_profile - RYY_profile)*np.cos(theta)*np.sin(theta) + RXY_profile*((np.cos(theta))**2 - (np.sin(theta))**2)
-    RNN = RXX_profile*(np.sin(theta))**2 + 2*RXY_profile*np.cos(theta)*np.sin(theta) + RYY_profile*(np.cos(theta))**2
-
-    ### Approach 2: Calculate Reynolds stresses on arbirtary line using rotation matrix [CORRECT RESULT WITH "INCORRECT" CODE]
-    # R_stress_tensor = np.array(((Rxx_profile, Rxy_profile), (Rxy_profile, Ryy_profile)))
-    # R_stress_tensor_rotated = rotation_matrix.dot(rotation_matrix.dot(R_stress_tensor))
+    # ### Approach 1: Calculate Reynolds stresses on arbirtary line "manually"
+    # RTT = RXX_profile*(np.cos(theta))**2 - 2*RXY_profile*np.cos(theta)*np.sin(theta) + RYY_profile*(np.sin(theta))**2
+    # RTN = (RXX_profile - RYY_profile)*np.cos(theta)*np.sin(theta) + RXY_profile*((np.cos(theta))**2 - (np.sin(theta))**2)
+    # RNN = RXX_profile*(np.sin(theta))**2 + 2*RXY_profile*np.cos(theta)*np.sin(theta) + RYY_profile*(np.cos(theta))**2
     
-    # Rtt = R_stress_tensor_rotated[0,0,:]
-    # Rnn = R_stress_tensor_rotated[1,1,:]
-    # Rtn = R_stress_tensor_rotated[0,1,:]
+    ### Approach 2: Calculate Reynolds stresses on arbirtary line with matrix multiplication
+    T_stress = np.array(((RXX_profile, RXY_profile), (RXY_profile, RYY_profile)))
+    T_stress_rotated = np.zeros_like(T_stress)
+    
+    for i in range(T_stress.shape[2]):
+        T_stress_rotated[:, :, i] = rotation_matrix @ T_stress[:, :, i] @ rotation_matrix.T
+    
+    
+    RTT = T_stress_rotated[0, 0, :]
+    RNN = T_stress_rotated[1, 1, :]
+    RTN = T_stress_rotated[0, 1, :]
     
     ### Approach 3: Calculate Reynolds stresses on arbirtary line using rotation matrix [CORRECT RESULT WITH "CORRECT" CODE]
     # R_stress_tensor_dummy = np.zeros([2, 2, num])
@@ -445,47 +450,47 @@ def plot_reynolds_stress1_dim(fig, ax, rotation_matrix, theta, profile_coords, p
     return RXX_profile, RYY_profile, RXY_profile
 
 
-def plot_reynolds_stress2_dim(fig, ax, rotation_matrix, coord0_mm, coord1_mm, n_images, U_transient, V_transient, Vt_avg_profile, Vn_avg_profile, label, cmin, cmax, color, num, order): 
+# def plot_reynolds_stress2_dim(fig, ax, rotation_matrix, coord0_mm, coord1_mm, n_images, U_transient, V_transient, Vt_avg_profile, Vn_avg_profile, label, cmin, cmax, color, num, order): 
     
-    x0_mm, y0_mm = coord0_mm
-    x1_mm, y1_mm = coord1_mm
-    x0, y0 = (coord0_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
-    x1, y1 = (coord1_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
+#     x0_mm, y0_mm = coord0_mm
+#     x1_mm, y1_mm = coord1_mm
+#     x0, y0 = (coord0_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
+#     x1, y1 = (coord1_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
     
-    x_profile, y_profile = np.linspace(x0, x1, num), np.linspace(y0, y1, num)
+#     x_profile, y_profile = np.linspace(x0, x1, num), np.linspace(y0, y1, num)
     
-    # Extract the values along the line, using first, second or third order interpolation
-    arbitrary_line = np.linspace(0, np.sqrt((x1_mm - x0_mm)**2 + (y1_mm - y0_mm)**2), num)
+#     # Extract the values along the line, using first, second or third order interpolation
+#     arbitrary_line = np.linspace(0, np.sqrt((x1_mm - x0_mm)**2 + (y1_mm - y0_mm)**2), num)
     
-    Rtt, Rnn, Rtn = (np.zeros(num) for i in range(3))
+#     Rtt, Rnn, Rtn = (np.zeros(num) for i in range(3))
     
-    for image_nr in progressbar.progressbar(range(1, n_images + 1)):
+#     for image_nr in progressbar.progressbar(range(1, n_images + 1)):
         
-        U, V = U_transient[:,:,image_nr-1], V_transient[:,:,image_nr-1]
+#         U, V = U_transient[:,:,image_nr-1], V_transient[:,:,image_nr-1]
 
-        Vx_profile = scipy.ndimage.map_coordinates(U, np.vstack((y_profile, x_profile)), order=order)
-        Vy_profile = scipy.ndimage.map_coordinates(V, np.vstack((y_profile, x_profile)), order=order)
+#         Vx_profile = scipy.ndimage.map_coordinates(U, np.vstack((y_profile, x_profile)), order=order)
+#         Vy_profile = scipy.ndimage.map_coordinates(V, np.vstack((y_profile, x_profile)), order=order)
     
-        Vt_profile, Vn_profile = np.dot(rotation_matrix, np.array([Vx_profile, Vy_profile]))
+#         Vt_profile, Vn_profile = np.dot(rotation_matrix, np.array([Vx_profile, Vy_profile]))
         
-        Rtt = Rtt + (Vt_profile - Vt_avg_profile)**2
-        Rnn = Rnn + (Vn_profile - Vn_avg_profile)**2
-        Rtn = Rtn + (Vt_profile - Vt_avg_profile)*(Vn_profile - Vn_avg_profile)
+#         Rtt = Rtt + (Vt_profile - Vt_avg_profile)**2
+#         Rnn = Rnn + (Vn_profile - Vn_avg_profile)**2
+#         Rtn = Rtn + (Vt_profile - Vt_avg_profile)*(Vn_profile - Vn_avg_profile)
     
-    Rtt /= n_images
-    Rnn /= n_images
-    Rtn /= n_images
+#     Rtt /= n_images
+#     Rnn /= n_images
+#     Rtn /= n_images
         
-    ax.plot(arbitrary_line, Rnn, c=color, ls="-")
-    ax.set_xlabel("distance along line [mm]")
-    ax.set_ylabel("$R_{nn}$ [m$^2$s$^{-2}$]")
-    ax.grid()
+#     ax.plot(arbitrary_line, Rnn, c=color, ls="-")
+#     ax.set_xlabel("distance along line [mm]")
+#     ax.set_ylabel("$R_{nn}$ [m$^2$s$^{-2}$]")
+#     ax.grid()
     
-    ax.set_xlim(np.array([arbitrary_line[0], arbitrary_line[-1]]))
-    # ax.set_ylim(np.array([cmin, cmax]))
+#     ax.set_xlim(np.array([arbitrary_line[0], arbitrary_line[-1]]))
+#     # ax.set_ylim(np.array([cmin, cmax]))
     
-    return Rtt, Rnn, Rtn
-    # return Rxx, Ryy, Rxy
+#     return Rtt, Rnn, Rtn
+#     # return Rxx, Ryy, Rxy
     
 # def plot_image(fig, ax, nx, ny):
 
@@ -511,23 +516,6 @@ def plot_reynolds_stress2_dim(fig, ax, rotation_matrix, coord0_mm, coord1_mm, n_
 
 def plot_strain_rate_dim(fig, ax, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num):
     
-    # c, s = np.cos(theta), np.sin(theta)
-    # rotation_matrix = np.array(((c, -s), (s, c)))
-    # rotation_matrix_T = np.transpose(rotation_matrix)
-    
-    # x0_mm, y0_mm = coord0_mm
-    # x1_mm, y1_mm = coord1_mm
-    # x0, y0 = (coord0_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
-    # x1, y1 = (coord1_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
-    
-    # x_profile, y_profile = np.linspace(x0, x1, num), np.linspace(y0, y1, num)
-    # x_profile, y_profile = np.linspace(x0_mm, x1_mm, num), np.linspace(y0_mm, y1_mm, num)
-    # profile_coords = np.column_stack((x_profile, y_profile))
-    
-    # Extract the values along the line, using first, second or third order interpolation
-    # profile_line_length = np.sqrt((x1_mm - x0_mm)**2 + (y1_mm - y0_mm)**2)
-    # profile_line = np.linspace(0, np.sqrt((x1_mm - x0_mm)**2 + (y1_mm - y0_mm)**2), int(profile_line_length/dx_piv))
-    
     X_values = X.flatten()
     Y_values = Y.flatten()
     
@@ -535,37 +523,31 @@ def plot_strain_rate_dim(fig, ax, rotation_matrix, theta, profile_coords, profil
     EXY_values = EXY.flatten()
     EYX_values = EYX.flatten()
     EYY_values = EYY.flatten()
+    EXY_EYX_div_2_values = EXY_EYX_div_2.flatten()
     
     EXX_profile = griddata((X_values, Y_values), EXX_values, profile_coords, method=interpolation_method)
     EXY_profile = griddata((X_values, Y_values), EXY_values, profile_coords, method=interpolation_method)
     EYX_profile = griddata((X_values, Y_values), EYX_values, profile_coords, method=interpolation_method)
-    EXY_TOTAL_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
+    # EXY_EYX_div_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
+    EXY_EYX_div_2_profile = griddata((X_values, Y_values), EXY_EYX_div_2_values, profile_coords, method=interpolation_method)
     EYY_profile = griddata((X_values, Y_values), EYY_values, profile_coords, method=interpolation_method)
     
-    ### Approach 1: Calculate Reynolds stresses on arbirtary line "manually"
-    ETT = EXX_profile*(np.cos(theta))**2 - 2*EXY_profile*np.cos(theta)*np.sin(theta) + EYY_profile*(np.sin(theta))**2
-    ETN = (EXX_profile - EYY_profile)*np.cos(theta)*np.sin(theta) + EXY_TOTAL_profile*((np.cos(theta))**2 - (np.sin(theta))**2)
-    ENN = EXX_profile*(np.sin(theta))**2 + 2*EXY_TOTAL_profile*np.cos(theta)*np.sin(theta) + EYY_profile*(np.cos(theta))**2
+    # ### Approach 1: Calculate Reynolds stresses on arbirtary line "manually"
+    # ETT = EXX_profile*(np.cos(theta))**2 - 2*EXY_EYX_div_2_profile*np.cos(theta)*np.sin(theta) + EYY_profile*(np.sin(theta))**2
+    # ETN = (EXX_profile - EYY_profile)*np.cos(theta)*np.sin(theta) + EXY_EYX_div_2_profile*((np.cos(theta))**2 - (np.sin(theta))**2)
+    # ENN = EXX_profile*(np.sin(theta))**2 + 2*EXY_EYX_div_2_profile*np.cos(theta)*np.sin(theta) + EYY_profile*(np.cos(theta))**2
 
-    ### Approach 2: Calculate Reynolds stresses on arbirtary line using rotation matrix [CORRECT RESULT WITH "INCORRECT" CODE]
-    # R_stress_tensor = np.array(((Rxx_profile, Rxy_profile), (Rxy_profile, Ryy_profile)))
-    # R_stress_tensor_rotated = rotation_matrix.dot(rotation_matrix.dot(R_stress_tensor))
+    ### Approach 2: Calculate Reynolds stresses on arbirtary line with matrix multiplication
+    T_strain = np.array(((EXX_profile, EXY_EYX_div_2_profile), (EXY_EYX_div_2_profile, EYY_profile)))
+    T_strain_rotated = np.zeros_like(T_strain)
     
-    # Rtt = R_stress_tensor_rotated[0,0,:]
-    # Rnn = R_stress_tensor_rotated[1,1,:]
-    # Rtn = R_stress_tensor_rotated[0,1,:]
+    for i in range(T_strain.shape[2]):
+        T_strain_rotated[:, :, i] = rotation_matrix @ T_strain[:, :, i] @ rotation_matrix.T
     
-    ### Approach 3: Calculate Reynolds stresses on arbirtary line using rotation matrix [CORRECT RESULT WITH "CORRECT" CODE]
-    # R_stress_tensor_dummy = np.zeros([2, 2, num])
-    # R_stress_tensor_rotated = np.zeros([2, 2, num])
-
-    # for i in range(num):
-    #     R_stress_tensor_dummy = rotation_matrix.dot(R_stress_tensor[:,:,i])
-    #     R_stress_tensor_rotated[:,:,i] = R_stress_tensor_dummy.dot(rotation_matrix_T)
     
-    # Rtt = R_stress_tensor_rotated[0,0,:]
-    # Rnn = R_stress_tensor_rotated[1,1,:]
-    # Rtn = R_stress_tensor_rotated[0,1,:]
+    ETT = T_strain_rotated[0, 0, :]
+    ENN = T_strain_rotated[1, 1, :]
+    ETN = T_strain_rotated[0, 1, :]
     
     ax.plot(profile_line, ENN, c=color, ls="-", marker="o")
     # ax.set_xlim(np.array([arbitrary_line[0], arbitrary_line[-1]]))
@@ -578,7 +560,7 @@ def plot_strain_rate_dim(fig, ax, rotation_matrix, theta, profile_coords, profil
     
     # ax.set_ylim(np.array([cmin, cmax]))
     
-    return EXX_profile, EYY_profile, EXY_TOTAL_profile
+    return EXX_profile, EYY_profile, EXY_EYX_div_2_profile
 
 
 def draw_walls(ax):
@@ -709,7 +691,7 @@ if __name__ == "__main__":
     csv_file = 'B0001.csv'
     piv_avgV_file = os.path.join(piv_avgV_dir, csv_file)
     
-    n_windows_x, n_windows_y, X, Y, AvgVx, AvgVy, AvgAbsV, RXY, RXX, RYY, TKE, EXX, EXY, EYX, EYY = read_flow_data(piv_avgV_file, normalized) 
+    n_windows_x, n_windows_y, X, Y, AvgVx, AvgVy, AvgAbsV, RXY, RXX, RYY, TKE, EXX, EXY, EYX, EYY, EXY_EYX_div_2 = read_flow_data(piv_avgV_file, normalized) 
     
     #%%% Read and save transient velocity data
     # n_images = 2500
@@ -962,13 +944,11 @@ if __name__ == "__main__":
         # plot_profile_nondim(fig5, ax5, rotation_matrix, coord0_mm, coord1_mm, AvgVx, AvgVy, label, cmin, cmax, color, num, order)
         
         #%%%%% Plot Reynolds normal stresses of selected cross-sections [Figure 6]
-        # Rxx_profile, Ryy_profile, Rxy_profile = plot_reynolds_stress1_dim(fig6, ax6, rotation_matrix, theta, coord0_mm, coord1_mm, label, cmin, cmax, color, num)
-        # Rxx_profile, Ryy_profile, Rxy_profile = plot_reynolds_stress1_dim(fig6, ax6, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num)
+        # Rxx_profile, Ryy_profile, Rxy_profile = plot_reynolds_stress_dim(fig6, ax6, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num)
         
         # Rtt, Rnn, Rtn = plot_reynolds_stress2_dim(fig6, ax6, rotation_matrix, coord0_mm, coord1_mm, n_images, U_transient, V_transient, Vt_avg_profile, Vn_avg_profile, label, 0, 1.5, color, num, order)
         
         #%%%%% Plot strains of selected cross-sections [Figure 6]
-        # Rxx_profile, Ryy_profile, Rxy_profile = plot_reynolds_stress1_dim(fig6, ax6, rotation_matrix, theta, coord0_mm, coord1_mm, label, cmin, cmax, color, num)
         Exx_profile, Eyy_profile, Exy_profile = plot_strain_rate_dim(fig6, ax6, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num)
         
         
