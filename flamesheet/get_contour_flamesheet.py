@@ -16,6 +16,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.patches as patches
 from scipy.signal import find_peaks, peak_prominences
+from scipy.interpolate import UnivariateSpline, CubicSpline
 from scipy import stats
 import imutils
 import pickle
@@ -60,61 +61,7 @@ def get_contour_data(procedure_nr, window_size, pre_record_data_path, pre_data_p
 
     return shape, contour, contour_length_pixels
 
-#%% METHOD A: PIXEL DENSITY METHOD
-def get_contour_procedure_pixel_density_method(window_size, pre_data_path, post_data_path, image_nr, extension, color, toggle_plot, save_image):
-    
-    #%% Step 1: read raw image
-    image_file = f'B{image_nr:04d}{extension}'
-    image_path = os.path.join(pre_data_path, image_file)
-    img_raw = cv2.imread(image_path, cv2.IMREAD_ANYDEPTH)
-    shape = img_raw.shape
-    
-    #%% Step 2: normalize the signal intensity of raw image to unity based on global raw image maxima and minima
-    img_normalized = cv2.normalize(img_raw, dst=None, alpha=0, beta=1.0, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-    
-    #%% Step 3: apply averaging filter on normalized image
-    w_size = int(window_size)
-    kernel = np.ones((w_size, w_size), np.float32)/(w_size**2)
-    img_pixel_density = cv2.filter2D(img_normalized, -1, kernel)
-    
-    #%% Step 4: obtain threshold value corresponding to a minimum probability 
-    threshold_value = get_thresholding_value(img_pixel_density, toggle_plot) 
-    
-    #%% Step 5: binarize the bilateral filtered image
-    threshold_type, maxVal  = cv2.THRESH_BINARY, 1                              
-    ret, img_binary = cv2.threshold(img_pixel_density, threshold_value, maxVal, threshold_type)
-    
-    #%% Step 6: extract largest contour == flame front
-    contour, contour_length_pixels = find_and_draw_flame_contours(img_binary)
-    
-    #%% Turn plots on or off
-    brighten_factor = 8
-    
-    if toggle_plot:
-        
-        toggle_contour = False
-        title = 'raw image (\#' + str(image_nr) + ')'
-        # title = ''
-        plot_image(title, img_raw, brighten_factor, contour, toggle_contour, color)
-        
-        title = 'Average filtered image (\#' + str(image_nr) + ')'
-        # title = ''
-        plot_image(title, img_pixel_density, brighten_factor, contour, toggle_contour, color)
-        
-        toggle_contour = True
-        title = 'raw image (\#' + str(image_nr) + ')' + ' with contour'
-        # title = ''
-        plot_image(title , img_raw, brighten_factor, contour, toggle_contour, color)
-        
 
-    #%% Final step: save images with contour drawn into the raw image
-    if save_image:
-        path = os.path.join(post_data_path, 'pdm', f'w_size_{w_size}')
-        save_contour_images(path, image_nr, img_raw, brighten_factor, contour, color)
-    
-    return shape, contour, contour_length_pixels
-
-    
 #%% METHOD B: BILATERAL FILTER METHOD
 def get_contour_procedure_bilateral_filter_method(window_size, mask_path, record_data_path, post_data_path, image_nr, extension, color, toggle_plot, save_image): 
 
@@ -164,27 +111,44 @@ def get_contour_procedure_bilateral_filter_method(window_size, mask_path, record
     sigma_space = filter_diameter/2.0
     img_bilateral = cv2.bilateralFilter(img_normalized, filter_diameter, sigma_color, sigma_space)
     
+    # img_normalized = cv2.normalize(img_raw, dst=None, alpha=0, beta=1.0, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+    # img_bilateral = cv2.bilateralFilter(img_normalized, filter_diameter, sigma_color, sigma_space)
+    
     # img_bilateral = bilateral_filter(result_normalized, mask, filter_diameter, sigma_color, sigma_space) 
     # img_bilateral = bilateral_filter_own(result_normalized, filter_diameter, sigma_color, sigma_space)
     
     fig, ax = plt.subplots()
     brighten_factor = 200
+    # im = ax.imshow(img_bilateral, vmin=np.min(img_bilateral.flatten())/brighten_factor, vmax=np.max(img_bilateral.flatten())/brighten_factor)  # Display the masked image
+    
+    
+    with open(os.path.join('figures', 'bfm', 'B0001'), 'rb') as f:
+            img_bilateral = pickle.load(f)
+    
     im = ax.imshow(img_bilateral, vmin=np.min(img_bilateral.flatten())/brighten_factor, vmax=np.max(img_bilateral.flatten())/brighten_factor)  # Display the masked image
     
     # Add a colorbar
     cbar = fig.colorbar(im, ax=ax)
-    cbar.set_label('Intensity', rotation=270, labelpad=15)  # Label for the colorbar
-
-
+    cbar.set_label('Intensity', rotation=270, labelpad=15)  # Label for the colorbar    
+    
     #%% [4] Obtain threshold value corresponding to a minimum probability 
     threshold_value = get_thresholding_value(img_bilateral, mask, toggle_plot)
-
+    
+    print(threshold_value)
+    
     #%% [5] Binarize the bilateral filtered image 
     threshold_type, maxVal  = cv2.THRESH_BINARY, 1                             
     ret, img_binary = cv2.threshold(img_bilateral, threshold_value, maxVal, threshold_type)
     
+    fig, ax = plt.subplots()
+    im = ax.imshow(img_binary, vmin=0, vmax=1)  # Display the masked image
+    
+    img_new = cv2.bitwise_and(img_binary, img_binary, mask=mask)
+    
     #%% [6] Extract largest contour == flame front
-    contour, contour_length_pixels = find_and_draw_flame_contours(img_binary)
+    contour, contour_length_pixels = find_and_draw_flame_contours(img_new, mask)
+    
+    # print(contour)
     
     #%% [7]Turn plots on or off
     brighten_factor = 8
@@ -193,81 +157,9 @@ def get_contour_procedure_bilateral_filter_method(window_size, mask_path, record
     
     if toggle_plot:
         
-        # fig, axs = plt.subplots(1, 3, figsize=(10, 6))
-        # plt.subplots_adjust(wspace=-.3)
-        # plot_images(axs, img_raw, img_bilateral, brighten_factor, contour, color)
-        
-        # fig.tight_layout()
-        # filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_detection_B{image_nr}'
-        # eps_path = os.path.join('figures', f"{filename}.eps")
-        # fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
-        
-        # toggle_contour = False
-        # title = 'raw image (\#' + str(image_nr) + ')'
-        # title = ''
-        # plot_image(title, img_raw, brighten_factor, contour, toggle_contour, color)
-        
-        # title = 'Bilateral filtered image (\#' + str(image_nr) + ')'
-        # toggle_contour = False
-        # title = ''
-        # plot_image(title, img_bilateral, brighten_factor, contour, toggle_contour, color)
-        
-        # toggle_contour = True
-        # title = 'raw image (\#' + str(image_nr) + ')' + ' with contour'
-        title = ''
-        # plot_image(title , img_raw, brighten_factor, contour, toggle_contour, color)
-        
-    #%% [8] Save images with contour drawn into the raw image
-    if save_image:
-    
-        path = os.path.join(post_data_path, 'bfm', f'w_size_{w_size}')
-        save_contour_images(path, image_nr, img_raw, brighten_factor, contour, color)
-    
-    return shape, contour, contour_length_pixels
-
-#%% METHOD C: BILATERAL FILTER METHOD + INTENSITY CORRECTION
-def get_contour_procedure_bilateral_filter_method2(window_size, pre_data_path, post_data_path, image_nr, extension, color, toggle_plot, save_image): 
-    
-    #%% [1] Read raw image
-    image_file = f'B{image_nr:04d}{extension}'
-    image_path = os.path.join(pre_data_path, image_file)
-    img_raw = cv2.imread(image_path, cv2.IMREAD_ANYDEPTH)
-    shape = img_raw.shape
-    
-    w_size = int(window_size)
-    
-    #%% [2] Normalize the signal intensity of raw image to unity based on global raw image maxima and minima
-    img_normalized = cv2.normalize(img_raw, dst=None, alpha=0, beta=1.0, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-    img_raw_boxfilter = cv2.boxFilter(img_normalized, -1, (w_size, w_size))
-    img_divide = np.divide(img_normalized, img_raw_boxfilter)
-    img_normalized = cv2.normalize(img_divide, dst=None, alpha=0, beta=1.0, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-    
-    #%% [3] Apply bilateral filter on normalized image
-    filter_diameter = w_size
-    sigma_color = 0.1
-    sigma_space = filter_diameter/2.0
-    img_bilateral = cv2.bilateralFilter(img_normalized, filter_diameter, sigma_color, sigma_space)
-    
-    #%% [4] Obtain threshold value corresponding to a minimum probability 
-    threshold_value = get_thresholding_value(img_bilateral, toggle_plot)
-
-    #%% [5] Binarize the bilateral filtered image 
-    threshold_type, maxVal  = cv2.THRESH_BINARY, 1                             
-    ret, img_binary = cv2.threshold(img_bilateral, threshold_value, maxVal, threshold_type)
-    
-    #%% [6] Extract largest contour == flame front
-    contour, contour_length_pixels = find_and_draw_flame_contours(img_binary)
-    
-    #%% [7]Turn plots on or off
-    brighten_factor = 4
-    
-    toggle_plot = True
-    
-    if toggle_plot:
-        
-        # fig, axs = plt.subplots(1, 3, figsize=(10, 6))
-        
-        # plot_images(axs, img_raw, img_bilateral, brighten_factor, contour, color)
+        fig, axs = plt.subplots(1, 3, figsize=(10, 6))
+        plt.subplots_adjust(wspace=-.3)
+        plot_images(axs, img_raw, img_bilateral, brighten_factor, contour, color)
         
         # fig.tight_layout()
         # filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_detection_B{image_nr}'
@@ -275,17 +167,18 @@ def get_contour_procedure_bilateral_filter_method2(window_size, pre_data_path, p
         # fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
         
         toggle_contour = False
-        # title = 'raw image (\#' + str(image_nr) + ')'
+        title = 'raw image (\#' + str(image_nr) + ')'
         title = ''
         plot_image(title, img_raw, brighten_factor, contour, toggle_contour, color)
         
-        # title = 'Bilateral filtered image (\#' + str(image_nr) + ')'
-        toggle_contour = False
+        title = 'Bilateral filtered image (\#' + str(image_nr) + ')'
+        toggle_contour = True
         title = ''
-        plot_image(title, img_divide, brighten_factor, contour, toggle_contour, color)
+        brighten_factor = 128
+        plot_image(title, img_bilateral, brighten_factor, contour, toggle_contour, color)
         
         toggle_contour = True
-        # title = 'raw image (\#' + str(image_nr) + ')' + ' with contour'
+        title = 'raw image (\#' + str(image_nr) + ')' + ' with contour'
         title = ''
         plot_image(title , img_raw, brighten_factor, contour, toggle_contour, color)
         
@@ -296,10 +189,10 @@ def get_contour_procedure_bilateral_filter_method2(window_size, pre_data_path, p
         save_contour_images(path, image_nr, img_raw, brighten_factor, contour, color)
     
     return shape, contour, contour_length_pixels
+
 #%% MAIN FUNCTIONS
 
 def get_thresholding_value(image, mask, toggle_plot):
-    
     
     quantity = image[mask == 1]
     
@@ -310,57 +203,57 @@ def get_thresholding_value(image, mask, toggle_plot):
     percentile_99 = np.percentile(quantity, 99)
     percentile_99_double = 1*percentile_99
     
-    # # Filter the data using the double the value of the 99th percentile
-    # quantity = quantity[quantity <= percentile_99_double]
+    # Filter the data using the double the value of the 99th percentile
+    quantity = quantity[quantity <= percentile_99_double]
     
-    # # Create a Gaussian Kernel Density Estimation (KDE) object using quantity
-    # gkde_obj = stats.gaussian_kde(quantity)
+    # Create a Gaussian Kernel Density Estimation (KDE) object using quantity
+    gkde_obj = stats.gaussian_kde(quantity)
     
-    # x_pts = np.linspace(0, np.max(quantity), 1000)
-    # estimated_pdf = gkde_obj.evaluate(x_pts)
+    x_pts = np.linspace(0, np.max(quantity), 1000)
+    estimated_pdf = gkde_obj.evaluate(x_pts)
     
-    # # Extract fitted distribution
-    # dist_data_x = x_pts
-    # dist_data_y = estimated_pdf
+    # Extract fitted distribution
+    dist_data_x = x_pts
+    dist_data_y = estimated_pdf
     
-    # # Find the peaks in the distribution
-    # peaks, _ = find_peaks(dist_data_y)
+    # Find the peaks in the distribution
+    peaks, _ = find_peaks(dist_data_y)
     
-    # # Obtain the prominences of the peaks
-    # prominences = peak_prominences(dist_data_y, peaks)[0]
+    # Obtain the prominences of the peaks
+    prominences = peak_prominences(dist_data_y, peaks)[0]
     
-    # # Create a list of tuples containing peak information: (peak index, prominence, x coordinate, y coordinate)
-    # peak_coords = list(zip(peaks, prominences, dist_data_x[peaks], dist_data_y[peaks]))
+    # Create a list of tuples containing peak information: (peak index, prominence, x coordinate, y coordinate)
+    peak_coords = list(zip(peaks, prominences, dist_data_x[peaks], dist_data_y[peaks]))
     
-    # # Sort the peak coordinates in descending order based on prominence
-    # peak_coords_prominence_descending = sorted(peak_coords, key = lambda x:x[1], reverse=True)
+    # Sort the peak coordinates in descending order based on prominence
+    peak_coords_prominence_descending = sorted(peak_coords, key = lambda x:x[1], reverse=True)
     
-    # # Sort the top 2 peak coordinates in ascending order based on probability
-    # peak_coords_sorted_probability = sorted(peak_coords_prominence_descending[0:2], key = lambda x:x[3])
+    # Sort the top 2 peak coordinates in ascending order based on probability
+    peak_coords_sorted_probability = sorted(peak_coords_prominence_descending[0:2], key = lambda x:x[3])
     
-    # # Sort the peak coordinates based on the index
-    # accepted_peak_coords = sorted(peak_coords_sorted_probability, key = lambda x:x[0])
+    # Sort the peak coordinates based on the index
+    accepted_peak_coords = sorted(peak_coords_sorted_probability, key = lambda x:x[0])
     
-    # # print(accepted_peak_coords)
+    # print(accepted_peak_coords)
     
-    # accepted_peaks = [accepted_peak_coord[0] for accepted_peak_coord in accepted_peak_coords]
+    accepted_peaks = [accepted_peak_coord[0] for accepted_peak_coord in accepted_peak_coords]
     
-    # quantity_range = dist_data_x[accepted_peaks[0]:accepted_peaks[-1]]
-    # probability_range = dist_data_y[accepted_peaks[0]:accepted_peaks[-1]]
+    quantity_range = dist_data_x[accepted_peaks[0]:accepted_peaks[-1]]
+    probability_range = dist_data_y[accepted_peaks[0]:accepted_peaks[-1]]
     
-    # min_probability_index = np.argmin(probability_range)
+    min_probability_index = np.argmin(probability_range)
     
     toggle_plot = True
     
     if toggle_plot:
         
-        # quantity_coord = quantity_range[min_probability_index]
-        # probability_coord = probability_range[min_probability_index]
+        quantity_coord = quantity_range[min_probability_index]
+        probability_coord = probability_range[min_probability_index]
         
         fig, ax = plot_pixel_density_histogram(quantity, mask, percentile_99_double)
         
-        # ax.plot(dist_data_x, dist_data_y, color='#000080', ls='-', label='kernel density estimation')
-        # # ax.plot(quantity_coord, probability_coord, color='#db3236', marker='x', ms=10, mew=2, ls='None')
+        ax.plot(dist_data_x, dist_data_y, color='r', ls='-', label='kernel density estimation')
+        ax.plot(quantity_coord, probability_coord, color='#db3236', marker='x', ms=10, mew=2, ls='None')
         
         # # Plot the vertical line on the axis
         # ax.axvline(x=quantity_coord, ymin=0, ymax=0.6, color='#db3236', ls='--', label='minimum probability') 
@@ -387,12 +280,12 @@ def get_thresholding_value(image, mask, toggle_plot):
         # # eps_path = os.path.join('figures', f"{filename}.eps")
         # # fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
         
-    # # Determine threshold pixel density (separating unburnt and burnt side) [value corresponding to minimum probability]
-    # threshold = quantity_range[min_probability_index]
+    # Determine threshold pixel density (separating unburnt and burnt side) [value corresponding to minimum probability]
+    threshold = quantity_range[min_probability_index]
     
-    # return threshold
+    return threshold
 
-def find_and_draw_flame_contours(img_binary):
+def find_and_draw_flame_contours(img_binary, mask):
     
     img_binary_8bit = (img_binary * (2 ** 8 - 1)).astype(np.uint8)
     
@@ -406,31 +299,53 @@ def find_and_draw_flame_contours(img_binary):
     # Find the largest contour
     largest_contour = max(contours, key=cv2.contourArea)
     
-    # print(largest_contour[:])
-    
-    # Compute point where flame anchors at burner rim on right and left hand side
-    # image axis start in top left corner and are positive in right and downward direction 
-    contour_all_y_values = np.hstack(largest_contour[:,:,1])
-    y_max = np.where(contour_all_y_values == max(contour_all_y_values))[0]
-    
-    contour_x_values_at_y_max = np.hstack(largest_contour[y_max,:,0])
-    x_right = np.where(contour_x_values_at_y_max == max(contour_x_values_at_y_max))[0]
-    x_left = np.where(contour_x_values_at_y_max == min(contour_x_values_at_y_max))[0]
-    
-    right_point_index = y_max[x_right[0]] 
-    left_point_index = y_max[x_left[0]] 
-    
-    diff = len(largest_contour) - right_point_index
-    
-    right_indices = np.linspace(right_point_index, (len(largest_contour) - 1), diff)
-    left_indices = np.linspace(0, left_point_index, left_point_index + 1)
-    total_indices = np.concatenate((right_indices, left_indices)).astype('int64')
-    
-    contour = largest_contour[total_indices]
+    # contour = largest_contour[total_indices]
+    contour_flame_front = largest_contour
     closed_contour = False
+    contour_length_pixels = cv2.arcLength(contour_flame_front, closed_contour)
+    
+    
+    ### MASK
+    img_mask_8bit = (mask * (2 ** 8 - 1)).astype(np.uint8)
+    
+    # Find the contours
+    src = img_mask_8bit # Input image array
+    contour_retrieval = cv2.RETR_TREE # Contour retrieval mode
+    contours_approx = cv2.CHAIN_APPROX_NONE
+    contours_found = cv2.findContours(src, contour_retrieval, contours_approx)
+    contours = imutils.grab_contours(contours_found)
+    
+    # Find the largest contour
+    largest_contour = max(contours, key=cv2.contourArea)
+    
+    # contour = largest_contour[total_indices]
+    contour_mask = largest_contour
+    closed_contour = False
+    contour_length_pixels = cv2.arcLength(contour_mask, closed_contour)
+    
+    # Convert contours to sets of tuples for easy comparison
+    contour_mask_set = set(tuple(point[0]) for point in contour_mask)
+    
+    # Create z as a list to collect points
+    contour = []
+    
+    # Iterate through x and add points to z if they are not in y_set
+    for point in contour_flame_front:
+        if tuple(point[0]) not in contour_mask_set:
+            contour.append(point)
+        else:
+            break
+    
+    # Convert z to numpy array (if needed)
+    contour = np.array(contour)
+    
+    contour_spline = fit_parametric_cubic_spline(contour)
+    
     contour_length_pixels = cv2.arcLength(contour, closed_contour)
     
-    return contour, contour_length_pixels
+    print(type(contour_spline), contour_spline.shape, len(contour_spline))
+
+    return contour_spline, contour_length_pixels
 
 
 
@@ -563,7 +478,11 @@ def plot_image(title, image, brighten_factor, contour, toggle_contour, color):
     if toggle_contour:
         contour_x = contour[:,:,0]
         contour_y = contour[:,:,1]
-        ax.plot(contour_x, contour_y, color, lw=4)
+        ax.plot(contour_x, contour_y, color, lw=1)
+        ax.plot(contour_x[0], contour_y[0], 'yx')
+        ax.plot(contour_x[-1], contour_y[-1], 'gx')
+        
+        
     
     # if toggle_contour:
         
@@ -724,7 +643,41 @@ def save_contour_images(path,image_nr, img_raw, brighten_factor, contour, color)
     
     # fig1.savefig(file_name + '_raw.png', dpi=dpi) 
     # fig2.savefig(file_name + '.png', dpi=dpi) 
+
+def fit_parametric_cubic_spline(coords, num_points=5):
+    
+    print(coords.shape, type(coords))
+    step = len(coords) // (num_points * 2)  # Calculate the step size
+    
+    # Select coordinates with step
+    selected_coords = coords[::step].squeeze(axis=1)  # Remove the single-dimensional entries
+    
+    # Check if the last coordinate is already included
+    if len(coords) % step != 0:
+        selected_coords = np.vstack([selected_coords, coords[-1].squeeze()])
         
+    s = np.arange(len(selected_coords))
+    
+    s_interp = np.linspace(s.min(), s.max(), num=1000)
+    
+    print(coords[:,:,0])
+    
+    x_spline = CubicSpline(s, selected_coords[:,0], bc_type='not-a-knot')
+    y_spline = CubicSpline(s, selected_coords[:,1], bc_type='not-a-knot')
+
+    x_interp = x_spline(s_interp)
+    y_interp = y_spline(s_interp)
+    
+    # Calculate the arc length
+    dx_interp = np.diff(x_interp)
+    dy_interp = np.diff(y_interp)
+    
+    spline_coords = np.column_stack((x_interp, y_interp))
+    
+    spline_coords = spline_coords[:, np.newaxis, :] 
+    
+    return spline_coords
+      
 #%% MAIN
 
 if __name__ == "__main__":
@@ -760,8 +713,9 @@ if __name__ == "__main__":
     
     post_data_path = 'post_data'
 
-    image_nr = 1
+    image_nr = 5
     
+    record_data_path
     toggle_plot = True
     save_image = False
     

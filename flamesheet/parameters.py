@@ -22,21 +22,18 @@ case = 0
 if case == 0:
     # test99, H2% = 100, phi = 0.35, Re_H = 5000, image_rate = 0.2 kHz
     day_nr = '23-2'
-    project_name = "flamesheet_2d_day" + day_nr
     record_name = "Recording_Date=230215_Time=153433_01"
     pre_record_name = "Recording_Date=230215_Time=153306"
     u_bulk_measured = 8.57
 elif case == 1:
     # test101, H2% = 100, phi = 0.35, Re_H = 7000, image_rate = 0.2 kHz
     day_nr = '23-2'
-    project_name = "flamesheet_2d_day" + day_nr
     record_name = "Recording_Date=230215_Time=160055_01"
     pre_record_name = "Recording_Date=230215_Time=153306"
     u_bulk_measured = 11.88
 elif case == 2:    
     # test103, H2% = 0, phi = 0, Re_H = 7000, image_rate = 0.2 kHz
     day_nr = '24-1'
-    project_name = "flamesheet_2d_day" + day_nr
     record_name = "Recording_Date=230216_Time=103453_01"
     pre_record_name = "Recording_Date=230216_Time=103309"
     u_bulk_measured = 10.33
@@ -59,6 +56,7 @@ elif case == 5:
     pre_record_name = "Recording_Date=230215_Time=153306" #Recording_Date=230215_Time=135049
     u_bulk_measured = 11.82
     
+project_name = "flamesheet_2d_day" + day_nr
 
 # H2% = 100, phi = 0.3, Re_H = 7000, image_rate = 0.2 kHz 
 # record_name = 'Recording_Date=221118_Time=115220_01'
@@ -78,7 +76,7 @@ elif case == 5:
 piv_result = "PIV_MP(3x32x32_50%ov_ImgCorr)_01"
 
 # Interpolation method used to interpolate data to grid data
-interpolation_method = 'linear'
+interpolation_method = 'nearest'
 
 #%%%%  Define data directories
 project_dir = os.path.join(main_dir, project_name)

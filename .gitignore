@@ -8,6 +8,9 @@ flame_front_detection/post_data/
 flame_simulations/__pycache__
 flame_simulations/figures/
 
+flamesheet/__pycache__
+flamesheet/figures/
+
 local_flame_speed/__pycache__
 local_flame_speed/figures/
 
