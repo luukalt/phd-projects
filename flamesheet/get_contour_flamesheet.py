@@ -116,11 +116,11 @@ def get_contour_procedure_pixel_density_method(window_size, pre_data_path, post_
 
     
 #%% METHOD B: BILATERAL FILTER METHOD
-def get_contour_procedure_bilateral_filter_method(window_size, pre_record_data_path, pre_data_path, post_data_path, image_nr, extension, color, toggle_plot, save_image): 
+def get_contour_procedure_bilateral_filter_method(window_size, mask_path, record_data_path, post_data_path, image_nr, extension, color, toggle_plot, save_image): 
 
     #%% [1] Read raw image
     image_file = f'B{image_nr:04d}{extension}'
-    image_path = os.path.join(pre_data_path, image_file)
+    image_path = os.path.join(record_data_path, image_file)
     img_raw = cv2.imread(image_path, cv2.IMREAD_ANYDEPTH)
     shape = img_raw.shape
     
@@ -129,7 +129,7 @@ def get_contour_procedure_bilateral_filter_method(window_size, pre_record_data_p
     
     image_nr_mask = 1
     image_file = f'B{image_nr_mask:04d}{extension}'
-    mask_path = os.path.join(pre_record_data_path, image_file)
+    mask_path = os.path.join(mask_path, image_file)
     mask = cv2.imread(mask_path, cv2.IMREAD_ANYDEPTH)
     mask = (mask > 0).astype(np.uint8)
     
@@ -754,18 +754,20 @@ if __name__ == "__main__":
     extension = '.tif'
 
     # pre_data_path = os.path.join(cwd, flame.pre_data_folder, flame.name, f'session_{flame.session_nr:03}' , flame.record_name, 'Correction', 'Resize', f'Frame{frame_nr}', 'Export_01')
-    pre_data_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', record_name, 'Correction', 'NonLinear_SubSlidingMin', f'Frame{frame_nr}', 'Export_01')
-    pre_record_data_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', pre_record_name, 'MaskCreateGeometric_01', 'MakePermanentImgMask', 'AboveBelow', 'Correction', f'Frame{frame_nr}', 'Export_01')
+    record_data_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', record_name, 'Correction', 'NonLinear_SubSlidingMin', f'Frame{frame_nr}', 'Export_01')
+    # mask_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', pre_record_name, 'MaskCreateGeometric_01', 'MakePermanentImgMask', 'AboveBelow', 'Correction', f'Frame{frame_nr}', 'Export_01')
+    mask_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', 'Masks')
+    
     post_data_path = 'post_data'
 
-    image_nr = 10
+    image_nr = 1
     
     toggle_plot = True
     save_image = False
     
     procedure_nr = 2
     
-    shape, contour, contour_length_pixels = get_contour_data(procedure_nr, window_size, pre_record_data_path, pre_data_path, post_data_path, image_nr, extension, toggle_plot, save_image)
+    shape, contour, contour_length_pixels = get_contour_data(procedure_nr, window_size, mask_path, record_data_path, post_data_path, image_nr, extension, toggle_plot, save_image)
 
 
 
