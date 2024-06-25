@@ -6,6 +6,7 @@ Created on Fri Sep 23 16:11:23 2022
 """
 #%% IMPORT PACKAGES 
 import os
+import pickle
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib import cm
@@ -91,7 +92,7 @@ def read_xy_dimensions(file):
     x_raw_array = pivot_intensity.columns
     y_raw_array = pivot_intensity.index
     x_raw, y_raw = np.meshgrid(x_raw_array, y_raw_array)
-    # window_size_x_raw, window_size_y_raw = np.mean(np.diff(x_raw_array)), -np.mean(np.diff(y_raw_array))
+    window_size_x_raw, window_size_y_raw = np.mean(np.diff(x_raw_array)), -np.mean(np.diff(y_raw_array))
     
     # Parameters for correcting contours from pixel coordinates to physical coordinates
     x_left_raw = x_raw_array[0]
@@ -102,7 +103,7 @@ def read_xy_dimensions(file):
     # print(n_windows_x_raw, n_windows_y_raw)
     # print(y_bottom_raw, y_top_raw)
     
-    return x_raw, y_raw
+    return x_raw, y_raw, x_left_raw, x_right_raw, y_bottom_raw, y_top_raw, window_size_x_raw, window_size_y_raw
 
 
 def read_flow_data(file, normalized):
@@ -169,7 +170,7 @@ def read_flow_data(file, normalized):
     
     headers = df_strain.columns
     
-    print(headers)
+    # print(headers)
     
     pivot_EXX = pd.pivot_table(df_strain, values=headers[2], index=headers[1], columns=headers[0])
     pivot_EXY = pd.pivot_table(df_strain, values=headers[3], index=headers[1], columns=headers[0])
@@ -316,11 +317,10 @@ def plot_profile_dim(fig, ax, rotation_matrix, profile_coords, profile_line, qua
     # quantity_x_profile[-1] = 0
     # quantity_y_profile[-1] = 0
     
-    # quantity_tangent_profile, quantity_normal_profile  = np.dot(rotation_matrix, np.array([quantity_x_profile, quantity_y_profile]))
     quantity_tangent_profile, quantity_normal_profile  = np.dot(rotation_matrix, np.array([quantity_x_profile, quantity_y_profile]))
     
-    quantity_tangent_profile = quantity_x_profile*np.cos(theta) - quantity_y_profile*np.sin(theta)
-    quantity_normal_profile = quantity_x_profile*np.sin(theta) + quantity_y_profile*np.cos(theta)
+    # quantity_tangent_profile = quantity_x_profile*np.cos(theta) - quantity_y_profile*np.sin(theta)
+    # quantity_normal_profile = quantity_x_profile*np.sin(theta) + quantity_y_profile*np.cos(theta)
     
     ax.plot(profile_line, quantity_normal_profile, c=color, ls='solid', marker='o')
     
@@ -336,41 +336,76 @@ def plot_profile_dim(fig, ax, rotation_matrix, profile_coords, profile_line, qua
     ax.axhline(y=0, color='k')
     
     u_bulk_2d = trapezoid(quantity_normal_profile, profile_line)/10
-    print(trapezoid(quantity_normal_profile, profile_line))
-    print("u_bulk_measured_2d= {0:.1f} m/s".format(u_bulk_2d))
+    # print(trapezoid(quantity_normal_profile, profile_line))
+    # print("u_bulk_measured_2d= {0:.1f} m/s".format(u_bulk_2d))
     
     return quantity_x_profile, quantity_y_profile, quantity_tangent_profile, quantity_normal_profile
 
+def plot_curved_profile_dim(fig, ax, profile_coords, quantity_x, quantity_y, label, cmin, cmax, color, num):
 
-# def plot_profile_nondim(fig, ax, rotation_matrix, coord0_mm, coord1_mm, quantity_x, quantity_y, label, cmin, cmax, color, num, order):
+    X_values = X.flatten()
+    Y_values = Y.flatten()
+    quantity_x_values = quantity_x.flatten()
+    quantity_y_values = quantity_y.flatten()
     
-#     x0, y0 = (coord0_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
-#     x1, y1 = (coord1_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
+    quantity_x_profile = griddata((X_values, Y_values), quantity_x_values, profile_coords, method=interpolation_method)
+    quantity_y_profile = griddata((X_values, Y_values), quantity_y_values, profile_coords, method=interpolation_method)
     
-#     x_profile, y_profile = np.linspace(x0, x1, num), np.linspace(y0, y1, num)
-#     ax[0].plot(x_profile, y_profile, c=color, ls="--", marker="None")
+    # quantity_x_profile[0] = 0
+    # quantity_y_profile[0] = 0
+    # quantity_x_profile[-1] = 0
+    # quantity_y_profile[-1] = 0
     
-#     ax[0].set_xlabel('interrogation windows')
-#     ax[0].set_ylabel('interrogation windows')
+    # Compute rotation matrices along the curved profile
+    rotation_matrices, thetas = compute_rotation_matrices(profile_coords)
     
-#     # Extract the values along the line, using first, second or third order interpolation
-#     quantity_x_profile = scipy.ndimage.map_coordinates(quantity_x, np.vstack((y_profile, x_profile)), order=order)
-#     quantity_y_profile = scipy.ndimage.map_coordinates(quantity_y, np.vstack((y_profile, x_profile)), order=order)
+    quantity_tangent_profile = []
+    quantity_normal_profile = []
     
-#     # quantity_tangent_profile, quantity_normal_profile  = np.dot(rotation_matrix, np.array([quantity_x_profile, quantity_y_profile]))
+    for i in range(len(profile_coords)):
+        
+        rotation_matrix = rotation_matrices[i]
+        qx = quantity_x_profile[i]
+        qy = quantity_y_profile[i]
+        qt, qn = np.dot(rotation_matrix, np.array([qx, qy]))
+        quantity_tangent_profile.append(qt)
+        quantity_normal_profile.append(qn)
     
-#     quantity_tangent_profile = quantity_x_profile*np.cos(theta) - quantity_y_profile*np.sin(theta)
-#     quantity_normal_profile = quantity_x_profile*np.sin(theta) + quantity_y_profile*np.cos(theta)
+    quantity_tangent_profile = np.array(quantity_tangent_profile)
+    quantity_normal_profile = np.array(quantity_normal_profile)
     
-#     ax[1].plot(quantity_normal_profile, c=color, ls='solid', marker='o')
+    # quantity_tangent_profile, quantity_normal_profile  = np.dot(rotation_matrix, np.array([quantity_x_profile, quantity_y_profile]))
     
-#     ax[1].set_xlabel('-')
-#     ax[1].set_ylabel("$V_{n}$ [ms$^-1$]")
+    # quantity_tangent_profile = quantity_x_profile*np.cos(theta) - quantity_y_profile*np.sin(theta)
+    # quantity_normal_profile = quantity_x_profile*np.sin(theta) + quantity_y_profile*np.cos(theta)
     
-#     ax[1].set_xlim(np.array([0, len(quantity_x_profile)]))
-#     # ax[1].set_ylim(np.array([cmin, cmax]))
-#     ax[1].grid()
-#     ax[1].axhline(y=0, color='k')
+    x_profile, y_profile = profile_coords[:, 0], profile_coords[:, 1]
+    distances = np.sqrt(np.diff(x_profile)**2 + np.diff(y_profile)**2)
+    cumulative_distances = np.cumsum(distances)
+    profile_line = np.insert(cumulative_distances, 0, 0)
+    
+    ax.plot(profile_line, quantity_tangent_profile, c='r', ls='solid', marker='None')
+    ax.plot(profile_line, quantity_normal_profile, c='b', ls='solid', marker='None')
+    ax.plot(profile_line, thetas, c='k', ls='dashed', marker='None')
+    ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
+    
+    
+    ax.set_xlabel("distance along line [mm]", fontsize=fontsize)
+    ax.set_ylabel("$V_{n}$ [ms$^-1$]", fontsize=fontsize)
+    ax.tick_params(axis='both', labelsize=fontsize)
+    # ax[1].set_ylabel("$R_{NN}$ [ms$^-1$]")
+    
+    
+    # ax.set_xlim(np.array([0, 30]))
+    # ax[1].set_ylim(np.array([cmin, cmax]))
+    ax.grid()
+    ax.axhline(y=0, color='k')
+    
+    u_bulk_2d = trapezoid(quantity_normal_profile, profile_line)/10
+    # print(trapezoid(quantity_normal_profile, profile_line))
+    # print("u_bulk_measured_2d= {0:.1f} m/s".format(u_bulk_2d))
+    
+    return quantity_x_profile, quantity_y_profile, quantity_tangent_profile, quantity_normal_profile
     
     
 def plot_reynolds_stress_dim(fig, ax, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num):
@@ -450,47 +485,7 @@ def plot_reynolds_stress_dim(fig, ax, rotation_matrix, theta, profile_coords, pr
     return RXX_profile, RYY_profile, RXY_profile
 
 
-# def plot_reynolds_stress2_dim(fig, ax, rotation_matrix, coord0_mm, coord1_mm, n_images, U_transient, V_transient, Vt_avg_profile, Vn_avg_profile, label, cmin, cmax, color, num, order): 
-    
-#     x0_mm, y0_mm = coord0_mm
-#     x1_mm, y1_mm = coord1_mm
-#     x0, y0 = (coord0_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
-#     x1, y1 = (coord1_mm - np.array([X0, Y0]))/np.array([dx_piv, dy_piv])
-    
-#     x_profile, y_profile = np.linspace(x0, x1, num), np.linspace(y0, y1, num)
-    
-#     # Extract the values along the line, using first, second or third order interpolation
-#     arbitrary_line = np.linspace(0, np.sqrt((x1_mm - x0_mm)**2 + (y1_mm - y0_mm)**2), num)
-    
-#     Rtt, Rnn, Rtn = (np.zeros(num) for i in range(3))
-    
-#     for image_nr in progressbar.progressbar(range(1, n_images + 1)):
-        
-#         U, V = U_transient[:,:,image_nr-1], V_transient[:,:,image_nr-1]
 
-#         Vx_profile = scipy.ndimage.map_coordinates(U, np.vstack((y_profile, x_profile)), order=order)
-#         Vy_profile = scipy.ndimage.map_coordinates(V, np.vstack((y_profile, x_profile)), order=order)
-    
-#         Vt_profile, Vn_profile = np.dot(rotation_matrix, np.array([Vx_profile, Vy_profile]))
-        
-#         Rtt = Rtt + (Vt_profile - Vt_avg_profile)**2
-#         Rnn = Rnn + (Vn_profile - Vn_avg_profile)**2
-#         Rtn = Rtn + (Vt_profile - Vt_avg_profile)*(Vn_profile - Vn_avg_profile)
-    
-#     Rtt /= n_images
-#     Rnn /= n_images
-#     Rtn /= n_images
-        
-#     ax.plot(arbitrary_line, Rnn, c=color, ls="-")
-#     ax.set_xlabel("distance along line [mm]")
-#     ax.set_ylabel("$R_{nn}$ [m$^2$s$^{-2}$]")
-#     ax.grid()
-    
-#     ax.set_xlim(np.array([arbitrary_line[0], arbitrary_line[-1]]))
-#     # ax.set_ylim(np.array([cmin, cmax]))
-    
-#     return Rtt, Rnn, Rtn
-#     # return Rxx, Ryy, Rxy
     
 # def plot_image(fig, ax, nx, ny):
 
@@ -541,6 +536,8 @@ def plot_strain_rate_dim(fig, ax, rotation_matrix, theta, profile_coords, profil
     T_strain = np.array(((EXX_profile, EXY_EYX_div_2_profile), (EXY_EYX_div_2_profile, EYY_profile)))
     T_strain_rotated = np.zeros_like(T_strain)
     
+    print(T_strain.shape[2])
+    
     for i in range(T_strain.shape[2]):
         T_strain_rotated[:, :, i] = rotation_matrix @ T_strain[:, :, i] @ rotation_matrix.T
     
@@ -562,6 +559,182 @@ def plot_strain_rate_dim(fig, ax, rotation_matrix, theta, profile_coords, profil
     
     return EXX_profile, EYY_profile, EXY_EYX_div_2_profile
 
+def plot_curved_profile_dim(fig, ax, profile_coords, quantity_x, quantity_y, label, cmin, cmax, color, num):
+
+    X_values = X.flatten()
+    Y_values = Y.flatten()
+    quantity_x_values = quantity_x.flatten()
+    quantity_y_values = quantity_y.flatten()
+    
+    quantity_x_profile = griddata((X_values, Y_values), quantity_x_values, profile_coords, method=interpolation_method)
+    quantity_y_profile = griddata((X_values, Y_values), quantity_y_values, profile_coords, method=interpolation_method)
+    
+    # quantity_x_profile[0] = 0
+    # quantity_y_profile[0] = 0
+    # quantity_x_profile[-1] = 0
+    # quantity_y_profile[-1] = 0
+    
+    # Compute rotation matrices along the curved profile
+    rotation_matrices, thetas = compute_rotation_matrices(profile_coords)
+    
+    quantity_tangent_profile = []
+    quantity_normal_profile = []
+    
+    for i in range(len(profile_coords)):
+        
+        rotation_matrix = rotation_matrices[i]
+        qx = quantity_x_profile[i]
+        qy = quantity_y_profile[i]
+        qt, qn = np.dot(rotation_matrix, np.array([qx, qy]))
+        quantity_tangent_profile.append(qt)
+        quantity_normal_profile.append(qn)
+    
+    quantity_tangent_profile = np.array(quantity_tangent_profile)
+    quantity_normal_profile = np.array(quantity_normal_profile)
+    
+    # quantity_tangent_profile, quantity_normal_profile  = np.dot(rotation_matrix, np.array([quantity_x_profile, quantity_y_profile]))
+    
+    # quantity_tangent_profile = quantity_x_profile*np.cos(theta) - quantity_y_profile*np.sin(theta)
+    # quantity_normal_profile = quantity_x_profile*np.sin(theta) + quantity_y_profile*np.cos(theta)
+    
+    x_profile, y_profile = profile_coords[:, 0], profile_coords[:, 1]
+    distances = np.sqrt(np.diff(x_profile)**2 + np.diff(y_profile)**2)
+    cumulative_distances = np.cumsum(distances)
+    profile_line = np.insert(cumulative_distances, 0, 0)
+    
+    ax.plot(profile_line, quantity_tangent_profile, c='r', ls='solid', marker='None')
+    ax.plot(profile_line, quantity_normal_profile, c='b', ls='solid', marker='None')
+    ax.plot(profile_line, thetas, c='k', ls='dashed', marker='None')
+    ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
+    
+    
+    ax.set_xlabel("distance along line [mm]", fontsize=fontsize)
+    ax.set_ylabel("$V_{n}$ [ms$^-1$]", fontsize=fontsize)
+    ax.tick_params(axis='both', labelsize=fontsize)
+    # ax[1].set_ylabel("$R_{NN}$ [ms$^-1$]")
+    
+    
+    # ax.set_xlim(np.array([0, 30]))
+    # ax[1].set_ylim(np.array([cmin, cmax]))
+    ax.grid()
+    ax.axhline(y=0, color='k')
+    
+    u_bulk_2d = trapezoid(quantity_normal_profile, profile_line)/10
+    # print(trapezoid(quantity_normal_profile, profile_line))
+    # print("u_bulk_measured_2d= {0:.1f} m/s".format(u_bulk_2d))
+    
+    return quantity_x_profile, quantity_y_profile, quantity_tangent_profile, quantity_normal_profile
+
+
+def plot_curved_strain_rate_dim(fig, ax, profile_coords, label, cmin, cmax, color, num):
+    
+    X_values = X.flatten()
+    Y_values = Y.flatten()
+    
+    EXX_values = EXX.flatten()
+    EXY_values = EXY.flatten()
+    EYX_values = EYX.flatten()
+    EYY_values = EYY.flatten()
+    EXY_EYX_div_2_values = EXY_EYX_div_2.flatten()
+    
+    EXX_profile = griddata((X_values, Y_values), EXX_values, profile_coords, method=interpolation_method)
+    EXY_profile = griddata((X_values, Y_values), EXY_values, profile_coords, method=interpolation_method)
+    EYX_profile = griddata((X_values, Y_values), EYX_values, profile_coords, method=interpolation_method)
+    # EXY_EYX_div_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
+    EXY_EYX_div_2_profile = griddata((X_values, Y_values), EXY_EYX_div_2_values, profile_coords, method=interpolation_method)
+    EYY_profile = griddata((X_values, Y_values), EYY_values, profile_coords, method=interpolation_method)
+    
+    # Compute rotation matrices along the curved profile
+    rotation_matrices, thetas = compute_rotation_matrices(profile_coords)
+    
+    ### Approach 2: Calculate Reynolds stresses on arbirtary line with matrix multiplication
+    T_strain = np.array(((EXX_profile, EXY_EYX_div_2_profile), (EXY_EYX_div_2_profile, EYY_profile)))
+    T_strain_rotated = np.zeros_like(T_strain)
+    
+    for i in range(len(profile_coords)):
+        
+        rotation_matrix = rotation_matrices[i]
+        
+        T_strain_rotated[:, :, i] = rotation_matrix @ T_strain[:, :, i] @ rotation_matrix.T
+        
+    
+    ETT = T_strain_rotated[0, 0, :]
+    ENN = T_strain_rotated[1, 1, :]
+    ETN = T_strain_rotated[0, 1, :]
+    
+    x_profile, y_profile = profile_coords[:, 0], profile_coords[:, 1]
+    distances = np.sqrt(np.diff(x_profile)**2 + np.diff(y_profile)**2)
+    cumulative_distances = np.cumsum(distances)
+    profile_line = np.insert(cumulative_distances, 0, 0)
+    
+    ax.plot(profile_line, ETT, c='r', ls="solid", marker="None")
+    ax.plot(profile_line, ENN, c='b', ls="solid", marker="None")
+    ax.plot(profile_line, thetas, c='k', ls='dashed', marker='None')
+    ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
+    
+    ax.set_xlabel("distance along line [mm]", fontsize=fontsize)
+    ax.set_ylabel("$E_{nn}$ [$1/s$]", fontsize=fontsize)
+    ax.tick_params(axis='both', labelsize=fontsize)
+    ax.grid()
+    
+    # ax.set_ylim(np.array([-10, 10]))
+    
+    return EXX_profile, EYY_profile, EXY_EYX_div_2_profile
+
+def plot_curved_strain_rate_dim(fig, ax, profile_coords, label, cmin, cmax, color, num):
+    
+    X_values = X.flatten()
+    Y_values = Y.flatten()
+    
+    EXX_values = EXX.flatten()
+    EXY_values = EXY.flatten()
+    EYX_values = EYX.flatten()
+    EYY_values = EYY.flatten()
+    EXY_EYX_div_2_values = EXY_EYX_div_2.flatten()
+    
+    EXX_profile = griddata((X_values, Y_values), EXX_values, profile_coords, method=interpolation_method)
+    EXY_profile = griddata((X_values, Y_values), EXY_values, profile_coords, method=interpolation_method)
+    EYX_profile = griddata((X_values, Y_values), EYX_values, profile_coords, method=interpolation_method)
+    # EXY_EYX_div_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
+    EXY_EYX_div_2_profile = griddata((X_values, Y_values), EXY_EYX_div_2_values, profile_coords, method=interpolation_method)
+    EYY_profile = griddata((X_values, Y_values), EYY_values, profile_coords, method=interpolation_method)
+    
+    # Compute rotation matrices along the curved profile
+    rotation_matrices, thetas = compute_rotation_matrices(profile_coords)
+    
+    ### Approach 2: Calculate Reynolds stresses on arbirtary line with matrix multiplication
+    T_strain = np.array(((EXX_profile, EXY_EYX_div_2_profile), (EXY_EYX_div_2_profile, EYY_profile)))
+    T_strain_rotated = np.zeros_like(T_strain)
+    
+    for i in range(len(profile_coords)):
+        
+        rotation_matrix = rotation_matrices[i]
+        
+        T_strain_rotated[:, :, i] = rotation_matrix @ T_strain[:, :, i] @ rotation_matrix.T
+        
+    
+    ETT = T_strain_rotated[0, 0, :]
+    ENN = T_strain_rotated[1, 1, :]
+    ETN = T_strain_rotated[0, 1, :]
+    
+    x_profile, y_profile = profile_coords[:, 0], profile_coords[:, 1]
+    distances = np.sqrt(np.diff(x_profile)**2 + np.diff(y_profile)**2)
+    cumulative_distances = np.cumsum(distances)
+    profile_line = np.insert(cumulative_distances, 0, 0)
+    
+    ax.plot(profile_line, ETT, c='r', ls="solid", marker="None")
+    ax.plot(profile_line, ENN, c='b', ls="solid", marker="None")
+    ax.plot(profile_line, thetas, c='k', ls='dashed', marker='None')
+    ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
+    
+    ax.set_xlabel("distance along line [mm]", fontsize=fontsize)
+    ax.set_ylabel("$E_{nn}$ [$1/s$]", fontsize=fontsize)
+    ax.tick_params(axis='both', labelsize=fontsize)
+    ax.grid()
+    
+    # ax.set_ylim(np.array([-10, 10]))
+    
+    return EXX_profile, EYY_profile, EXY_EYX_div_2_profile
 
 def draw_walls(ax):
 
@@ -670,13 +843,58 @@ def circle_line_segment_intersection(circle_center, circle_radius, pt1, pt2, ful
             return [intersections[0]]
         else:
             return intersections
-   
+
+def contour_correction(x_left_raw, x_right_raw, y_bottom_raw, y_top_raw, window_size_x_raw, window_size_y_raw):
+    
+    with open(os.path.join('pickles', f'{record_name}.pkl'), 'rb') as f:
+            contour = pickle.load(f)
+            
+    segmented_contour = contour
+    
+    segmented_contour_x = segmented_contour[:, 0, 0]
+    segmented_contour_y = segmented_contour[:, 0, 1]
+    
+    # x and y coordinates of the discretized (segmented) flame front 
+    contour_x_corrected = segmented_contour_x*window_size_x_raw + x_left_raw
+    contour_y_corrected = segmented_contour_y*window_size_y_raw + y_top_raw
+    
+    # Non-dimensionalize coordinates by pipe diameter
+    contour_x_corrected /= 1 #D_in
+    contour_y_corrected /= 1 #D_in
+    
+    contour_x_corrected_array = np.array(contour_x_corrected)
+    contour_y_corrected_array = np.array(contour_y_corrected)
+    
+    # Combine the x and y coordinates into a single array of shape (n_coords, 2)
+    contour_corrected_coords = np.array([contour_x_corrected_array, contour_y_corrected_array]).T
+
+    # Create a new array of shape (n_coords, 1, 2) and assign the coordinates to it
+    contour_corrected = np.zeros((len(contour_x_corrected_array), 1, 2))
+    contour_corrected[:, 0, :] = contour_corrected_coords
+    
+    return contour_corrected  
+
+def compute_rotation_matrices(profile_coords):
+    tangents = np.diff(profile_coords, axis=0)
+    tangents = np.vstack([tangents, tangents[-1]])  # Repeat the last tangent for the last point
+    
+    norms = np.linalg.norm(tangents, axis=1, keepdims=True)
+    tangents = tangents / norms  # Normalize tangents
+    
+    thetas = np.arctan2(tangents[:, 1], tangents[:, 0])
+    
+    thetas = [-np.abs(theta) for theta in thetas]
+    
+    rotation_matrices = [np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]) for theta in thetas]
+    
+    return rotation_matrices, thetas
+
 #%% MAIN
 
 if __name__ == "__main__":
 
     #%%% Read info of the raw images
-    x_raw, y_raw = read_xy_dimensions(calibration_csv_file)
+    x_raw, y_raw, x_left_raw, x_right_raw, y_bottom_raw, y_top_raw, window_size_x_raw, window_size_y_raw = read_xy_dimensions(calibration_csv_file)
     
     # Invert the y-axis
     y_raw = y_raw[::-1]
@@ -693,6 +911,10 @@ if __name__ == "__main__":
     
     n_windows_x, n_windows_y, X, Y, AvgVx, AvgVy, AvgAbsV, RXY, RXX, RYY, TKE, EXX, EXY, EYX, EYY, EXY_EYX_div_2 = read_flow_data(piv_avgV_file, normalized) 
     
+    contour_correction = contour_correction(x_left_raw, x_right_raw, y_bottom_raw, y_top_raw, window_size_x_raw, window_size_y_raw)
+    
+    contour_correction2 = contour_correction[:, 0, :]
+    contour_correction2 = contour_correction2[::-1]
     #%%% Read and save transient velocity data
     # n_images = 2500
     # U_transient = np.zeros([n_windows_y, n_windows_x, n_images])
@@ -809,6 +1031,12 @@ if __name__ == "__main__":
     #%%%%% Plot vector field
     plot_vector_field(fig1, ax1, X, Y, AvgVx, AvgVy)
     
+    contour_x = contour_correction2[:,0]
+    contour_y = contour_correction2[:,1]
+    ax1.plot(contour_x, contour_y, 'm', lw=2)
+    ax1.plot(contour_x[250], contour_y[250], 'c', marker='x', ls='None')
+    
+    
     #%%%%% Plot streamlines
     # streamlines = plot_streamlines(fig1, ax1, X, Y, AvgVx, AvgVy)
     
@@ -885,11 +1113,11 @@ if __name__ == "__main__":
     
     # Angle with respect to the horizon of cross-section for profile in degrees
     # thetas_deg = [80, 60, 30, 0, 0, 0, 0] 
-    thetas_deg = [60, 30, 0, 0, 0] 
+    thetas_deg = [60, 30, 0, 0, 0, 0] 
     
     thetas = np.radians(thetas_deg) # Conversion to radians
     
-    vertical_locs = [0, 0, 0, 15, 30] # in mm
+    vertical_locs = [0, 0, 0, 7.5, 15, 30] # in mm
     
     # vertical_locs = [vertical_coord, vertical_coord, vertical_coord, 9, 18, 27] # in mm
     
@@ -940,6 +1168,8 @@ if __name__ == "__main__":
         profile_coords, profile_line = plot_profile_in_field(fig4, ax4, coord0_mm, coord1_mm, color, num)
         Vx_avg_profile, Vy_avg_profile, Vt_avg_profile, Vn_avg_profile = plot_profile_dim(fig5, ax5, rotation_matrix, profile_coords, profile_line, AvgVx, AvgVy, label, cmin, cmax, color, num)
         
+        
+        print(type(profile_line), profile_line.shape)
         #%%%%% Plot velocity profiles without dimensions [Figure 5]
         # plot_profile_nondim(fig5, ax5, rotation_matrix, coord0_mm, coord1_mm, AvgVx, AvgVy, label, cmin, cmax, color, num, order)
         
@@ -955,7 +1185,13 @@ if __name__ == "__main__":
         #%%%%% Write data to lists
         profile_lines.append(profile_line)
         Vn_avg_profiles.append(Vn_avg_profile)
-
+    
+    figY, axY = plt.subplots()
+    profile_coords = contour_correction2
+    # Vx_avg_profile, Vy_avg_profile, Vt_avg_profile, Vn_avg_profile = plot_curved_profile_dim(figY, axY, profile_coords, AvgVx, AvgVy, label, cmin, cmax, color, num)
+    
+    Exx_profile, Eyy_profile, Exy_profile = plot_curved_strain_rate_dim(figY, axY, profile_coords, label, cmin, cmax, color, num)
+    
     # for profile_id in profile_ids:
         
     #     f  = open("V_n_profile" + str(profile_id) + ".csv", "w")
