@@ -389,7 +389,7 @@ def plot_curved_profile_dim(fig, ax, profile_coords, quantity_x, quantity_y, lab
     ax.plot(profile_line, quantity_tangent_profile, c='r', ls='solid', marker='None')
     ax.plot(profile_line, quantity_normal_profile, c='b', ls='solid', marker='None')
     ax.plot(profile_line, thetas, c='k', ls='dashed', marker='None')
-    ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
+    # ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
     
     
     ax.set_xlabel("distance along line [mm]")
@@ -636,7 +636,7 @@ def plot_curved_profile_dim(fig, ax, profile_coords, quantity_x, quantity_y, lab
     ax.plot(profile_line, quantity_tangent_profile, c='r', ls='solid', marker='None')
     ax.plot(profile_line, quantity_normal_profile, c='b', ls='solid', marker='None')
     ax.plot(profile_line, thetas, c='k', ls='dashed', marker='None')
-    ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
+    # ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
     
     
     ax.set_xlabel("distance along line [mm]")
@@ -696,7 +696,7 @@ def plot_curved_reynolds_stress_dim(fig, ax, profile_coords, label, cmin, cmax, 
     ax.plot(profile_line, RTT, c='r', ls="solid", marker="None")
     ax.plot(profile_line, RNN, c='b', ls="solid", marker="None")
     ax.plot(profile_line, thetas, c='k', ls='dashed', marker='None')
-    ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
+    # ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
     
     ax.set_xlabel("distance along line [mm]")
     ax.set_ylabel("$R_{nn}$ [m$^2$s$^{-2}$]")
@@ -751,7 +751,7 @@ def plot_curved_strain_rate_dim(fig, ax, profile_coords, label, cmin, cmax, colo
     ax.plot(profile_line, ETT, c='r', ls="solid", marker="None")
     ax.plot(profile_line, ENN, c='b', ls="solid", marker="None")
     ax.plot(profile_line, thetas, c='k', ls='dashed', marker='None')
-    ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
+    # ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
     
     ax.set_xlabel("distance along line [mm]", fontsize=fontsize)
     ax.set_ylabel("$E_{nn}$ [$1/s$]", fontsize=fontsize)
@@ -903,7 +903,7 @@ def circle_line_segment_intersection(circle_center, circle_radius, pt1, pt2, ful
 
 def contour_correction(x_left_raw, x_right_raw, y_bottom_raw, y_top_raw, window_size_x_raw, window_size_y_raw):
     
-    with open(os.path.join('pickles', f'{record_name}.pkl'), 'rb') as f:
+    with open(os.path.join('pickles', f'{record_name}_BfmOfAvg_wsize_{window_size}.pkl'), 'rb') as f:
             contour = pickle.load(f)
             
     segmented_contour = contour
@@ -981,6 +981,7 @@ if __name__ == "__main__":
     
     contour_correction2 = contour_correction[:, 0, :]
     contour_correction2 = contour_correction2[::-1]
+    contour_correction2 = contour_correction2[contour_correction2[:, 0] > 5]
     
     # contour_correction2[:, 1] -= -3
     
@@ -1060,8 +1061,6 @@ if __name__ == "__main__":
                      ]
     
     
-    
-    
     #%%% Plots
     plt.close("all")    
     
@@ -1103,7 +1102,25 @@ if __name__ == "__main__":
     contour_x = contour_correction2[:,0]
     contour_y = contour_correction2[:,1]
     ax1.plot(contour_x, contour_y, 'm', lw=2)
-    ax1.plot(contour_x[250], contour_y[250], 'c', marker='x', ls='None')
+    # ax1.plot(contour_x[250], contour_y[250], 'c', marker='x', ls='None')
+    
+    def find_highest_negative_index(arr):
+        highest_row_index = -1
+        corresponding_col_index = -1
+    
+        for row_idx in range(len(arr) - 1, -1, -1):
+            for col_idx in range(len(arr[row_idx])):
+                if arr[row_idx][col_idx] < 0:
+                    highest_row_index = row_idx
+                    corresponding_col_index = col_idx
+                    return highest_row_index, corresponding_col_index  # Return as soon as we find the highest negative value
+        return None  # Return None if no negative value is found
+    
+    highest_row_index, corresponding_col_index = find_highest_negative_index(AvgVy)
+    print(highest_row_index, corresponding_col_index)
+    
+    ax1.plot(X[0, corresponding_col_index], Y[highest_row_index, 0], 'c', marker='x', ls='None')
+    
     
     #%%%%% Plot streamlines
     # streamlines = plot_streamlines(fig1, ax1, X, Y, AvgVx, AvgVy)

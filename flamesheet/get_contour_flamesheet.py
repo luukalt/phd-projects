@@ -16,24 +16,17 @@ import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.patches as patches
 from scipy.signal import find_peaks, peak_prominences
-from scipy.interpolate import UnivariateSpline, CubicSpline
+from scipy.interpolate import UnivariateSpline, CubicSpline, interp1d
 from scipy import stats
 import imutils
 import pickle
+from tqdm import tqdm
 
-# Add the 'main' folder to sys.path
-parent_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-# flame_front_detection_directory = os.path.abspath(os.path.join(parent_folder, 'flame_front_detection'))
-flame_simulations_directory = os.path.abspath(os.path.join(parent_folder, 'flame_simulations'))
-plot_parameters_directory = os.path.abspath(os.path.join(parent_folder, 'plot_parameters'))
-
-# Add the flame_object_directory to sys.path
-sys.path.append(parent_folder)
-# sys.path.append(flame_front_detection_directory)
-sys.path.append(flame_simulations_directory)
-sys.path.append(plot_parameters_directory)
-
-# from contour_properties import contour_segmentation
+#%% IMPORT USER DEFINED PACKAGES
+from sys_paths import parent_directory
+import sys_paths
+import rc_params_settings
+from parameters import *
 from plot_params import colormap, fontsize, fontsize_legend
 
 figures_folder = 'figures'
@@ -65,8 +58,8 @@ def get_contour_procedure_bilateral_filter_method(window_size, mask_path, record
     img_raw = cv2.imread(image_path, cv2.IMREAD_ANYDEPTH)
     shape = img_raw.shape
     
-    print(shape)
-    print(shape[0]*shape[1])
+    # print(shape)
+    # print(shape[0]*shape[1])
     
     image_nr_mask = 1
     image_file = f'B{image_nr_mask:04d}{extension}'
@@ -87,20 +80,20 @@ def get_contour_procedure_bilateral_filter_method(window_size, mask_path, record
     # result_normalized = (result_float - min_valid) / (max_valid - min_valid)
     # # result_normalized[mask == 0] = np.nan
 
-    fig, axs = plt.subplots(1, 3)
-    axs[0].imshow(mask)  # Display the masked image
-    axs[1].imshow(img_raw)  # Display the masked image
-    brighten_factor = 32
-    axs[2].imshow(result, vmin=np.min(result.flatten())/brighten_factor, vmax=np.max(result.flatten())/brighten_factor)  # Display the masked image
+    # fig, axs = plt.subplots(1, 3)
+    # axs[0].imshow(mask)  # Display the masked image
+    # axs[1].imshow(img_raw)  # Display the masked image
+    # brighten_factor = 32
+    # axs[2].imshow(result, vmin=np.min(result.flatten())/brighten_factor, vmax=np.max(result.flatten())/brighten_factor)  # Display the masked image
     
     #%% [2] Normalize the signal intensity of raw image to unity based on global raw image maxima and minima
     img_normalized = cv2.normalize(result, dst=None, alpha=0, beta=1.0, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-    fig, ax = plt.subplots()
-    brighten_factor = 1
-    ax.imshow(img_normalized, vmin=np.min(img_normalized.flatten())/brighten_factor, vmax=np.max(img_normalized.flatten())/brighten_factor)  # Display the masked image
+    # fig, ax = plt.subplots()
+    # brighten_factor = 1
+    # ax.imshow(img_normalized, vmin=np.min(img_normalized.flatten())/brighten_factor, vmax=np.max(img_normalized.flatten())/brighten_factor)  # Display the masked image
     
     #%% [3] Apply bilateral filter on normalized image
-    w_size = int(window_size*1)
+    w_size = int(window_size)
     filter_diameter = w_size
     sigma_color = 0.1
     sigma_space = filter_diameter/2.0
@@ -112,44 +105,46 @@ def get_contour_procedure_bilateral_filter_method(window_size, mask_path, record
     # img_bilateral = bilateral_filter(result_normalized, mask, filter_diameter, sigma_color, sigma_space) 
     # img_bilateral = bilateral_filter_own(result_normalized, filter_diameter, sigma_color, sigma_space)
     
-    fig, ax = plt.subplots()
+    # fig, ax = plt.subplots()
     # brighten_factor = 300
     # im = ax.imshow(img_bilateral, vmin=np.min(img_bilateral.flatten())/brighten_factor, vmax=np.max(img_bilateral.flatten())/brighten_factor)  # Display the masked image
     
     
-    with open(os.path.join('figures', 'bfm', 'SubOverTimeMin_sl=99'), 'rb') as f:
-            img_bilateral = pickle.load(f)
+    # with open(os.path.join('figures', 'bfm', 'SubOverTimeMin_sl=99'), 'rb') as f:
+    #         img_bilateral = pickle.load(f)
     
-    im = ax.imshow(img_bilateral, vmin=np.min(img_bilateral.flatten())/brighten_factor, vmax=np.max(img_bilateral.flatten())/brighten_factor)  # Display the masked image
+    # im = ax.imshow(img_bilateral, vmin=np.min(img_bilateral.flatten())/brighten_factor, vmax=np.max(img_bilateral.flatten())/brighten_factor)  # Display the masked image
     
     # Add a colorbar
-    cbar = fig.colorbar(im, ax=ax)
-    cbar.set_label('Intensity', rotation=270, labelpad=15)  # Label for the colorbar    
+    # cbar = fig.colorbar(im, ax=ax)
+    # cbar.set_label('Intensity', rotation=270, labelpad=15)  # Label for the colorbar    
     
     #%% [4] Obtain threshold value corresponding to a minimum probability 
     threshold_value = get_thresholding_value(img_bilateral, mask, toggle_plot)
     
-    print(threshold_value)
+    # print(threshold_value)
     
     # threshold_value = 0.0021
     #%% [5] Binarize the bilateral filtered image 
     threshold_type, maxVal  = cv2.THRESH_BINARY, 1                             
     ret, img_binary = cv2.threshold(img_bilateral, threshold_value, maxVal, threshold_type)
     
-    fig, ax = plt.subplots()
-    im = ax.imshow(img_binary, vmin=0, vmax=1)  # Display the masked image
+    # fig, ax = plt.subplots()
+    # im = ax.imshow(img_binary, vmin=0, vmax=1)  # Display the masked image
     
     img_new = cv2.bitwise_and(img_binary, img_binary, mask=mask)
     
+    # im = ax.imshow(img_new, vmin=0, vmax=1)  # Display the masked image
+    
     #%% [6] Extract largest contour == flame front
-    contour, contour_length_pixels, selected_coords = find_and_draw_flame_contours(img_new, mask)
+    contour, contour_length_pixels = find_and_draw_flame_contours(img_new, mask)
     
     # print(contour)
     
     #%% [7]Turn plots on or off
-    brighten_factor = 8
+    brighten_factor = 16
     
-    toggle_plot = True
+    # toggle_plot = False
     
     if toggle_plot:
         
@@ -165,22 +160,21 @@ def get_contour_procedure_bilateral_filter_method(window_size, mask_path, record
         toggle_contour = False
         title = 'raw image (\#' + str(image_nr) + ')'
         title = ''
-        plot_image(title, img_raw, brighten_factor, contour, selected_coords, toggle_contour, color)
+        plot_image(title, img_raw, brighten_factor, contour, toggle_contour, color)
         
         title = 'Bilateral filtered image (\#' + str(image_nr) + ')'
         toggle_contour = True
         title = ''
-        brighten_factor = 8
-        plot_image(title, img_bilateral, brighten_factor, contour, selected_coords, toggle_contour, color)
+        brighten_factor = 16
+        plot_image(title, img_bilateral, brighten_factor, contour, toggle_contour, color)
         
         toggle_contour = True
         title = 'raw image (\#' + str(image_nr) + ')' + ' with contour'
         title = ''
-        plot_image(title , img_raw, brighten_factor, contour, selected_coords, toggle_contour, color)
+        plot_image(title , img_raw, brighten_factor, contour, toggle_contour, color)
         
     #%% [8] Save images with contour drawn into the raw image
     if save_image:
-    
         path = os.path.join(post_data_path, 'bfm', f'w_size_{w_size}')
         save_contour_images(path, image_nr, img_raw, brighten_factor, contour, color)
     
@@ -192,7 +186,7 @@ def get_thresholding_value(image, mask, toggle_plot):
     
     quantity = image[mask == 1]
     
-    print(len(quantity))
+    # print(len(quantity))
     # quantity = image.flatten()
     
     # Compute the 99th percentile
@@ -285,6 +279,8 @@ def find_and_draw_flame_contours(img_binary, mask):
     
     img_binary_8bit = (img_binary * (2 ** 8 - 1)).astype(np.uint8)
     
+    # img_binary_8bit = cv2.bitwise_and(img_binary_8bit, img_binary_8bit, mask=mask)
+    
     # Find the contours
     src = img_binary_8bit # Input image array
     contour_retrieval = cv2.RETR_TREE # Contour retrieval mode
@@ -295,12 +291,10 @@ def find_and_draw_flame_contours(img_binary, mask):
     # Find the largest contour
     largest_contour = max(contours, key=cv2.contourArea)
     
-    
     # contour = largest_contour[total_indices]
     contour_flame_front = largest_contour
     closed_contour = False
     contour_length_pixels = cv2.arcLength(contour_flame_front, closed_contour)
-    
     
     ### MASK
     img_mask_8bit = (mask * (2 ** 8 - 1)).astype(np.uint8)
@@ -330,21 +324,23 @@ def find_and_draw_flame_contours(img_binary, mask):
     for point in contour_flame_front:
         if tuple(point[0]) not in contour_mask_set:
             contour.append(point)
-        
+    
     # Convert z to numpy array (if needed)
     contour = np.array(contour)
     
-    contour_spline, selected_coords = fit_parametric_cubic_spline(contour)
+    # contour_spline, selected_coords = fit_parametric_cubic_spline(contour)
+    
+    _, _, segmented_contour = contour_segmentation(contour, segment_length_pixels)
     
     # print(contour_flame_front)
     # print(contour_mask)
-    print(type(contour_spline))
+    # print(type(contour_spline))
     
     # contour_length_pixels = cv2.arcLength(contour_spline, closed_contour)
     contour_length_pixels = 0
     # print(type(contour_spline), contour_spline.shape, len(contour_spline))
 
-    return contour_spline, contour_length_pixels, selected_coords
+    return segmented_contour, contour_length_pixels
 
 
 
@@ -464,28 +460,27 @@ def plot_images(axs, image1, image2, brighten_factor, contour, color):
                 bbox=dict(facecolor="w", edgecolor='k', boxstyle='round')
                 )
     
-def plot_image(title, image, brighten_factor, contour, selected_coords, toggle_contour, color):
+def plot_image(title, image, brighten_factor, contour, toggle_contour, color):
     
     fig, ax = plt.subplots(figsize=(6, 6))
     ax.set_title(title)
     ax.imshow(image, cmap="gray", vmin=np.min(image.flatten())/brighten_factor, vmax=np.max(image.flatten())/brighten_factor)
-    ax.set_xlabel('pixels', fontsize=fontsize)
-    ax.set_ylabel('pixels', fontsize=fontsize)
+    ax.set_xlabel('pixels', fontsize=16)
+    ax.set_ylabel('pixels', fontsize=16)
     
     # segmented_contour_x, segmented_contour_y, segmented_contour = contour_segmentation(contour, flame.segment_length_pixels)
     
     if toggle_contour:
         contour_x = contour[:,:,0]
         contour_y = contour[:,:,1]
-        ax.plot(contour_x, contour_y, color, lw=1)
+        ax.plot(contour_x, contour_y, color, ls='None', marker='.', ms=1)
         
-        ax.plot(contour_x[0], contour_y[0], 'yx')
-        ax.plot(contour_x[-1], contour_y[-1], 'gx')
+        # ax.plot(contour_x[0], contour_y[0], 'yx')
+        # ax.plot(contour_x[-1], contour_y[-1], 'gx')
         
-        
-        selected_coord_x = selected_coords[:,:,0]
-        selected_coord_y = selected_coords[:,:,1]
-        ax.plot(selected_coord_x, selected_coord_y, 'mo')
+        # selected_coord_x = selected_coords[:,:,0]
+        # selected_coord_y = selected_coords[:,:,1]
+        # ax.plot(selected_coord_x, selected_coord_y, 'mo')
         
         
     
@@ -621,7 +616,7 @@ def plot_pixel_density_histogram(quantity, mask, x_lim_right):
     return fig, ax
 
 
-def save_contour_images(path,image_nr, img_raw, brighten_factor, contour, color):
+def save_contour_images(path, image_nr, img_raw, brighten_factor, contour, color):
     
     # create a new directory because it does not exist 
     if not os.path.exists(path):
@@ -657,7 +652,7 @@ def fit_parametric_cubic_spline(coords, num_points=5):
     # Select coordinates with step
     selected_coords = coords[::step]  # Remove the single-dimensional entries
     
-    print(coords.shape)
+    # print(coords.shape)
     
     # Check if the last coordinate is already included
     # if len(coords) % step != 0:
@@ -683,7 +678,62 @@ def fit_parametric_cubic_spline(coords, num_points=5):
     spline_coords = spline_coords[:, np.newaxis, :] 
     
     return spline_coords, selected_coords
-      
+
+
+def contour_segmentation(contour, segment_length_pixels):
+    
+    x, y = contour[:,0,0], contour[:,0,1]
+    
+    # Linear length on the line
+    distance = np.cumsum(np.sqrt( np.ediff1d(x, to_begin=0)**2 + np.ediff1d(y, to_begin=0)**2 ))
+    distance = distance/distance[-1]
+    
+    # print(len(distance))
+    # fx, fy = interp1d(distance, flatten(contour_x)), interp1d(distance, flatten(contour_y))
+    fx, fy = interp1d(distance, x), interp1d(distance, y)
+    
+    n_interp_points = np.linspace(0, 1, 10001)
+    x_interp, y_interp = fx(n_interp_points), fy(n_interp_points)
+
+    x_segment = [x_interp[0]]
+    y_segment = [y_interp[0]]
+    
+    i = 0
+    counter = 0
+    
+    while i < len(x_interp):
+        
+        counter += 1
+        
+        for j in range(i, len(x_interp)):
+            
+            segment_distance = np.sqrt((x_interp[j] - x_interp[i])**2 + (y_interp[j] - y_interp[i])**2)
+            
+            if segment_distance >= segment_length_pixels:
+                
+                x_segment.append(x_interp[j])
+                y_segment.append(y_interp[j])
+                break
+        
+        i = j
+        
+        if counter > len(x_interp):
+            break
+    
+    segmented_contour_x = np.array(x_segment)
+    segmented_contour_y = np.array(y_segment)
+    
+    # Combine the x and y coordinates into a single array of shape (n_coords, 2)
+    segmented_coords = np.array([segmented_contour_x, segmented_contour_y]).T
+
+    # Create a new array of shape (n_coords, 1, 2) and assign the coordinates to it
+    segmented_contour = np.zeros((len(segmented_contour_x), 1, 2))
+    segmented_contour[:,0,:] = segmented_coords
+    
+    return segmented_contour_x, segmented_contour_y, segmented_contour
+
+
+    
 #%% MAIN
 
 if __name__ == "__main__":
@@ -702,38 +752,42 @@ if __name__ == "__main__":
     pre_data_folder = "pre_data"
     post_data_folder = "post_data"
     
-    day_nr = '23-2'         
-    record_name = 'Recording_Date=230215_Time=143726_01'                                          
-    pre_record_name = 'Recording_Date=230215_Time=153306_01'                                                
-    scale = 10.68
-    frame_nr = 0
-    segment_length_mm = 1                                           # units: mm
-    window_size = int(np.ceil(2*scale) // 2 * 2 + 1) 
-    extension = '.tif'
+    # day_nr = '23-2'         
+    # record_name = 'Recording_Date=230215_Time=143726_01'                                          
+    # pre_record_name = 'Recording_Date=230215_Time=153306_01'                                                
+    # scale = 10.68
+    # frame_nr = 0
+    # segment_length_mm = 1                                           # units: mm
+    # window_size = int(np.ceil(2*scale) // 2 * 2 + 1) 
+    # extension = '.tif'
 
     # pre_data_path = os.path.join(cwd, flame.pre_data_folder, flame.name, f'session_{flame.session_nr:03}' , flame.record_name, 'Correction', 'Resize', f'Frame{frame_nr}', 'Export_01')
     # record_data_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', record_name, 'Correction', 'NonLinear_SubSlidingMin', f'Frame{frame_nr}', 'Export_01')
-    # record_data_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', record_name, 'Correction', 'SubOverTimeMin_sl=99', f'Frame{frame_nr}', 'Export_01')
-    record_data_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', record_name, 'Correction', 'SubOverTimeMin_sl=99', 'Avg', f'Frame{frame_nr}', 'Export_01')
+    record_data_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', record_name, 'Correction', 'SubOverTimeMin_sl=99', f'Frame{frame_nr}', 'Export')
+    # record_data_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', record_name, 'Correction', 'SubOverTimeMin_sl=99', 'Avg', f'Frame{frame_nr}', 'Export')
     
     # mask_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', pre_record_name, 'MaskCreateGeometric_01', 'MakePermanentImgMask', 'AboveBelow', 'Correction', f'Frame{frame_nr}', 'Export_01')
     mask_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', 'Masks')
     
-    post_data_path = 'post_data'
+    post_data_path = os.path.join('post_data', record_name)
 
     image_nr = 1
     
     record_data_path
-    toggle_plot = True
-    save_image = False
+    toggle_plot = False
+    save_image = True
     
     procedure_nr = 2
     
-    shape, contour, contour_length_pixels = get_contour_data(procedure_nr, window_size, mask_path, record_data_path, post_data_path, image_nr, extension, toggle_plot, save_image)
+    n_images = 50
+    
+    for image_nr in tqdm(range(1, n_images + 1)):
+        
+        shape, contour, contour_length_pixels = get_contour_data(procedure_nr, window_size, mask_path, record_data_path, post_data_path, image_nr, extension, toggle_plot, save_image)
 
-    save_file_path = os.path.join('pickles', f'{record_name}.pkl')
-    with open(save_file_path, 'wb') as f:
-        pickle.dump(contour, f)
+    # save_file_path = os.path.join('pickles', f'{record_name}_BfmOfAvg_wsize_{window_size}.pkl')
+    # with open(save_file_path, 'wb') as f:
+    #     pickle.dump(contour, f)
 
 
 

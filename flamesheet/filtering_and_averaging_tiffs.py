@@ -1,9 +1,18 @@
+#%% IMPORT PACKAGES 
 import os
 import pickle
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+
+#%% IMPORT USER DEFINED PACKAGES
+from sys_paths import parent_directory
+import sys_paths
+import rc_params_settings
+from parameters import *
+from plot_params import colormap, fontsize, fontsize_legend, fontsize_label, fontsize_fraction
+
 
 def read_tiff_images(folder_path, window_size, save_path=None):
     image_list = []
@@ -19,7 +28,7 @@ def read_tiff_images(folder_path, window_size, save_path=None):
         
         img_normalized = cv2.normalize(image, dst=None, alpha=0, beta=1.0, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
         
-        w_size = int(window_size*1)
+        w_size = int(window_size)
         filter_diameter = w_size
         sigma_color = 0.1
         sigma_space = filter_diameter/2.0
@@ -53,7 +62,7 @@ def save_image_16bit(image, save_path, file_name):
 def calculate_average_image(image_list):
     # Assuming all images have the same shape
     sum_image = np.zeros_like(image_list[0], dtype=np.float64)
-    for image in image_list:
+    for image in tqdm(image_list, desc="Calculating Average..."):
         sum_image += image
     avg_image = sum_image / len(image_list)
     return avg_image
@@ -88,18 +97,18 @@ if __name__ == '__main__':
     pre_data_folder = "pre_data"
     post_data_folder = "post_data"
     
-    day_nr = '23-2'         
-    record_name = 'Recording_Date=230215_Time=143726_01'                                          
-    pre_record_name = 'Recording_Date=230215_Time=153306_01'                                                
-    scale = 10.68
-    frame_nr = 0
-    segment_length_mm = 1                                           # units: mm
-    window_size = int(np.ceil(2*scale) // 2 * 2 + 1) 
-    extension = '.tif'
+    # day_nr = '23-2'         
+    # record_name = 'Recording_Date=230215_Time=143726_01'                                          
+    # pre_record_name = 'Recording_Date=230215_Time=153306_01'                                                
+    # scale = 10.68
+    # frame_nr = 0
+    # segment_length_mm = 1                                           # units: mm
+    # window_size = int(np.ceil(2*scale) // 2 * 2 + 1) 
+    # extension = '.tif'
 
     # pre_data_path = os.path.join(cwd, flame.pre_data_folder, flame.name, f'session_{flame.session_nr:03}' , flame.record_name, 'Correction', 'Resize', f'Frame{frame_nr}', 'Export_01')
     # record_data_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', record_name, 'Correction', 'NonLinear_SubSlidingMin', f'Frame{frame_nr}', 'Export_01')
-    record_data_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', record_name, 'Correction', 'SubOverTimeMin_sl=99', f'Frame{frame_nr}', 'Export_01')
+    record_data_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', record_name, 'Correction', 'SubOverTimeMin_sl=99', f'Frame{frame_nr}', 'Export')
     
     post_data_path = 'post_data'
 
@@ -118,11 +127,11 @@ if __name__ == '__main__':
         
     avg_image = calculate_average_image(image_list)
     
-    save_file_path = os.path.join('figures', 'avg_bfm.pkl')
+    save_file_path = os.path.join('pickles', f'{record_name}_AvgOfBfm_wsize_{window_size}.pkl')
     with open(save_file_path, 'wb') as f:
         pickle.dump(avg_image, f)
         
-    save_image_16bit(avg_image, 'figures', 'avg_image_16bit.tiff')
+    save_image_16bit(avg_image, 'pickles', f'{record_name}_AvgOfBfm_wsize_{window_size}_16bit.tiff')
      
     plot_image(avg_image)
 

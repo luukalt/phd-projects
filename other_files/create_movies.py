@@ -1,6 +1,7 @@
 import cv2
 import os
 import progressbar
+from parameters import *
 
 def create_movie_from_png(folder_path, video_name, fps=30):
     """
@@ -46,9 +47,9 @@ def create_movie_from_png(folder_path, video_name, fps=30):
 
 if __name__ == '__main__':
     
-    folder_path = 'post_data/flame_6/Cam_Date=210910_Time=153000_phi=1_Frame0/bilateral_filter_method/w_size_29'
-    output_file_path = 'post_data/flame_6/videos/'
-    filename = 'bilteral_filter_w_size=29_sigma_space=14.5_sigma_color=0.1_24Hz'
+    folder_path = os.path.join('post_data', record_name, 'bfm',  f'w_size_{window_size}')
+    output_file_path = os.path.join('post_data', record_name, 'videos',  f'w_size_{window_size}')
+    filename = 'vid'
     fps = 24
     
     # folder_path = 'post_data/flame_5/Cam_Date=211021_Time=162640_ExtractVolume_Frame0/bilateral_filter_method/w_size_29'

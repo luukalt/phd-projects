@@ -10,6 +10,7 @@ flame_simulations/figures/
 
 flamesheet/__pycache__
 flamesheet/figures/
+flamesheet/post_data/
 
 local_flame_speed/__pycache__
 local_flame_speed/figures/

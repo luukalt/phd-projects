@@ -88,7 +88,6 @@ def contour_segmentation(contour, segment_length_pixels):
     segmented_contour = np.zeros((len(segmented_contour_x), 1, 2))
     segmented_contour[:,0,:] = segmented_coords
     
-    
     return segmented_contour_x, segmented_contour_y, segmented_contour
     
 #%% FUNCTION: SLOPE OF CONTOUR SEGMENTS 
