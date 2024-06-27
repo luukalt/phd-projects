@@ -302,6 +302,7 @@ def plot_profile_in_field(fig, ax, coord0_mm, coord1_mm, color, num):
     
     return profile_coords, profile_line
 
+
 def plot_profile_dim(fig, ax, rotation_matrix, profile_coords, profile_line, quantity_x, quantity_y, label, cmin, cmax, color, num):
 
     X_values = X.flatten()
@@ -332,7 +333,7 @@ def plot_profile_dim(fig, ax, rotation_matrix, profile_coords, profile_line, qua
     
     ax.set_xlim(np.array([0, 30]))
     # ax[1].set_ylim(np.array([cmin, cmax]))
-    ax.grid()
+    ax.grid(True)
     ax.axhline(y=0, color='k')
     
     u_bulk_2d = trapezoid(quantity_normal_profile, profile_line)/10
@@ -340,6 +341,7 @@ def plot_profile_dim(fig, ax, rotation_matrix, profile_coords, profile_line, qua
     # print("u_bulk_measured_2d= {0:.1f} m/s".format(u_bulk_2d))
     
     return quantity_x_profile, quantity_y_profile, quantity_tangent_profile, quantity_normal_profile
+
 
 def plot_curved_profile_dim(fig, ax, profile_coords, quantity_x, quantity_y, label, cmin, cmax, color, num):
 
@@ -390,15 +392,15 @@ def plot_curved_profile_dim(fig, ax, profile_coords, quantity_x, quantity_y, lab
     ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
     
     
-    ax.set_xlabel("distance along line [mm]", fontsize=fontsize)
-    ax.set_ylabel("$V_{n}$ [ms$^-1$]", fontsize=fontsize)
-    ax.tick_params(axis='both', labelsize=fontsize)
+    ax.set_xlabel("distance along line [mm]")
+    ax.set_ylabel("$V_{n}$ [ms$^-1$]")
+    # ax.tick_params(axis='both', labelsize=fontsize)
     # ax[1].set_ylabel("$R_{NN}$ [ms$^-1$]")
     
     
     # ax.set_xlim(np.array([0, 30]))
     # ax[1].set_ylim(np.array([cmin, cmax]))
-    ax.grid()
+    ax.grid(True)
     ax.axhline(y=0, color='k')
     
     u_bulk_2d = trapezoid(quantity_normal_profile, profile_line)/10
@@ -478,15 +480,14 @@ def plot_reynolds_stress_dim(fig, ax, rotation_matrix, theta, profile_coords, pr
     ax.set_xlabel("distance along line [mm]", fontsize=fontsize)
     ax.set_ylabel("$R_{nn}$ [m$^2$s$^{-2}$]", fontsize=fontsize)
     ax.tick_params(axis='both', labelsize=fontsize)
-    ax.grid()
+    ax.grid(True)
+    
+    min_value, min_index, max_value, max_index = find_min_max_indices(RNN)
     
     # ax.set_ylim(np.array([cmin, cmax]))
     
-    return RXX_profile, RYY_profile, RXY_profile
+    return RXX_profile, RYY_profile, RXY_profile, min_index, max_index
 
-
-
-    
 # def plot_image(fig, ax, nx, ny):
 
 #     XYI = np.genfromtxt(correction_dir +'B0001.csv', delimiter=",", skip_header=1)
@@ -553,11 +554,41 @@ def plot_strain_rate_dim(fig, ax, rotation_matrix, theta, profile_coords, profil
     ax.set_xlabel("distance along line [mm]", fontsize=fontsize)
     ax.set_ylabel("$E_{nn}$ [$1/s$]", fontsize=fontsize)
     ax.tick_params(axis='both', labelsize=fontsize)
-    ax.grid()
+    ax.grid(True)
     
-    # ax.set_ylim(np.array([cmin, cmax]))
+    min_value, min_index, max_value, max_index = find_min_max_indices(ENN)
     
-    return EXX_profile, EYY_profile, EXY_EYX_div_2_profile
+    ax.plot(profile_line[min_index], ENN[min_index], c='r', marker="x")
+    ax.plot(profile_line[max_index], ENN[max_index], c='b', marker="x")
+    
+    return EXX_profile, EYY_profile, EXY_EYX_div_2_profile, min_index, max_index
+
+def plot_tke_dim(fig, ax, profile_coords, profile_line, label, cmin, cmax, color, num):
+
+    X_values = X.flatten()
+    Y_values = Y.flatten()
+    TKE_values = TKE.flatten()
+    
+    TKE_profile = griddata((X_values, Y_values), TKE_values, profile_coords, method=interpolation_method)
+    
+    # quantity_tangent_profile = quantity_x_profile*np.cos(theta) - quantity_y_profile*np.sin(theta)
+    # quantity_normal_profile = quantity_x_profile*np.sin(theta) + quantity_y_profile*np.cos(theta)
+    
+    ax.plot(profile_line, TKE_profile, c=color, ls='solid', marker='o')
+    
+    ax.set_xlabel("distance along line [mm]", fontsize=fontsize)
+    ax.set_ylabel("TKE [m$^2$s$^{-2}$]", fontsize=fontsize)
+    ax.tick_params(axis='both', labelsize=fontsize)
+    # ax[1].set_ylabel("$R_{NN}$ [ms$^-1$]")
+    
+    ax.set_xlim(np.array([0, 30]))
+    # ax[1].set_ylim(np.array([cmin, cmax]))
+    ax.grid(True)
+    ax.axhline(y=0, color='k')
+    
+    min_value, min_index, max_value, max_index = find_min_max_indices(TKE_profile)
+    
+    return TKE_profile, min_index, max_index
 
 def plot_curved_profile_dim(fig, ax, profile_coords, quantity_x, quantity_y, label, cmin, cmax, color, num):
 
@@ -608,15 +639,15 @@ def plot_curved_profile_dim(fig, ax, profile_coords, quantity_x, quantity_y, lab
     ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
     
     
-    ax.set_xlabel("distance along line [mm]", fontsize=fontsize)
-    ax.set_ylabel("$V_{n}$ [ms$^-1$]", fontsize=fontsize)
-    ax.tick_params(axis='both', labelsize=fontsize)
+    ax.set_xlabel("distance along line [mm]")
+    ax.set_ylabel("$V_{n}$ [ms$^-1$]")
+    # ax.tick_params(axis='both', labelsize=fontsize)
     # ax[1].set_ylabel("$R_{NN}$ [ms$^-1$]")
     
     
     # ax.set_xlim(np.array([0, 30]))
     # ax[1].set_ylim(np.array([cmin, cmax]))
-    ax.grid()
+    ax.grid(True)
     ax.axhline(y=0, color='k')
     
     u_bulk_2d = trapezoid(quantity_normal_profile, profile_line)/10
@@ -626,60 +657,55 @@ def plot_curved_profile_dim(fig, ax, profile_coords, quantity_x, quantity_y, lab
     return quantity_x_profile, quantity_y_profile, quantity_tangent_profile, quantity_normal_profile
 
 
-def plot_curved_strain_rate_dim(fig, ax, profile_coords, label, cmin, cmax, color, num):
+def plot_curved_reynolds_stress_dim(fig, ax, profile_coords, label, cmin, cmax, color, num):
     
     X_values = X.flatten()
     Y_values = Y.flatten()
     
-    EXX_values = EXX.flatten()
-    EXY_values = EXY.flatten()
-    EYX_values = EYX.flatten()
-    EYY_values = EYY.flatten()
-    EXY_EYX_div_2_values = EXY_EYX_div_2.flatten()
+    RXX_values = RXX.flatten()
+    RYY_values = RYY.flatten()
+    RXY_values = RXY.flatten()
     
-    EXX_profile = griddata((X_values, Y_values), EXX_values, profile_coords, method=interpolation_method)
-    EXY_profile = griddata((X_values, Y_values), EXY_values, profile_coords, method=interpolation_method)
-    EYX_profile = griddata((X_values, Y_values), EYX_values, profile_coords, method=interpolation_method)
-    # EXY_EYX_div_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
-    EXY_EYX_div_2_profile = griddata((X_values, Y_values), EXY_EYX_div_2_values, profile_coords, method=interpolation_method)
-    EYY_profile = griddata((X_values, Y_values), EYY_values, profile_coords, method=interpolation_method)
+    RXX_profile = griddata((X_values, Y_values), RXX_values, profile_coords, method=interpolation_method)
+    RYY_profile = griddata((X_values, Y_values), RYY_values, profile_coords, method=interpolation_method)
+    RXY_profile = griddata((X_values, Y_values), RXY_values, profile_coords, method=interpolation_method)
     
     # Compute rotation matrices along the curved profile
     rotation_matrices, thetas = compute_rotation_matrices(profile_coords)
     
     ### Approach 2: Calculate Reynolds stresses on arbirtary line with matrix multiplication
-    T_strain = np.array(((EXX_profile, EXY_EYX_div_2_profile), (EXY_EYX_div_2_profile, EYY_profile)))
-    T_strain_rotated = np.zeros_like(T_strain)
+    T_stress = np.array(((RXX_profile, RXY_profile), (RXY_profile, RYY_profile)))
+    T_stress_rotated = np.zeros_like(T_stress)
     
     for i in range(len(profile_coords)):
         
         rotation_matrix = rotation_matrices[i]
         
-        T_strain_rotated[:, :, i] = rotation_matrix @ T_strain[:, :, i] @ rotation_matrix.T
+        T_stress_rotated[:, :, i] = rotation_matrix @ T_stress[:, :, i] @ rotation_matrix.T
         
     
-    ETT = T_strain_rotated[0, 0, :]
-    ENN = T_strain_rotated[1, 1, :]
-    ETN = T_strain_rotated[0, 1, :]
+    RTT = T_stress_rotated[0, 0, :]
+    RNN = T_stress_rotated[1, 1, :]
+    RTN = T_stress_rotated[0, 1, :]
     
     x_profile, y_profile = profile_coords[:, 0], profile_coords[:, 1]
     distances = np.sqrt(np.diff(x_profile)**2 + np.diff(y_profile)**2)
     cumulative_distances = np.cumsum(distances)
     profile_line = np.insert(cumulative_distances, 0, 0)
     
-    ax.plot(profile_line, ETT, c='r', ls="solid", marker="None")
-    ax.plot(profile_line, ENN, c='b', ls="solid", marker="None")
+    ax.plot(profile_line, RTT, c='r', ls="solid", marker="None")
+    ax.plot(profile_line, RNN, c='b', ls="solid", marker="None")
     ax.plot(profile_line, thetas, c='k', ls='dashed', marker='None')
     ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
     
-    ax.set_xlabel("distance along line [mm]", fontsize=fontsize)
-    ax.set_ylabel("$E_{nn}$ [$1/s$]", fontsize=fontsize)
-    ax.tick_params(axis='both', labelsize=fontsize)
-    ax.grid()
+    ax.set_xlabel("distance along line [mm]")
+    ax.set_ylabel("$R_{nn}$ [m$^2$s$^{-2}$]")
+    # ax.tick_params(axis='both', labelsize=fontsize)
+    ax.grid(True)
     
     # ax.set_ylim(np.array([-10, 10]))
     
-    return EXX_profile, EYY_profile, EXY_EYX_div_2_profile
+    return RXX_profile, RYY_profile, RXY_profile
 
 def plot_curved_strain_rate_dim(fig, ax, profile_coords, label, cmin, cmax, color, num):
     
@@ -730,11 +756,42 @@ def plot_curved_strain_rate_dim(fig, ax, profile_coords, label, cmin, cmax, colo
     ax.set_xlabel("distance along line [mm]", fontsize=fontsize)
     ax.set_ylabel("$E_{nn}$ [$1/s$]", fontsize=fontsize)
     ax.tick_params(axis='both', labelsize=fontsize)
-    ax.grid()
+    ax.grid(True)
     
     # ax.set_ylim(np.array([-10, 10]))
     
     return EXX_profile, EYY_profile, EXY_EYX_div_2_profile
+
+def plot_curved_tke_dim(fig, ax, profile_coords, label, cmin, cmax, color, num):
+
+    X_values = X.flatten()
+    Y_values = Y.flatten()
+    TKE_values = TKE.flatten()
+    
+    TKE_profile = griddata((X_values, Y_values), TKE_values, profile_coords, method=interpolation_method)
+
+    
+    x_profile, y_profile = profile_coords[:, 0], profile_coords[:, 1]
+    distances = np.sqrt(np.diff(x_profile)**2 + np.diff(y_profile)**2)
+    cumulative_distances = np.cumsum(distances)
+    profile_line = np.insert(cumulative_distances, 0, 0)
+    
+    ax.plot(profile_line, TKE_profile, c='r', ls='solid', marker='None')
+    
+    
+    ax.set_xlabel("distance along line [mm]")
+    ax.set_ylabel("TKE [m$^2$s$^{-2}$]")
+    # ax.tick_params(axis='both', labelsize=fontsize)
+    # ax[1].set_ylabel("$R_{NN}$ [ms$^-1$]")
+    
+    # ax.set_xlim(np.array([0, 30]))
+    # ax[1].set_ylim(np.array([cmin, cmax]))
+    ax.grid(True)
+    ax.axhline(y=0, color='k')
+    
+    min_value, min_index, max_value, max_index = find_min_max_indices(TKE_profile)
+    
+    return TKE_profile, min_index, max_index
 
 def draw_walls(ax):
 
@@ -875,19 +932,28 @@ def contour_correction(x_left_raw, x_right_raw, y_bottom_raw, y_top_raw, window_
     return contour_corrected  
 
 def compute_rotation_matrices(profile_coords):
+    
     tangents = np.diff(profile_coords, axis=0)
     tangents = np.vstack([tangents, tangents[-1]])  # Repeat the last tangent for the last point
     
     norms = np.linalg.norm(tangents, axis=1, keepdims=True)
     tangents = tangents / norms  # Normalize tangents
     
-    thetas = np.arctan2(tangents[:, 1], tangents[:, 0])
-    
-    thetas = [-np.abs(theta) for theta in thetas]
+    thetas = np.arctan2(-tangents[:, 1], tangents[:, 0])
     
     rotation_matrices = [np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]) for theta in thetas]
     
     return rotation_matrices, thetas
+
+def find_min_max_indices(data_array):
+
+  min_value = np.min(data_array)
+  min_index = np.argmin(data_array)
+
+  max_value = np.max(data_array)
+  max_index = np.argmax(data_array)
+
+  return min_value, min_index, max_value, max_index
 
 #%% MAIN
 
@@ -915,6 +981,9 @@ if __name__ == "__main__":
     
     contour_correction2 = contour_correction[:, 0, :]
     contour_correction2 = contour_correction2[::-1]
+    
+    # contour_correction2[:, 1] -= -3
+    
     #%%% Read and save transient velocity data
     # n_images = 2500
     # U_transient = np.zeros([n_windows_y, n_windows_x, n_images])
@@ -1006,7 +1075,7 @@ if __name__ == "__main__":
     scalar_max = np.max(scalar)
     
     
-    fig_scale = 1.5
+    fig_scale = 1
     default_fig_dim = plt.rcParams["figure.figsize"]
 
     fig1, ax1 = plt.subplots(figsize=(fig_scale*default_fig_dim[0], fig_scale*default_fig_dim[1]), ncols=1, dpi=100)
@@ -1035,7 +1104,6 @@ if __name__ == "__main__":
     contour_y = contour_correction2[:,1]
     ax1.plot(contour_x, contour_y, 'm', lw=2)
     ax1.plot(contour_x[250], contour_y[250], 'c', marker='x', ls='None')
-    
     
     #%%%%% Plot streamlines
     # streamlines = plot_streamlines(fig1, ax1, X, Y, AvgVx, AvgVy)
@@ -1168,29 +1236,41 @@ if __name__ == "__main__":
         profile_coords, profile_line = plot_profile_in_field(fig4, ax4, coord0_mm, coord1_mm, color, num)
         Vx_avg_profile, Vy_avg_profile, Vt_avg_profile, Vn_avg_profile = plot_profile_dim(fig5, ax5, rotation_matrix, profile_coords, profile_line, AvgVx, AvgVy, label, cmin, cmax, color, num)
         
-        
         print(type(profile_line), profile_line.shape)
+        
         #%%%%% Plot velocity profiles without dimensions [Figure 5]
         # plot_profile_nondim(fig5, ax5, rotation_matrix, coord0_mm, coord1_mm, AvgVx, AvgVy, label, cmin, cmax, color, num, order)
         
         #%%%%% Plot Reynolds normal stresses of selected cross-sections [Figure 6]
-        # Rxx_profile, Ryy_profile, Rxy_profile = plot_reynolds_stress_dim(fig6, ax6, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num)
-        
-        # Rtt, Rnn, Rtn = plot_reynolds_stress2_dim(fig6, ax6, rotation_matrix, coord0_mm, coord1_mm, n_images, U_transient, V_transient, Vt_avg_profile, Vn_avg_profile, label, 0, 1.5, color, num, order)
+        # Rxx_profile, Ryy_profile, Rxy_profile, min_index, max_index = plot_reynolds_stress_dim(fig6, ax6, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num)
         
         #%%%%% Plot strains of selected cross-sections [Figure 6]
-        Exx_profile, Eyy_profile, Exy_profile = plot_strain_rate_dim(fig6, ax6, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num)
+        Exx_profile, Eyy_profile, Exy_profile, min_index, max_index = plot_strain_rate_dim(fig6, ax6, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num)
         
+        #%%%%% Plot strains of selected cross-sections [Figure 6]
+        # TKE_profile, min_index, max_index = plot_tke_dim(fig6, ax6, profile_coords, profile_line, label, cmin, cmax, color, num)
+        
+        
+        ax1.plot(profile_coords[min_index, 0], profile_coords[min_index, 1], c='r', marker="x")
+        ax1.plot(profile_coords[max_index, 0], profile_coords[max_index, 1], c='b', marker="x")
+        
+        ax4.plot(profile_coords[min_index, 0], profile_coords[min_index, 1], c='r', marker="x")
+        ax4.plot(profile_coords[max_index, 0], profile_coords[max_index, 1], c='b', marker="x")
+        ax4.plot(contour_x, contour_y, 'm', lw=2)
         
         #%%%%% Write data to lists
         profile_lines.append(profile_line)
         Vn_avg_profiles.append(Vn_avg_profile)
     
-    figY, axY = plt.subplots()
-    profile_coords = contour_correction2
-    # Vx_avg_profile, Vy_avg_profile, Vt_avg_profile, Vn_avg_profile = plot_curved_profile_dim(figY, axY, profile_coords, AvgVx, AvgVy, label, cmin, cmax, color, num)
+    figY, axY = plt.subplots(figsize=(fig_scale*default_fig_dim[0], fig_scale*default_fig_dim[1]), ncols=1, dpi=100)
     
+    profile_coords = contour_correction2
+    
+    # Vx_avg_profile, Vy_avg_profile, Vt_avg_profile, Vn_avg_profile = plot_curved_profile_dim(figY, axY, profile_coords, AvgVx, AvgVy, label, cmin, cmax, color, num)
     Exx_profile, Eyy_profile, Exy_profile = plot_curved_strain_rate_dim(figY, axY, profile_coords, label, cmin, cmax, color, num)
+    # Rxx_profile, Ryy_profile, Rxy_profile = plot_curved_reynolds_stress_dim(figY, axY, profile_coords, label, cmin, cmax, color, num)
+    # TKE_profile, min_index, max_index = plot_curved_tke_dim(figY, axY, profile_coords, label, cmin, cmax, color, num)
+    
     
     # for profile_id in profile_ids:
         
@@ -1237,6 +1317,8 @@ if __name__ == "__main__":
     # fig5.tight_layout()
     fig6.tight_layout()
     figX.tight_layout()
+    figY.tight_layout()
+    
     
     #%%%% Save figures
     

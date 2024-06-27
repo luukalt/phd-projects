@@ -76,6 +76,7 @@ project_name = "flamesheet_2d_day" + day_nr
 piv_result = "PIV_MP(3x32x32_50%ov_ImgCorr)_01"
 
 # Interpolation method used to interpolate data to grid data
+# interpolation_method = 'nearest'
 interpolation_method = 'linear'
 
 #%%%%  Define data directories
