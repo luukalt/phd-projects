@@ -172,7 +172,9 @@ def get_contour_procedure_bilateral_filter_method(window_size, mask_path, record
         title = 'raw image (\#' + str(image_nr) + ')' + ' with contour'
         title = ''
         plot_image(title , img_raw, brighten_factor, contour, toggle_contour, color)
-        
+    
+    fig.tight_layout()
+    
     #%% [8] Save images with contour drawn into the raw image
     if save_image:
         path = os.path.join(post_data_path, 'bfm', f'w_size_{w_size}')
@@ -462,7 +464,7 @@ def plot_images(axs, image1, image2, brighten_factor, contour, color):
     
 def plot_image(title, image, brighten_factor, contour, toggle_contour, color):
     
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(width, height))
     ax.set_title(title)
     ax.imshow(image, cmap="gray", vmin=np.min(image.flatten())/brighten_factor, vmax=np.max(image.flatten())/brighten_factor)
     ax.set_xlabel('pixels', fontsize=16)
@@ -474,7 +476,9 @@ def plot_image(title, image, brighten_factor, contour, toggle_contour, color):
         contour_x = contour[:,:,0]
         contour_y = contour[:,:,1]
         ax.plot(contour_x, contour_y, color, ls='None', marker='.', ms=1)
-        
+    
+    fig.tight_layout()
+    
         # ax.plot(contour_x[0], contour_y[0], 'yx')
         # ax.plot(contour_x[-1], contour_y[-1], 'gx')
         
@@ -588,7 +592,7 @@ def plot_image(title, image, brighten_factor, contour, toggle_contour, color):
     
 def plot_pixel_density_histogram(quantity, mask, x_lim_right):
     
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(width, height))
     # fig, ax = plt.subplots()
     
     ax.grid()
@@ -613,6 +617,8 @@ def plot_pixel_density_histogram(quantity, mask, x_lim_right):
     ax.set_xlabel('$I_{f}$', fontsize=20)
     ax.set_ylabel('pdf', fontsize=20)
     
+    fig.tight_layout()
+    
     return fig, ax
 
 
@@ -624,7 +630,7 @@ def save_contour_images(path, image_nr, img_raw, brighten_factor, contour, color
       os.makedirs(path)
     
     filename = os.path.join(path, f"B{image_nr:04d}")
-    dpi = 300
+    dpi = 72
     
     # toggle_contour = False
     # plot_image('', img_raw, brighten_factor, contour, toggle_contour, color)
@@ -763,8 +769,8 @@ if __name__ == "__main__":
 
     # pre_data_path = os.path.join(cwd, flame.pre_data_folder, flame.name, f'session_{flame.session_nr:03}' , flame.record_name, 'Correction', 'Resize', f'Frame{frame_nr}', 'Export_01')
     # record_data_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', record_name, 'Correction', 'NonLinear_SubSlidingMin', f'Frame{frame_nr}', 'Export_01')
-    record_data_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', record_name, 'Correction', 'SubOverTimeMin_sl=99', f'Frame{frame_nr}', 'Export')
-    # record_data_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', record_name, 'Correction', 'SubOverTimeMin_sl=99', 'Avg', f'Frame{frame_nr}', 'Export')
+    # record_data_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', record_name, 'Correction', 'SubOverTimeMin_sl=99', f'Frame{frame_nr}', 'Export')
+    record_data_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', record_name, 'Correction', 'SubOverTimeMin_sl=99', 'Avg', f'Frame{frame_nr}', 'Export')
     
     # mask_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', pre_record_name, 'MaskCreateGeometric_01', 'MakePermanentImgMask', 'AboveBelow', 'Correction', f'Frame{frame_nr}', 'Export_01')
     mask_path = os.path.join(data_dir, f'flamesheet_2d_day{day_nr:03}', 'Masks')
@@ -774,16 +780,20 @@ if __name__ == "__main__":
     image_nr = 1
     
     record_data_path
-    toggle_plot = False
-    save_image = True
+    toggle_plot = True
+    save_image = False
     
     procedure_nr = 2
     
+    width, height = plt.rcParams["figure.figsize"]
+    
+    shape, contour, contour_length_pixels = get_contour_data(procedure_nr, window_size, mask_path, record_data_path, post_data_path, image_nr, extension, toggle_plot, save_image)
+
     n_images = 50
     
-    for image_nr in tqdm(range(1, n_images + 1)):
+    # for image_nr in tqdm(range(1, n_images + 1)):
         
-        shape, contour, contour_length_pixels = get_contour_data(procedure_nr, window_size, mask_path, record_data_path, post_data_path, image_nr, extension, toggle_plot, save_image)
+    #     shape, contour, contour_length_pixels = get_contour_data(procedure_nr, window_size, mask_path, record_data_path, post_data_path, image_nr, extension, toggle_plot, save_image)
 
     # save_file_path = os.path.join('pickles', f'{record_name}_BfmOfAvg_wsize_{window_size}.pkl')
     # with open(save_file_path, 'wb') as f:

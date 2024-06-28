@@ -39,12 +39,14 @@ elif case == 2:
     day_nr = '24-1'
     record_name = "Recording_Date=230216_Time=103453_01"
     pre_record_name = "Recording_Date=230216_Time=103309"
+    scale = 10.73
     u_bulk_measured = 10.33
 elif case == 3:    
     # test105, H2% = 0, phi = 0, Re_H = 5000, image_rate = 0.2 kHz
     day_nr = '24-1'
     record_name = "Recording_Date=230216_Time=105230_01"
     pre_record_name = "Recording_Date=230216_Time=103309"
+    scale = 10.73
     u_bulk_measured = 7.44
 elif case == 4:
     # test96, H2% = 100, phi = 0.35, Re_H = 5000, image_rate = 4.5 kHz
