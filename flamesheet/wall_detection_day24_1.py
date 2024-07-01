@@ -105,12 +105,20 @@ def wall_detection(calibration_dir, pre_record_dir):
             
             if pixel == 255:
                 x_loc_index.append(x_start_liner + i) 
-                
+        
+        # Check if x_loc_index is not empty before calculating the mean
+        if x_loc_index:
             x_loc_mean = np.mean(x_loc_index)
-            
             if not np.isnan(x_loc_mean):
-                wall_coord = (int(x_loc_mean)+1, y)
+                wall_coord = (int(x_loc_mean) + 1, y)
                 wall_coords_liner.append(wall_coord)
+            
+            # if len(x_loc_index) > 0:
+            #     x_loc_mean = np.mean(x_loc_index)
+            
+            # if not np.isnan(x_loc_mean):
+            #     wall_coord = (int(x_loc_mean)+1, y)
+            #     wall_coords_liner.append(wall_coord)
     
     
     pt1_liner = (wall_coords_liner[0][0], 0)
@@ -138,12 +146,21 @@ def wall_detection(calibration_dir, pre_record_dir):
             
             if pixel == 255:
                 x_loc_index.append(x_start_core_left + i) 
-                
-            x_loc_mean = np.mean(x_loc_index)
             
+        
+        # Check if x_loc_index is not empty before calculating the mean
+        if x_loc_index:
+            x_loc_mean = np.mean(x_loc_index)
             if not np.isnan(x_loc_mean):
-                wall_coord = (int(x_loc_mean), y)
+                wall_coord = (int(x_loc_mean) + 1, y)
                 wall_coords_core_left.append(wall_coord)
+                
+            # if len(x_loc_index) > 0:
+            #     x_loc_mean = np.mean(x_loc_index)
+            
+            # if not np.isnan(x_loc_mean):
+            #     wall_coord = (int(x_loc_mean), y)
+            #     wall_coords_core_left.append(wall_coord)
         
     pt1_core_left = (wall_coords_core_left[0][0], wall_coords_core_left[0][1])
     pt2_core_left = (wall_coords_core_left[-1][0], wall_coords_core_left[-1][1])
@@ -246,7 +263,7 @@ def wall_detection(calibration_dir, pre_record_dir):
             
             wall_coord_dome_mid = (x_start_dome, y_start_dome + j) 
             
-            print("bottom dome right found")
+            print("bottom dome right found: True")
             break
         
     # # right

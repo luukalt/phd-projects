@@ -1276,12 +1276,12 @@ if __name__ == "__main__":
     # ax1.plot(contour_x[250], contour_y[250], 'c', marker='x', ls='None')
     
     highest_row_index, corresponding_col_index = find_highest_negative_index(AvgVy)
-    print(highest_row_index, corresponding_col_index)
+    # print(highest_row_index, corresponding_col_index)
     ax1.plot(X[0, corresponding_col_index], Y[highest_row_index, 0], 'c', marker='x', ls='None')
     
     filtered_AvgVy = find_values_in_range(AvgVy, Y, left_bound=0, right_bound=10, lower_bound=-20, upper_bound=-10)
     row_idx, col_idx = find_first_positive_index(filtered_AvgVy)
-    print(row_idx, col_idx)
+    # print(row_idx, col_idx)
     ax1.plot(X[0, col_idx], Y[row_idx, 0], 'r', marker='x', ls='None')
     
     index_closest_to_zero = find_index_closest_to_zero_derivative(contour_correction2)
@@ -1379,11 +1379,11 @@ if __name__ == "__main__":
     
     # Angle with respect to the horizon of cross-section for profile in degrees
     # thetas_deg = [80, 60, 30, 0, 0, 0, 0] 
-    thetas_deg = [60, 30, 0, 0, 0, 0] 
+    thetas_deg = [60, 30, 0, 0, 0, 0, 0] 
     
     thetas = np.radians(thetas_deg) # Conversion to radians
     
-    vertical_locs = [0, 0, 0, 7.5, 15, 30] # in mm
+    vertical_locs = [0, 0, 0, 7.5, 15, 22.5, 30] # in mm
     
     # vertical_locs = [vertical_coord, vertical_coord, vertical_coord, 9, 18, 27] # in mm
     
@@ -1471,13 +1471,16 @@ if __name__ == "__main__":
     ax1.plot(profile_coords[min_index, 0], profile_coords[min_index, 1], c='r', marker="x")
     ax1.plot(profile_coords[max_index, 0], profile_coords[max_index, 1], c='b', marker="x")
     
-    # for profile_id in profile_ids:
+    for profile_id in profile_ids:
         
-    #     f  = open("V_n_profile" + str(profile_id) + ".csv", "w")
-    #     f.write("distance [mm]" + "," + "V_n [m/s]\n")
-    #     for i,j in zip(arbitrary_lines[profile_id], Vn_avg_profiles[profile_id]):
-    #         f.write(str(i) + "," + str(j) + "\n")
-    #     f.close()
+        theta = thetas_deg[profile_id]
+        vertical_loc = vertical_locs[profile_id]
+        
+        f  = open(f"V_n_profile_theta{theta}_vertical_location{vertical_loc}.csv", "w")
+        f.write("distance [mm]" + "," + "V_n [m/s]\n")
+        for i,j in zip(profile_lines[profile_id], Vn_avg_profiles[profile_id]):
+            f.write(str(i) + "," + str(j) + "\n")
+        f.close()
 
     #%%%% Plot scalar field [Figure 7]
     figX, axX = plt.subplots(figsize=(fig_scale*default_fig_dim[0], fig_scale*default_fig_dim[1]), ncols=1, dpi=100)
@@ -1507,7 +1510,7 @@ if __name__ == "__main__":
     axX.set_ylim(ax2.get_ylim())
     
     #%%%% Legends
-    figX.legend()
+    # figX.legend()
     figY.legend()                      
     
     #%%%% Tighten layouts                      

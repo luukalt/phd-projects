@@ -18,7 +18,7 @@ main_dir = os.path.join('Y:', 'laaltenburg', 'flamesheet_2d_campaign1')
 
 #%%%% Select recording
 
-case = 4
+case = 2
 
 if case == 0:
     # test99, H2% = 100, phi = 0.35, Re_H = 5000, image_rate = 0.2 kHz
