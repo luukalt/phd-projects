@@ -170,7 +170,7 @@ def read_flow_data(file, normalized):
     
     headers = df_strain.columns
     
-    print(headers)
+    # print(headers)
     
     pivot_EXX = pd.pivot_table(df_strain, values=headers[2], index=headers[1], columns=headers[0])
     pivot_EXY = pd.pivot_table(df_strain, values=headers[3], index=headers[1], columns=headers[0])
@@ -997,14 +997,15 @@ def plot_curved_principal_strain_rate_symmetric2(fig, ax, profile_coords, label,
         EYY_i = T_strain[1, 1, i]
         EXY_i = T_strain[0, 1, i]
         
-        theta_principal = (np.arctan((EXY_i*2)/(EXX_i - EYY_i)))/2
+        # theta_principal = 0.5*(np.arctan((EXY_i*2)/(EXX_i - EYY_i)))
+        theta_principal = 0.5*(np.arctan2(EXY_i*2, EXX_i - EYY_i))
         
-        if EXX_i >= EYY_i:
+        # if EXX_i >= EYY_i:
             
-            pass 
+        #     pass 
         
-        else:
-            theta_principal -= np.pi/2
+        # else:
+            # theta_principal -= np.pi/2
             
         # theta_principal = (np.arctan((EXY_i*2)/(EXX_i - EYY_i)))/2
         
@@ -1014,20 +1015,27 @@ def plot_curved_principal_strain_rate_symmetric2(fig, ax, profile_coords, label,
                                               [-np.sin(theta_principal), np.cos(theta_principal)]])
         
         principal_T_strain[:, :, i] = principal_rotation_matrix @ T_strain[:, :, i] @ principal_rotation_matrix.T
+        # principal_T_strain[:, :, i] = principal_rotation_matrix @ T_strain_rotated[:, :, i] @ principal_rotation_matrix.T
+        
         
         matrix = principal_T_strain[:, :, i]
-        max_index_1d = np.argmax(matrix)
-        min_index_1d = np.argmin(matrix)
+        # max_index_1d = np.argmax(matrix)
+        # min_index_1d = np.argmin(matrix)
         
-        if max_index_1d == 0:
+        # print(max_index_1d)
+        
+        EMAX[i] = np.max(matrix)
+        EMIN[i] = np.min(matrix)
+        
+        # if max_index_1d == 0:
             
-            EMAX[i] = np.max(matrix)
-            EMIN[i] = np.min(matrix)
+        #     EMAX[i] = np.max(matrix)
+        #     EMIN[i] = np.min(matrix)
             
-        elif max_index_1d == 3:
+        # elif max_index_1d == 3:
             
-            EMAX[i] = np.min(matrix)
-            EMIN[i] = np.max(matrix)
+        #     EMAX[i] = np.min(matrix)
+        #     EMIN[i] = np.max(matrix)
                 
         
     EMAX = principal_T_strain[0, 0, :]
@@ -1673,12 +1681,16 @@ if __name__ == "__main__":
     profile_coords = contour_correction2
     
     # Vx_avg_profile, Vy_avg_profile, Vt_avg_profile, Vn_avg_profile = plot_curved_profile(figY, axY, profile_coords, AvgVx, AvgVy, label, cmin, cmax, color, num)
+    
     # Exx_profile, Eyy_profile, Exy_profile = plot_curved_strain_rate(figY, axY, profile_coords, label, cmin, cmax, color, num)
-    # Exx_profile, Eyy_profile, Exy_profile, min_index, max_index = plot_curved_strain_rate_symmetric(figY, axY, profile_coords, label, cmin, cmax, color, num)
+    Exx_profile, Eyy_profile, Exy_profile, min_index, max_index = plot_curved_strain_rate_symmetric(figY, axY, profile_coords, label, cmin, cmax, color, num)
+    
     # Rxx_profile, Ryy_profile, Rxy_profile = plot_curved_reynolds_stress(figY, axY, profile_coords, label, cmin, cmax, color, num)
+    
     # TKE_profile, min_index, max_index = plot_curved_tke(figY, axY, profile_coords, label, cmin, cmax, color, num)
+    
     # principal_T_strain_rotated, EMAX, EMIN, EZERO, min_index, max_index = plot_curved_principal_strain_rate_symmetric(figY, axY, profile_coords, label, cmin, cmax, color, num)
-    principal_T_strain, EMAX, EMIN, EZERO, min_index, max_index = plot_curved_principal_strain_rate_symmetric2(figY, axY, profile_coords, label, cmin, cmax, color, num)
+    # principal_T_strain, EMAX, EMIN, EZERO, min_index, max_index = plot_curved_principal_strain_rate_symmetric2(figY, axY, profile_coords, label, cmin, cmax, color, num)
     
     ax1.plot(profile_coords[min_index, 0], profile_coords[min_index, 1], c='r', marker="s")
     ax1.plot(profile_coords[max_index, 0], profile_coords[max_index, 1], c='b', marker="s")
