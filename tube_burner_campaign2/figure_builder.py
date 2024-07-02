@@ -110,14 +110,16 @@ def copy_content(fig, old_ax, new_ax):
 
 
 # Load pickled figures
-filename1 = 'H100_Re16000_fig8'
+filename1 = 'H0_Re4000_fig4'
+# filename1 = 'H100_Re16000_fig8'
 # filename1 = 'H0_Re4000_fig8'
 # filename1 = 'H100_Re16000_fig4'
 # filename1 = 'H0_Re4000_fig2_favre'
 
 file_path1 = os.path.join('pickles', 'ls', f'{filename1}.pkl')
 
-filename2 = 'H100_Re12500_fig8'
+filename2 = 'H0_Re3000_fig4'
+# filename2 = 'H100_Re12500_fig8'
 # filename2 = 'H0_Re3000_fig8'
 # filename2 = 'H100_Re12500_fig4'
 # filename2 = 'H0_Re4000_fig21'
@@ -166,14 +168,17 @@ axs[0].set_ylabel(current_ylabel, fontsize=fontsize)  # Adjust the fontsize as n
 axs[0].tick_params(axis='both', labelsize=fontsize)
 axs[1].tick_params(axis='both', labelsize=fontsize)
 
+
+axs[0].text(-.09, 1.75, r'$\alpha$', fontsize=40)
+
 # Add textbox
 left, width = .075 , .0
 bottom, height = .225, .72
 right = left + width
 top = bottom + height
 
-# Re_D_check = 4000
-Re_D_check = 16000
+Re_D_check = 4000
+# Re_D_check = 16000
 
 if Re_D_check in [3000, 4000]:
     fuel_type = 'DNG'
@@ -191,8 +196,8 @@ axs[0].text(left, top, text,
         bbox=dict(facecolor="w", edgecolor='k', boxstyle='round')
         )
 
-# Re_D_check = 3000
-Re_D_check = 12500
+Re_D_check = 3000
+# Re_D_check = 12500
 
 if Re_D_check in [3000, 4000]:
     fuel_type = 'DNG'
