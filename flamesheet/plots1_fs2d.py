@@ -1700,11 +1700,11 @@ if __name__ == "__main__":
         theta = thetas_deg[profile_id]
         vertical_loc = vertical_locs[profile_id]
         
-        f  = open(f"V_n_profile_theta{theta}_vertical_location{vertical_loc}.csv", "w")
-        f.write("distance [mm]" + "," + "V_n [m/s]\n")
-        for i,j in zip(profile_lines[profile_id], Vn_avg_profiles[profile_id]):
-            f.write(str(i) + "," + str(j) + "\n")
-        f.close()
+        # f  = open(f"V_n_profile_theta{theta}_vertical_location{vertical_loc}.csv", "w")
+        # f.write("distance [mm]" + "," + "V_n [m/s]\n")
+        # for i,j in zip(profile_lines[profile_id], Vn_avg_profiles[profile_id]):
+        #     f.write(str(i) + "," + str(j) + "\n")
+        # f.close()
 
     #%%%% Plot scalar field [Figure 7]
     figX, axX = plt.subplots(figsize=(fig_scale*default_fig_dim[0], fig_scale*default_fig_dim[1]), ncols=1, dpi=100)
