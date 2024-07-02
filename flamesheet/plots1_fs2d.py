@@ -170,15 +170,15 @@ def read_flow_data(file, normalized):
     
     headers = df_strain.columns
     
-    # print(headers)
+    print(headers)
     
     pivot_EXX = pd.pivot_table(df_strain, values=headers[2], index=headers[1], columns=headers[0])
     pivot_EXY = pd.pivot_table(df_strain, values=headers[3], index=headers[1], columns=headers[0])
     pivot_EYX = pd.pivot_table(df_strain, values=headers[4], index=headers[1], columns=headers[0])
     pivot_EYY = pd.pivot_table(df_strain, values=headers[5], index=headers[1], columns=headers[0])
-    pivot_EXY_EYX_div_2 = pd.pivot_table(df_strain, values=headers[6], index=headers[1], columns=headers[0]) 
+    pivot_EXY_EYX_DIV_2 = pd.pivot_table(df_strain, values=headers[6], index=headers[1], columns=headers[0]) 
     
-    return n_windows_x, n_windows_y, X, Y, pivot_U.values, pivot_V.values, pivot_absV.values, pivot_RXX.values, pivot_RXY.values, pivot_RYY.values, pivot_TKE.values, pivot_EXX.values, pivot_EXY.values, pivot_EYX.values, pivot_EYY.values, pivot_EXY_EYX_div_2.values 
+    return n_windows_x, n_windows_y, X, Y, pivot_U.values, pivot_V.values, pivot_absV.values, pivot_RXX.values, pivot_RXY.values, pivot_RYY.values, pivot_TKE.values, pivot_EXX.values, pivot_EXY.values, pivot_EYX.values, pivot_EYY.values, pivot_EXY_EYX_DIV_2.values 
 
 
 def plot_field(fig, ax, X, Y, quantity, label, cmin, cmax):
@@ -502,22 +502,22 @@ def plot_strain_rate_symmetric(fig, ax, rotation_matrix, theta, profile_coords, 
     EXY_values = EXY.flatten()
     EYX_values = EYX.flatten()
     EYY_values = EYY.flatten()
-    EXY_EYX_div_2_values = EXY_EYX_div_2.flatten()
+    EXY_EYX_DIV_2_values = EXY_EYX_DIV_2.flatten()
     
     EXX_profile = griddata((X_values, Y_values), EXX_values, profile_coords, method=interpolation_method)
     EXY_profile = griddata((X_values, Y_values), EXY_values, profile_coords, method=interpolation_method)
     EYX_profile = griddata((X_values, Y_values), EYX_values, profile_coords, method=interpolation_method)
-    # EXY_EYX_div_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
-    EXY_EYX_div_2_profile = griddata((X_values, Y_values), EXY_EYX_div_2_values, profile_coords, method=interpolation_method)
+    # EXY_EYX_DIV_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
+    EXY_EYX_DIV_2_profile = griddata((X_values, Y_values), EXY_EYX_DIV_2_values, profile_coords, method=interpolation_method)
     EYY_profile = griddata((X_values, Y_values), EYY_values, profile_coords, method=interpolation_method)
     
     # ### Approach 1: Calculate Reynolds stresses on arbirtary line "manually"
-    # ETT = EXX_profile*(np.cos(theta))**2 - 2*EXY_EYX_div_2_profile*np.cos(theta)*np.sin(theta) + EYY_profile*(np.sin(theta))**2
-    # ETN = (EXX_profile - EYY_profile)*np.cos(theta)*np.sin(theta) + EXY_EYX_div_2_profile*((np.cos(theta))**2 - (np.sin(theta))**2)
-    # ENN = EXX_profile*(np.sin(theta))**2 + 2*EXY_EYX_div_2_profile*np.cos(theta)*np.sin(theta) + EYY_profile*(np.cos(theta))**2
+    # ETT = EXX_profile*(np.cos(theta))**2 - 2*EXY_EYX_DIV_2_profile*np.cos(theta)*np.sin(theta) + EYY_profile*(np.sin(theta))**2
+    # ETN = (EXX_profile - EYY_profile)*np.cos(theta)*np.sin(theta) + EXY_EYX_DIV_2_profile*((np.cos(theta))**2 - (np.sin(theta))**2)
+    # ENN = EXX_profile*(np.sin(theta))**2 + 2*EXY_EYX_DIV_2_profile*np.cos(theta)*np.sin(theta) + EYY_profile*(np.cos(theta))**2
 
     ### Approach 2: Calculate Reynolds stresses on arbirtary line with matrix multiplication
-    T_strain = np.array(((EXX_profile, EXY_EYX_div_2_profile), (EXY_EYX_div_2_profile, EYY_profile)))
+    T_strain = np.array(((EXX_profile, EXY_EYX_DIV_2_profile), (EXY_EYX_DIV_2_profile, EYY_profile)))
     T_strain_rotated = np.zeros_like(T_strain)
     
     for i in range(T_strain.shape[2]):
@@ -542,7 +542,7 @@ def plot_strain_rate_symmetric(fig, ax, rotation_matrix, theta, profile_coords, 
     # ax.plot(profile_line[min_index], ENN[min_index], c='r', marker="x")
     # ax.plot(profile_line[max_index], ENN[max_index], c='b', marker="x")
     
-    return EXX_profile, EYY_profile, EXY_EYX_div_2_profile, min_index, max_index
+    return EXX_profile, EYY_profile, EXY_EYX_DIV_2_profile, min_index, max_index
 
 
 def plot_strain_rate(fig, ax, rotation_matrix, theta, profile_coords, profile_line, label, cmin, cmax, color, num):
@@ -554,19 +554,19 @@ def plot_strain_rate(fig, ax, rotation_matrix, theta, profile_coords, profile_li
     EXY_values = EXY.flatten()
     EYX_values = EYX.flatten()
     EYY_values = EYY.flatten()
-    EXY_EYX_div_2_values = EXY_EYX_div_2.flatten()
+    EXY_EYX_DIV_2_values = EXY_EYX_DIV_2.flatten()
     
     EXX_profile = griddata((X_values, Y_values), EXX_values, profile_coords, method=interpolation_method)
     EXY_profile = griddata((X_values, Y_values), EXY_values, profile_coords, method=interpolation_method)
     EYX_profile = griddata((X_values, Y_values), EYX_values, profile_coords, method=interpolation_method)
-    # EXY_EYX_div_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
-    EXY_EYX_div_2_profile = griddata((X_values, Y_values), EXY_EYX_div_2_values, profile_coords, method=interpolation_method)
+    # EXY_EYX_DIV_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
+    EXY_EYX_DIV_2_profile = griddata((X_values, Y_values), EXY_EYX_DIV_2_values, profile_coords, method=interpolation_method)
     EYY_profile = griddata((X_values, Y_values), EYY_values, profile_coords, method=interpolation_method)
     
     # ### Approach 1: Calculate Reynolds stresses on arbirtary line "manually"
-    # ETT = EXX_profile*(np.cos(theta))**2 - 2*EXY_EYX_div_2_profile*np.cos(theta)*np.sin(theta) + EYY_profile*(np.sin(theta))**2
-    # ETN = (EXX_profile - EYY_profile)*np.cos(theta)*np.sin(theta) + EXY_EYX_div_2_profile*((np.cos(theta))**2 - (np.sin(theta))**2)
-    # ENN = EXX_profile*(np.sin(theta))**2 + 2*EXY_EYX_div_2_profile*np.cos(theta)*np.sin(theta) + EYY_profile*(np.cos(theta))**2
+    # ETT = EXX_profile*(np.cos(theta))**2 - 2*EXY_EYX_DIV_2_profile*np.cos(theta)*np.sin(theta) + EYY_profile*(np.sin(theta))**2
+    # ETN = (EXX_profile - EYY_profile)*np.cos(theta)*np.sin(theta) + EXY_EYX_DIV_2_profile*((np.cos(theta))**2 - (np.sin(theta))**2)
+    # ENN = EXX_profile*(np.sin(theta))**2 + 2*EXY_EYX_DIV_2_profile*np.cos(theta)*np.sin(theta) + EYY_profile*(np.cos(theta))**2
 
     ### Approach 2: Calculate Reynolds stresses on arbirtary line with matrix multiplication
     T_strain = np.array(((EXX_profile, EXY_profile), (EYX_profile, EYY_profile)))
@@ -594,7 +594,7 @@ def plot_strain_rate(fig, ax, rotation_matrix, theta, profile_coords, profile_li
     # ax.plot(profile_line[min_index], ENN[min_index], c='r', marker="x")
     # ax.plot(profile_line[max_index], ENN[max_index], c='b', marker="x")
     
-    return EXX_profile, EYY_profile, EXY_EYX_div_2_profile, min_index, max_index
+    return EXX_profile, EYY_profile, EXY_EYX_DIV_2_profile, min_index, max_index
 
 
 def plot_tke(fig, ax, profile_coords, profile_line, label, cmin, cmax, color, num):
@@ -750,20 +750,20 @@ def plot_curved_strain_rate_symmetric(fig, ax, profile_coords, label, cmin, cmax
     EXY_values = EXY.flatten()
     EYX_values = EYX.flatten()
     EYY_values = EYY.flatten()
-    EXY_EYX_div_2_values = EXY_EYX_div_2.flatten()
+    EXY_EYX_DIV_2_values = EXY_EYX_DIV_2.flatten()
     
     EXX_profile = griddata((X_values, Y_values), EXX_values, profile_coords, method=interpolation_method)
     EXY_profile = griddata((X_values, Y_values), EXY_values, profile_coords, method=interpolation_method)
     EYX_profile = griddata((X_values, Y_values), EYX_values, profile_coords, method=interpolation_method)
-    # EXY_EYX_div_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
-    EXY_EYX_div_2_profile = griddata((X_values, Y_values), EXY_EYX_div_2_values, profile_coords, method=interpolation_method)
+    # EXY_EYX_DIV_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
+    EXY_EYX_DIV_2_profile = griddata((X_values, Y_values), EXY_EYX_DIV_2_values, profile_coords, method=interpolation_method)
     EYY_profile = griddata((X_values, Y_values), EYY_values, profile_coords, method=interpolation_method)
     
     # Compute rotation matrices along the curved profile
     rotation_matrices, thetas = compute_rotation_matrices(profile_coords)
     
     ### Approach 2: Calculate Reynolds stresses on arbirtary line with matrix multiplication
-    T_strain = np.array(((EXX_profile, EXY_EYX_div_2_profile), (EXY_EYX_div_2_profile, EYY_profile)))
+    T_strain = np.array(((EXX_profile, EXY_EYX_DIV_2_profile), (EXY_EYX_DIV_2_profile, EYY_profile)))
     T_strain_rotated = np.zeros_like(T_strain)
     
     for i in range(len(profile_coords)):
@@ -801,7 +801,7 @@ def plot_curved_strain_rate_symmetric(fig, ax, profile_coords, label, cmin, cmax
     ax.plot(profile_line[min_index], ETN[min_index], c='r', marker="x")
     ax.plot(profile_line[max_index], ETN[max_index], c='b', marker="x")
     
-    return EXX_profile, EYY_profile, EXY_EYX_div_2_profile, min_index, max_index
+    return EXX_profile, EYY_profile, EXY_EYX_DIV_2_profile, min_index, max_index
 
 def plot_curved_strain_rate(fig, ax, profile_coords, label, cmin, cmax, color, num):
     
@@ -812,13 +812,13 @@ def plot_curved_strain_rate(fig, ax, profile_coords, label, cmin, cmax, color, n
     EXY_values = EXY.flatten()
     EYX_values = EYX.flatten()
     EYY_values = EYY.flatten()
-    EXY_EYX_div_2_values = EXY_EYX_div_2.flatten()
+    EXY_EYX_DIV_2_values = EXY_EYX_DIV_2.flatten()
     
     EXX_profile = griddata((X_values, Y_values), EXX_values, profile_coords, method=interpolation_method)
     EXY_profile = griddata((X_values, Y_values), EXY_values, profile_coords, method=interpolation_method)
     EYX_profile = griddata((X_values, Y_values), EYX_values, profile_coords, method=interpolation_method)
-    # EXY_EYX_div_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
-    EXY_EYX_div_2_profile = griddata((X_values, Y_values), EXY_EYX_div_2_values, profile_coords, method=interpolation_method)
+    # EXY_EYX_DIV_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
+    EXY_EYX_DIV_2_profile = griddata((X_values, Y_values), EXY_EYX_DIV_2_values, profile_coords, method=interpolation_method)
     EYY_profile = griddata((X_values, Y_values), EYY_values, profile_coords, method=interpolation_method)
     
     # Compute rotation matrices along the curved profile
@@ -859,7 +859,7 @@ def plot_curved_strain_rate(fig, ax, profile_coords, label, cmin, cmax, color, n
     
     # ax.set_ylim(np.array([-10, 10]))
     
-    return EXX_profile, EYY_profile, EXY_EYX_div_2_profile
+    return EXX_profile, EYY_profile, EXY_EYX_DIV_2_profile
 
 def plot_curved_principal_strain_rate_symmetric(fig, ax, profile_coords, label, cmin, cmax, color, num):
     
@@ -870,20 +870,20 @@ def plot_curved_principal_strain_rate_symmetric(fig, ax, profile_coords, label, 
     EXY_values = EXY.flatten()
     EYX_values = EYX.flatten()
     EYY_values = EYY.flatten()
-    EXY_EYX_div_2_values = EXY_EYX_div_2.flatten()
+    EXY_EYX_DIV_2_values = EXY_EYX_DIV_2.flatten()
     
     EXX_profile = griddata((X_values, Y_values), EXX_values, profile_coords, method=interpolation_method)
     EXY_profile = griddata((X_values, Y_values), EXY_values, profile_coords, method=interpolation_method)
     EYX_profile = griddata((X_values, Y_values), EYX_values, profile_coords, method=interpolation_method)
-    # EXY_EYX_div_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
-    EXY_EYX_div_2_profile = griddata((X_values, Y_values), EXY_EYX_div_2_values, profile_coords, method=interpolation_method)
+    # EXY_EYX_DIV_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
+    EXY_EYX_DIV_2_profile = griddata((X_values, Y_values), EXY_EYX_DIV_2_values, profile_coords, method=interpolation_method)
     EYY_profile = griddata((X_values, Y_values), EYY_values, profile_coords, method=interpolation_method)
     
     # Compute rotation matrices along the curved profile
     rotation_matrices, thetas = compute_rotation_matrices(profile_coords)
     
     ### Approach 2: Calculate Reynolds stresses on arbirtary line with matrix multiplication
-    T_strain = np.array(((EXX_profile, EXY_EYX_div_2_profile), (EXY_EYX_div_2_profile, EYY_profile)))
+    T_strain = np.array(((EXX_profile, EXY_EYX_DIV_2_profile), (EXY_EYX_DIV_2_profile, EYY_profile)))
     T_strain_rotated = np.zeros_like(T_strain)
     principal_T_strain_rotated = np.zeros_like(T_strain)
     
@@ -962,21 +962,21 @@ def plot_curved_principal_strain_rate_symmetric2(fig, ax, profile_coords, label,
     EXY_values = EXY.flatten()
     EYX_values = EYX.flatten()
     EYY_values = EYY.flatten()
-    EXY_EYX_div_2_values = EXY_EYX_div_2.flatten()
+    EXY_EYX_DIV_2_values = EXY_EYX_DIV_2.flatten()
     
     EXX_profile = griddata((X_values, Y_values), EXX_values, profile_coords, method=interpolation_method)
     EXY_profile = griddata((X_values, Y_values), EXY_values, profile_coords, method=interpolation_method)
     EYX_profile = griddata((X_values, Y_values), EYX_values, profile_coords, method=interpolation_method)
-    # EXY_EYX_div_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
-    EXY_EYX_div_2_profile = griddata((X_values, Y_values), EXY_EYX_div_2_values, profile_coords, method=interpolation_method)
+    # EXY_EYX_DIV_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
+    EXY_EYX_DIV_2_profile = griddata((X_values, Y_values), EXY_EYX_DIV_2_values, profile_coords, method=interpolation_method)
     EYY_profile = griddata((X_values, Y_values), EYY_values, profile_coords, method=interpolation_method)
     
     # Compute rotation matrices along the curved profile
     rotation_matrices, thetas = compute_rotation_matrices(profile_coords)
     
     ### Approach 2: Calculate Reynolds stresses on arbirtary line with matrix multiplication
-    T_strain = np.array(((EXX_profile, EXY_EYX_div_2_profile), (EXY_EYX_div_2_profile, EYY_profile)))
-    # T_strain_rotated = np.zeros_like(T_strain)
+    T_strain = np.array(((EXX_profile, EXY_EYX_DIV_2_profile), (EXY_EYX_DIV_2_profile, EYY_profile)))
+    T_strain_rotated = np.zeros_like(T_strain)
     principal_T_strain = np.zeros_like(T_strain)
     
     EMAX = np.zeros_like(thetas)
@@ -985,19 +985,29 @@ def plot_curved_principal_strain_rate_symmetric2(fig, ax, profile_coords, label,
     
     for i in range(len(profile_coords)):
         
-        # rotation_matrix = rotation_matrices[i]
+        rotation_matrix = rotation_matrices[i]
         
-        # T_strain_rotated[:, :, i] = rotation_matrix @ T_strain[:, :, i] @ rotation_matrix.T
+        T_strain_rotated[:, :, i] = rotation_matrix @ T_strain[:, :, i] @ rotation_matrix.T
         
-        # ETT_i = T_strain_rotated[0, 0, i]
-        # ENN_i = T_strain_rotated[1, 1, i]
-        # ETN_i = T_strain_rotated[0, 1, i]
+        # EXX_i = T_strain_rotated[0, 0, i]
+        # EYY_i = T_strain_rotated[1, 1, i]
+        # EXY_i = T_strain_rotated[0, 1, i]
         
         EXX_i = T_strain[0, 0, i]
         EYY_i = T_strain[1, 1, i]
         EXY_i = T_strain[0, 1, i]
         
         theta_principal = (np.arctan((EXY_i*2)/(EXX_i - EYY_i)))/2
+        
+        if EXX_i >= EYY_i:
+            
+            pass 
+        
+        else:
+            theta_principal -= np.pi/2
+            
+        # theta_principal = (np.arctan((EXY_i*2)/(EXX_i - EYY_i)))/2
+        
         thetas_principal[i] = theta_principal
         
         principal_rotation_matrix = np.array([[np.cos(theta_principal), np.sin(theta_principal)], 
@@ -1033,7 +1043,7 @@ def plot_curved_principal_strain_rate_symmetric2(fig, ax, profile_coords, label,
     ax.plot(profile_line, EMIN,  ls="solid", marker=marker, label= r'$E_{min}$')
     ax.plot(profile_line, EXX_profile,  ls="solid", marker=marker, label= r'$E_{xx}$')
     ax.plot(profile_line, EYY_profile,  ls="solid", marker=marker, label= r'$E_{yy}$')
-    ax.plot(profile_line, EXY_EYX_div_2_profile,  ls="solid", marker=marker, label= r'$E_{xy}$')
+    ax.plot(profile_line, EXY_EYX_DIV_2_profile,  ls="solid", marker=marker, label= r'$E_{xy}$')
     
     # ax.plot(profile_line, ENT,  ls="solid", marker=marker, label= r'$E_{nt}$')
     
@@ -1344,7 +1354,7 @@ if __name__ == "__main__":
     csv_file = 'B0001.csv'
     piv_avgV_file = os.path.join(piv_avgV_dir, csv_file)
     
-    n_windows_x, n_windows_y, X, Y, AvgVx, AvgVy, AvgAbsV, RXY, RXX, RYY, TKE, EXX, EXY, EYX, EYY, EXY_EYX_div_2 = read_flow_data(piv_avgV_file, normalized) 
+    n_windows_x, n_windows_y, X, Y, AvgVx, AvgVy, AvgAbsV, RXY, RXX, RYY, TKE, EXX, EXY, EYX, EYY, EXY_EYX_DIV_2 = read_flow_data(piv_avgV_file, normalized) 
     
     contour_correction = contour_correction(x_left_raw, x_right_raw, y_bottom_raw, y_top_raw, window_size_x_raw, window_size_y_raw)
     

@@ -244,22 +244,22 @@ if __name__ == '__main__':
     
     df_favre_avg['TKE'] =  0.5*(df_favre_avg['u_fluc*u_fluc'] + df_favre_avg['v_fluc*v_fluc'])
     
-    # df_favre_avg['u_favre [counts] [m/s]'] = df_favre_avg['Wmean*u [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
-    # df_favre_avg['v_favre [counts] [m/s]'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
-    # df_favre_avg['|V|_favre [counts] [m/s]'] = np.sqrt(df_favre_avg['u_favre [counts] [m/s]']**2 + df_favre_avg['v_favre [counts] [m/s]']**2)
+    df_favre_avg['u_favre [counts] [m/s]'] = df_favre_avg['Wmean*u [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
+    df_favre_avg['v_favre [counts] [m/s]'] = df_favre_avg['Wmean*v [counts]'].div(df_favre_avg['Wmean [counts]']).fillna(0)
+    df_favre_avg['|V|_favre [counts] [m/s]'] = np.sqrt(df_favre_avg['u_favre [counts] [m/s]']**2 + df_favre_avg['v_favre [counts] [m/s]']**2)
     
-    # var1 = 'Velocity |V| [m/s]'
-    # var2 = '|V|_favre [counts] [m/s]'
-    # var3 = '|V|_favre [m/s]'
-    # var_list = [var1, var2, var3]
-    # labels = ['Reynolds average',
-    #           'Favre average [intensity count]',
-    #           'Favre average [flame front detection]',
-    #           ]
-    # cbar_titles = [r'$\frac{|\overline{V}|}{U_{b}}$',
-    #                 r'$\frac{|\overline{V}|}{U_{b}}$',
-    #                 r'$\frac{|\overline{V}|}{U_{b}}$',
-    #               ]
+    var1 = 'Velocity |V| [m/s]'
+    var2 = '|V|_favre [counts] [m/s]'
+    var3 = '|V|_favre [m/s]'
+    var_list = [var1, var2, var3]
+    labels = ['Reynolds average',
+              'Favre average [intensity count]',
+              'Favre average [flame front detection]',
+              ]
+    cbar_titles = [r'$\frac{|\overline{V}|}{U_{b}}$',
+                    r'$\frac{|\overline{V}|}{U_{b}}$',
+                    r'$\frac{|\overline{V}|}{U_{b}}$',
+                  ]
                                 
     # var1 = 'Wmean [counts]'
     # var2 = 'Wmean [states]'
@@ -278,41 +278,44 @@ if __name__ == '__main__':
     
     # var_counts_norm = 'Wmean_norm [counts]'
     
-    var1 = 'TKE'
-    var2 = 'TKE_favre2'
-    # var3 = '0.5*(R_uu + R_vv) [m^2/s^2]'
+    # var1 = 'TKE'
+    # var2 = 'TKE_favre2'
+    # # var3 = '0.5*(R_uu + R_vv) [m^2/s^2]'
     
-    var_list = [var1,
-                var2,
-                # var3,
-                # var4
-                ]
-    labels = [r'$k/U_{b}^{2}$',
-              r'$\widetilde{k}/U_{b}^{2}$',
-              # var3
-              ]
+    # var_list = [var1,
+    #             var2,
+    #             # var3,
+    #             # var4
+    #             ]
+    # labels = [r'$k/U_{b}^{2}$',
+    #           r'$\widetilde{k}/U_{b}^{2}$',
+    #           # var3
+    #           ]
     
-    cbar_titles = [r'$\frac{k}{U_{b}^{2}}$',
-                    r'$\frac{\widetilde{k}}{U_{b}^{2}}$',
-                  # r'$\frac{\tilde{k}}{U_{b}^{2}}$',
-                  ]
+    # cbar_titles = [r'$\frac{k}{U_{b}^{2}}$',
+    #                 r'$\frac{\widetilde{k}}{U_{b}^{2}}$',
+    #               # r'$\frac{\tilde{k}}{U_{b}^{2}}$',
+    #               ]
     
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    third_color = colors[1]
     
+    # Create a new list with the first color, black, and white
+    colors = ['white', 'black', third_color]
     # fig2, ax2 = plt.subplots()
     
     width, height = 9, 6
     fig3, ax3 = plt.subplots(figsize=(6, 6))
     
     axial_locations = [1.75, 1.25]
-    linestyles = ['solid', 'dashed']
+    linestyles = ['solid', 'dashed', 'dashed']
     fig4, ax4 = plt.subplots(len(axial_locations), 1, figsize=(6, 12))
     
     handles = []
     
-    
     for color, var, label, cbar_title, linestyle in zip(colors[:len(var_list)], var_list, labels, cbar_titles, linestyles):
         
+        print(var)
         pivot_var = pd.pivot_table(df_favre_avg, values=var, index=index_name, columns=column_name)
 
         # Create x-y meshgrid
@@ -325,7 +328,7 @@ if __name__ == '__main__':
         fig, ax = plt.subplots(figsize=(width, height))
         # ax.set_title(label)
         
-        pivot_var /= u_bulk_measured**2
+        pivot_var /= u_bulk_measured**1
         # pivot_var /= cbar_max
         
         cbar_min = np.min(pivot_var.values)
@@ -458,8 +461,8 @@ if __name__ == '__main__':
     
     fontsize = 20
     ax3.set_xlabel(r'$x/D$', fontsize=fontsize)
-    # ylabel = ax3.set_ylabel(r'$\frac{|\widetilde{V}|}{U_{b}}$''\n'r'$,$''\n'r'$\frac{|\overline{V}|}{U_{b}}$', rotation=0, labelpad=15, fontsize=28, multialignment='center', va='center')
-    # ylabel.set_position((ylabel.get_position()[0], 0.25))
+    ylabel = ax3.set_ylabel(r'$\frac{|\widetilde{V}|}{U_{b}}$''\n'r'$,$''\n'r'$\frac{|\overline{V}|}{U_{b}}$', rotation=0, labelpad=15, fontsize=28, multialignment='center', va='center')
+    ylabel.set_position((ylabel.get_position()[0], 0.25))
     ax3.set_ylim(bottom=1.1, top=1.8)
     ylabel = ax3.set_ylabel(r'$\frac{|\widetilde{V}|}{U_{b}}$''\n'r'$,$''\n'r'$\frac{|\overline{V}|}{U_{b}}$', rotation=0, labelpad=15, fontsize=28, multialignment='center', va='center')
     
@@ -564,8 +567,8 @@ if __name__ == '__main__':
     dpdx = mom_x[2] 
     dpdr = mom_r[2]
     
-    r_starts = [.1, .2, .3,]
-    # r_starts = [.2]
+    # r_starts = [.1, .2, .3,]
+    r_starts = [.2]
     x_starts = np.linspace(0.2, 0.2, len(r_starts))
     start_points = [(r_starts[i], x_starts[i]) for i in range(len(r_starts))]
     
@@ -709,59 +712,59 @@ if __name__ == '__main__':
     
     # %%% Save images
     # Get a list of all currently opened figures
-    # figure_ids = plt.get_fignums()
-    # figure_ids = [12, 13]
+    figure_ids = plt.get_fignums()
+    figure_ids = [3]
     
-    # if 'ls' in flame.name:
-    #     folder = 'ls'
-    # else:
-    #     folder = 'hs'
+    if 'ls' in flame.name:
+        folder = 'ls'
+    else:
+        folder = 'hs'
     
-    # figures_subfolder = os.path.join(figures_folder, folder)
-    # if not os.path.exists(figures_subfolder):
-    #         os.makedirs(figures_subfolder)
+    figures_subfolder = os.path.join(figures_folder, folder)
+    if not os.path.exists(figures_subfolder):
+            os.makedirs(figures_subfolder)
     
-    # pickles_subfolder = os.path.join(pickles_folder, folder)
-    # if not os.path.exists(pickles_subfolder):
-    #         os.makedirs(pickles_subfolder)
+    pickles_subfolder = os.path.join(pickles_folder, folder)
+    if not os.path.exists(pickles_subfolder):
+            os.makedirs(pickles_subfolder)
 
-    # # Apply tight_layout to each figure
-    # for fid in figure_ids:
-    #     fig = plt.figure(fid)
-    #     filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
+    # Apply tight_layout to each figure
+    for fid in figure_ids:
+        fig = plt.figure(fid)
+        filename = f'H{flame.H2_percentage}_Re{flame.Re_D}_fig{fid}_favre'
         
-    #     # Get the current width and height of the figure
-    #     current_width, current_height = fig.get_size_inches()
+        # Get the current width and height of the figure
+        current_width, current_height = fig.get_size_inches()
         
-    #     print("Current Width:", current_width)
-    #     print("Current Height:", current_height)
+        print("Current Width:", current_width)
+        print("Current Height:", current_height)
 
-    #     # Constructing the paths
-    #     if fid == 100:
+        # Constructing the paths
+        if fid == 100:
             
-    #         png_path = os.path.join('figures', f'{folder}', f"{filename}.png")
-    #         pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
+            png_path = os.path.join('figures', f'{folder}', f"{filename}.png")
+            pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
             
-    #         # Saving the figure in EPS format
-    #         fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
+            # Saving the figure in EPS format
+            fig.savefig(png_path, format='png', dpi=300, bbox_inches='tight')
             
-    #     else:
+        else:
             
-    #         eps_path = os.path.join('figures', f'{folder}', f"{filename}.eps")
-    #         pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
+            eps_path = os.path.join('figures', f'{folder}', f"{filename}.eps")
+            pkl_path = os.path.join('pickles', f'{folder}', f"{filename}.pkl")
             
-    #         # Saving the figure in EPS format
-    #         fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
+            # Saving the figure in EPS format
+            fig.savefig(eps_path, format='eps', dpi=300, bbox_inches='tight')
             
-    #         # Get the current width and height of the figure
-    #         current_width, current_height = fig.get_size_inches()
+            # Get the current width and height of the figure
+            current_width, current_height = fig.get_size_inches()
             
-    #         print("Current Width:", current_width)
-    #         print("Current Height:", current_height)
+            print("Current Width:", current_width)
+            print("Current Height:", current_height)
         
-    #     # Pickling the figure
-    #     with open(pkl_path, 'wb') as f:
-    #         pickle.dump(fig, f)
+        # Pickling the figure
+        with open(pkl_path, 'wb') as f:
+            pickle.dump(fig, f)
             
     
     
