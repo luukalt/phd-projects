@@ -861,6 +861,202 @@ def plot_curved_strain_rate(fig, ax, profile_coords, label, cmin, cmax, color, n
     
     return EXX_profile, EYY_profile, EXY_EYX_div_2_profile
 
+def plot_curved_principal_strain_rate_symmetric(fig, ax, profile_coords, label, cmin, cmax, color, num):
+    
+    X_values = X.flatten()
+    Y_values = Y.flatten()
+    
+    EXX_values = EXX.flatten()
+    EXY_values = EXY.flatten()
+    EYX_values = EYX.flatten()
+    EYY_values = EYY.flatten()
+    EXY_EYX_div_2_values = EXY_EYX_div_2.flatten()
+    
+    EXX_profile = griddata((X_values, Y_values), EXX_values, profile_coords, method=interpolation_method)
+    EXY_profile = griddata((X_values, Y_values), EXY_values, profile_coords, method=interpolation_method)
+    EYX_profile = griddata((X_values, Y_values), EYX_values, profile_coords, method=interpolation_method)
+    # EXY_EYX_div_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
+    EXY_EYX_div_2_profile = griddata((X_values, Y_values), EXY_EYX_div_2_values, profile_coords, method=interpolation_method)
+    EYY_profile = griddata((X_values, Y_values), EYY_values, profile_coords, method=interpolation_method)
+    
+    # Compute rotation matrices along the curved profile
+    rotation_matrices, thetas = compute_rotation_matrices(profile_coords)
+    
+    ### Approach 2: Calculate Reynolds stresses on arbirtary line with matrix multiplication
+    T_strain = np.array(((EXX_profile, EXY_EYX_div_2_profile), (EXY_EYX_div_2_profile, EYY_profile)))
+    T_strain_rotated = np.zeros_like(T_strain)
+    principal_T_strain_rotated = np.zeros_like(T_strain)
+    
+    EMAX = np.zeros_like(thetas)
+    EMIN = np.zeros_like(thetas)
+    thetas_principal = np.zeros_like(thetas)
+    
+    for i in range(len(profile_coords)):
+        
+        rotation_matrix = rotation_matrices[i]
+        
+        T_strain_rotated[:, :, i] = rotation_matrix @ T_strain[:, :, i] @ rotation_matrix.T
+        
+        ETT_i = T_strain_rotated[0, 0, i]
+        ENN_i = T_strain_rotated[1, 1, i]
+        ETN_i = T_strain_rotated[0, 1, i]
+        
+        theta_principal = np.arctan((ETN_i*2)/(ETT_i - ENN_i))/2
+        thetas_principal[i] = theta_principal
+        
+        principal_rotation_matrix = np.array([[np.cos(theta_principal), np.sin(theta_principal)], 
+                                              [-np.sin(theta_principal), np.cos(theta_principal)]])
+        
+        principal_T_strain_rotated[:, :, i] = principal_rotation_matrix @ T_strain_rotated[:, :, i] @ principal_rotation_matrix.T
+        
+        # matrix = principal_T_strain_rotated[:, :, i]
+        # EMAX[i] = np.max(matrix)
+        # EMIN[i] = np.min(matrix)
+        
+    EMAX = principal_T_strain_rotated[0, 0, :]
+    EMIN = principal_T_strain_rotated[1, 1, :]
+    EZERO = principal_T_strain_rotated[0, 1, :]
+    
+    ETT = T_strain_rotated[0, 0, :]
+    ENN = T_strain_rotated[1, 1, :]
+    ETN = T_strain_rotated[0, 1, :]
+    # ENT = T_strain_rotated[1, 0, :]
+    
+    x_profile, y_profile = profile_coords[:, 0], profile_coords[:, 1]
+    distances = np.sqrt(np.diff(x_profile)**2 + np.diff(y_profile)**2)
+    cumulative_distances = np.cumsum(distances)
+    profile_line = np.insert(cumulative_distances, 0, 0)
+    
+    ax.plot(profile_line, EMAX, ls="solid", marker=marker, label= r'$E_{max}$')
+    ax.plot(profile_line, EMIN,  ls="solid", marker=marker, label= r'$E_{min}$')
+    ax.plot(profile_line, EZERO,  ls="solid", marker=marker, label= r'$E_{tn}$')
+    # ax.plot(profile_line, ENT,  ls="solid", marker=marker, label= r'$E_{nt}$')
+    
+    # ax.plot(profile_line, thetas, c='k', ls='dashed', marker='None')
+    # ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
+    
+    ax.set_xlabel("distance along line [mm]")
+    ax.set_ylabel("Strain [$1/s$]")
+    # ax.tick_params(axis='both', labelsize=fontsize)
+    ax.grid(True)
+    
+    ax2 = ax.twinx()
+    ax2.plot(profile_line, thetas, "r--", )
+    ax2.plot(profile_line, thetas_principal, "g--")
+    
+    # ax.set_ylim(np.array([-10, 10]))
+    
+    min_value, min_index, max_value, max_index = find_min_max_indices(ETN)
+    ax.plot(profile_line[min_index], ETN[min_index], c='r', marker="x")
+    ax.plot(profile_line[max_index], ETN[max_index], c='b', marker="x")
+    
+    return principal_T_strain_rotated, EMAX, EMIN, EZERO, min_index, max_index
+
+
+def plot_curved_principal_strain_rate_symmetric2(fig, ax, profile_coords, label, cmin, cmax, color, num):
+    
+    X_values = X.flatten()
+    Y_values = Y.flatten()
+    
+    EXX_values = EXX.flatten()
+    EXY_values = EXY.flatten()
+    EYX_values = EYX.flatten()
+    EYY_values = EYY.flatten()
+    EXY_EYX_div_2_values = EXY_EYX_div_2.flatten()
+    
+    EXX_profile = griddata((X_values, Y_values), EXX_values, profile_coords, method=interpolation_method)
+    EXY_profile = griddata((X_values, Y_values), EXY_values, profile_coords, method=interpolation_method)
+    EYX_profile = griddata((X_values, Y_values), EYX_values, profile_coords, method=interpolation_method)
+    # EXY_EYX_div_2_profile = griddata((X_values, Y_values), (EXY_values + EYX_values)/2, profile_coords, method=interpolation_method)
+    EXY_EYX_div_2_profile = griddata((X_values, Y_values), EXY_EYX_div_2_values, profile_coords, method=interpolation_method)
+    EYY_profile = griddata((X_values, Y_values), EYY_values, profile_coords, method=interpolation_method)
+    
+    # Compute rotation matrices along the curved profile
+    rotation_matrices, thetas = compute_rotation_matrices(profile_coords)
+    
+    ### Approach 2: Calculate Reynolds stresses on arbirtary line with matrix multiplication
+    T_strain = np.array(((EXX_profile, EXY_EYX_div_2_profile), (EXY_EYX_div_2_profile, EYY_profile)))
+    # T_strain_rotated = np.zeros_like(T_strain)
+    principal_T_strain = np.zeros_like(T_strain)
+    
+    EMAX = np.zeros_like(thetas)
+    EMIN = np.zeros_like(thetas)
+    thetas_principal = np.zeros_like(thetas)
+    
+    for i in range(len(profile_coords)):
+        
+        # rotation_matrix = rotation_matrices[i]
+        
+        # T_strain_rotated[:, :, i] = rotation_matrix @ T_strain[:, :, i] @ rotation_matrix.T
+        
+        # ETT_i = T_strain_rotated[0, 0, i]
+        # ENN_i = T_strain_rotated[1, 1, i]
+        # ETN_i = T_strain_rotated[0, 1, i]
+        
+        EXX_i = T_strain[0, 0, i]
+        EYY_i = T_strain[1, 1, i]
+        EXY_i = T_strain[0, 1, i]
+        
+        theta_principal = (np.arctan((EXY_i*2)/(EXX_i - EYY_i)))/2
+        thetas_principal[i] = theta_principal
+        
+        principal_rotation_matrix = np.array([[np.cos(theta_principal), np.sin(theta_principal)], 
+                                              [-np.sin(theta_principal), np.cos(theta_principal)]])
+        
+        principal_T_strain[:, :, i] = principal_rotation_matrix @ T_strain[:, :, i] @ principal_rotation_matrix.T
+        
+        matrix = principal_T_strain[:, :, i]
+        max_index_1d = np.argmax(matrix)
+        min_index_1d = np.argmin(matrix)
+        
+        if max_index_1d == 0:
+            
+            EMAX[i] = np.max(matrix)
+            EMIN[i] = np.min(matrix)
+            
+        elif max_index_1d == 3:
+            
+            EMAX[i] = np.min(matrix)
+            EMIN[i] = np.max(matrix)
+                
+        
+    EMAX = principal_T_strain[0, 0, :]
+    EMIN = principal_T_strain[1, 1, :]
+    EZERO = principal_T_strain[0, 1, :]
+    
+    x_profile, y_profile = profile_coords[:, 0], profile_coords[:, 1]
+    distances = np.sqrt(np.diff(x_profile)**2 + np.diff(y_profile)**2)
+    cumulative_distances = np.cumsum(distances)
+    profile_line = np.insert(cumulative_distances, 0, 0)
+    
+    ax.plot(profile_line, EMAX, ls="solid", marker=marker, label= r'$E_{max}$')
+    ax.plot(profile_line, EMIN,  ls="solid", marker=marker, label= r'$E_{min}$')
+    ax.plot(profile_line, EXX_profile,  ls="solid", marker=marker, label= r'$E_{xx}$')
+    ax.plot(profile_line, EYY_profile,  ls="solid", marker=marker, label= r'$E_{yy}$')
+    ax.plot(profile_line, EXY_EYX_div_2_profile,  ls="solid", marker=marker, label= r'$E_{xy}$')
+    
+    # ax.plot(profile_line, ENT,  ls="solid", marker=marker, label= r'$E_{nt}$')
+    
+    # ax.plot(profile_line, thetas, c='k', ls='dashed', marker='None')
+    # ax.plot(profile_line[250], thetas[250], c='c', ls='None', marker='x')
+    
+    ax.set_xlabel("distance along line [mm]")
+    ax.set_ylabel("Strain [$1/s$]")
+    # ax.tick_params(axis='both', labelsize=fontsize)
+    ax.grid(True)
+    
+    ax2 = ax.twinx()
+    ax2.plot(profile_line, np.rad2deg(thetas), "k.", )
+    ax2.plot(profile_line, np.rad2deg(thetas_principal), "k--")
+    
+    # ax.set_ylim(np.array([-10, 10]))
+    
+    min_value, min_index, max_value, max_index = find_min_max_indices(EMIN)
+    ax.plot(profile_line[min_index], EMIN[min_index], c='r', marker="x")
+    ax.plot(profile_line[max_index], EMIN[max_index], c='b', marker="x")
+    
+    return principal_T_strain, EMAX, EMIN, EZERO, min_index, max_index
+
 def plot_curved_tke(fig, ax, profile_coords, label, cmin, cmax, color, num):
 
     X_values = X.flatten()
@@ -1395,7 +1591,11 @@ if __name__ == "__main__":
         
         # Build rotation matrix
         c, s = np.cos(theta), np.sin(theta)
-        rotation_matrix = np.array(((c, -s), (s, c)))
+        
+        rotation_matrix = np.array([[c, -s],
+                                    [s, c]])
+                                   
+        # rotation_matrix = np.array(((c, -s), (s, c)))
         
         if vertical_loc != 0:
             
@@ -1460,16 +1660,18 @@ if __name__ == "__main__":
     
     figY, axY = plt.subplots(figsize=(fig_scale*default_fig_dim[0], fig_scale*default_fig_dim[1]), ncols=1, dpi=100)
     
-    profile_coords = contour_correction2_u
+    profile_coords = contour_correction2
     
     # Vx_avg_profile, Vy_avg_profile, Vt_avg_profile, Vn_avg_profile = plot_curved_profile(figY, axY, profile_coords, AvgVx, AvgVy, label, cmin, cmax, color, num)
     # Exx_profile, Eyy_profile, Exy_profile = plot_curved_strain_rate(figY, axY, profile_coords, label, cmin, cmax, color, num)
-    Exx_profile, Eyy_profile, Exy_profile, min_index, max_index = plot_curved_strain_rate_symmetric(figY, axY, profile_coords, label, cmin, cmax, color, num)
+    # Exx_profile, Eyy_profile, Exy_profile, min_index, max_index = plot_curved_strain_rate_symmetric(figY, axY, profile_coords, label, cmin, cmax, color, num)
     # Rxx_profile, Ryy_profile, Rxy_profile = plot_curved_reynolds_stress(figY, axY, profile_coords, label, cmin, cmax, color, num)
     # TKE_profile, min_index, max_index = plot_curved_tke(figY, axY, profile_coords, label, cmin, cmax, color, num)
+    # principal_T_strain_rotated, EMAX, EMIN, EZERO, min_index, max_index = plot_curved_principal_strain_rate_symmetric(figY, axY, profile_coords, label, cmin, cmax, color, num)
+    principal_T_strain, EMAX, EMIN, EZERO, min_index, max_index = plot_curved_principal_strain_rate_symmetric2(figY, axY, profile_coords, label, cmin, cmax, color, num)
     
-    ax1.plot(profile_coords[min_index, 0], profile_coords[min_index, 1], c='r', marker="x")
-    ax1.plot(profile_coords[max_index, 0], profile_coords[max_index, 1], c='b', marker="x")
+    ax1.plot(profile_coords[min_index, 0], profile_coords[min_index, 1], c='r', marker="s")
+    ax1.plot(profile_coords[max_index, 0], profile_coords[max_index, 1], c='b', marker="s")
     
     for profile_id in profile_ids:
         
